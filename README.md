@@ -6,7 +6,7 @@
   And later expanding to Wealth management & Asset Management. We will build our own technology stack, tools from scratch.
 - 👀 Let's collect use cases, set of tools, AI infra already available and so on.
 - 🌱 Let's start from a "Hello World" but then build something remarkable for the World.
-- 💞️ Let your imagination and coding skills to come together. Start from the use cases you think should be built. Think of Co-Pilots for various roles.
+- 💞️ Let your imagination and coding skills come together. Start from the use cases you think should be built. Think of Co-Pilots for various roles.
 - 📫 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
 
 <!---
