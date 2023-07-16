@@ -32,7 +32,7 @@
 # Use Cases for Finance
   ## Lending
   - Sales Co-Pilot for humans that predicts probability of sales, explains products, gives best offers
-  - Sales Co-Pilot  for digital chennels like at checkouts, embedded finance
+  - Sales Co-Pilot  for digital channels like at checkouts, embedded finance
   - Sales Admin Co-Pilot which predicts the sales and suggests strategies to achieve sales targets
   - Portfolio Manager Co-Pilot which suggests ways to increase profits, sector allocation of loans
   ### Customer Onboarding
