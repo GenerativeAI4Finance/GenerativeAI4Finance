@@ -10,8 +10,8 @@
 - 📫 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
 
 # Interesting Developments in Generative AI
-[Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)\
-[Vaayushop Building its own AGI stack for Business Lending) ](https://www.vaayushop.com/)
+-[Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
+-[Vaayushop Building its own AGI stack for Business Lending) ](https://www.vaayushop.com/)
 
 # Interesting Glossary
 
@@ -23,26 +23,26 @@
 
 # Use Cases for Finance
   ## Lending
-  ### Sales Co-Pilot for humans that predicts probability of sales, explains products, gives best offers
-  ### Sales Co-Pilot  for digital chennels like at checkouts, embedded finance
-  ### Sales Admin Co-Pilot which predicts the sales and suggests strategies to achieve sales targets
-  ### Portfolio Manager Co-Pilot which suggests ways to increase profits, sector allocation of loans
+  - Sales Co-Pilot for humans that predicts probability of sales, explains products, gives best offers
+  - Sales Co-Pilot  for digital chennels like at checkouts, embedded finance
+  - Sales Admin Co-Pilot which predicts the sales and suggests strategies to achieve sales targets
+  - Portfolio Manager Co-Pilot which suggests ways to increase profits, sector allocation of loans
   ## Customer Onboarding
   ## Document Checker
   ## Underwriter
   ## Credit Management
-  ### Credit Manager Co-pilot to design a credit policy and predict its outcome. Cuts down cycle from years to minutes
+  - Credit Manager Co-pilot to design a credit policy and predict its outcome. Cuts down cycle from years to minutes
 
   ## Borrowing
-  ### AI financial advisor for Small Business owners. Suggests which source to use, when to borrow money and from who and how to do that at lowest prices.
-  ### AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
-  ### AI Co-Pilot for Chief Financial Officer to increase profit by deploying free cash. Assists in cash management, liqiquidity based on future and suggests pro-active actions.
+  - AI financial advisor for Small Business owners. Suggests which source to use, when to borrow money and from who and how to do that at lowest prices.
+  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
+  - AI Co-Pilot for Chief Financial Officer to increase profit by deploying free cash. Assists in cash management, liqiquidity based on future and suggests pro-active actions.
 
   ## Supply chain finance
-  ### AI financial advisor for Small Business owners to get off-balance sheet funding & access alternate financing sources based on transaction data about sales and more.
-  ### AI Co-Pilot for Chief Financial Officer Large Enterprises. Helps them get access to multiple banks offering supply chain finance. Suggests the best prices and match for multiple segments and help borrow at minimum interest rate and get off-balance sheet funding.
+  - AI financial advisor for Small Business owners to get off-balance sheet funding & access alternate financing sources based on transaction data about sales and more.
+  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Helps them get access to multiple banks offering supply chain finance. Suggests the best prices and match for multiple segments and help borrow at minimum interest rate and get off-balance sheet funding.
 
-  ### AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
+  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
 
  ## Investment Banking
 
