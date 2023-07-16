@@ -10,7 +10,7 @@
 - 📫 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
 
 # Interesting Developments in Generative AI
-[Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
+[Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)\
 [Vaayushop Building its own AGI stack for Business Lending) ](https://www.vaayushop.com/)
 
 # Interesting Glossary
