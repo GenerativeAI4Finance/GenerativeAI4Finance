@@ -13,6 +13,14 @@
   - [Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
   - [Vaayushop Building its own AGI stack for Business Lending ](https://www.vaayushop.com/)
 
+  - [Cohere, developer of cloud agnostic models raises $270m from NVIDIA, Oracle](https://www.reuters.com/technology/ai-startup-cohere-raises-270-mln-nvidia-backed-funding-round-2023-06-08/)
+  - [A14Bharat, backed by MSFT & Nilekani could well be the first foundation model from India](https://ai4bharat.iitm.ac.in/)
+
+  # Generative AI Illustrative Architecture
+  This is not complete but just examplary. Certain improvements need to be done and are known.
+  These may be done in upcoming versions.  
+![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
+
 # Interesting Glossary
 
 
@@ -48,7 +56,26 @@
 
  ## Wealth Management
 
- 
+ # Interesting Glossary
+
+
+# Cloud AI Infra
+
+# Foundation models
+  ## Open-Source Foundation Models
+  ## Closed-Source Foundation Models
+
+
+# Books
+
+# Interesting Research Papers
+- [Recurrent neural networks, long short-term memory, Attention based networks](https://arxiv.org/abs/1706.03762)
+- [Comprehensive Hierarchy Aware Multi-label Predictions](https://arxiv.org/abs/2206.08653)
+- [Transformer-Based Deep Learning Model for Stock Price Prediction](https://arxiv.org/abs/2208.08300)
+- [Financial Time Series Forecasting using CNN and Transformer](https://arxiv.org/abs/2208.08300)
+- [Temporal Data Meets LLM -- Explainable Financial Time Series Forecasting](https://arxiv.org/abs/2208.08300)
+- [Transformer models in Finance](https://quantdare.com/transformers-is-attention-all-we-need-in-finance-part-ii/)
+- [Inside Large Language Models](https://lifearchitect.ai/models/)
 
 
 <!---
