@@ -11,7 +11,7 @@
 
 # Interesting Developments in Generative AI
   - [Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
-  - [Vaayushop Building its own AGI stack for Business Lending) ](https://www.vaayushop.com/)
+  - [Vaayushop Building its own AGI stack for Business Lending ](https://www.vaayushop.com/)
 
 # Interesting Glossary
 
