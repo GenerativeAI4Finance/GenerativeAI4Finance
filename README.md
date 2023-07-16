@@ -17,7 +17,8 @@
 
   # Generative AI Illustrative Architecture
   This is not complete but just examplary. Certain improvements need to be done and are known.
-  These may be done in upcoming versions.
+  These may be done in upcoming versions.  
+![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
 
 # Use Cases for Finance
   ## Lending
