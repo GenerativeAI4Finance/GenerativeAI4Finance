@@ -27,10 +27,10 @@
   - Sales Co-Pilot  for digital chennels like at checkouts, embedded finance
   - Sales Admin Co-Pilot which predicts the sales and suggests strategies to achieve sales targets
   - Portfolio Manager Co-Pilot which suggests ways to increase profits, sector allocation of loans
-  ## Customer Onboarding
-  ## Document Checker
-  ## Underwriter
-  ## Credit Management
+  ### Customer Onboarding
+  ### Document Checker
+  ### Underwriter
+  ### Credit Management
   - Credit Manager Co-pilot to design a credit policy and predict its outcome. Cuts down cycle from years to minutes
 
   ## Borrowing
