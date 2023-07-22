@@ -1,4 +1,5 @@
 👋 Hi from the GenerativeAI4Finance team!! You have been using OpenAI & chatGPT for Text & Audio. How cool is it to build a "Generative AI platform for Finance" from scratch! Kind of like Jarvis from Iron Man, exclusively for Finance. A Jarvis Avatar for users, IT professionals, Bankers, and everyone needing or using Finance. You read it right. Totally from scratch - Right from a foundational model to different forms of prompts, co-pilots, and tools. It's Generative AI for use cases in Lending, Investment Banking, Trading, Banking as a Service, and so on. And later expanding to Wealth management & Asset Management. We will build our technology stack, tools from scratch.
+
 👀 Let's collect use cases, a set of tools, AI infrastructure already available, and so on.
 🌱 Let's start with a "Hello World," but then build something remarkable for the World.
 💞️ Let your imagination and coding skills come together. Start with the use cases you think should be built. Think of Co-Pilots for various roles.
