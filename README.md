@@ -1,7 +1,18 @@
 👋 Hi from the GenerativeAI4Finance team!
 
-You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
-How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance from scratch together.
+- You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
+- How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance from scratch together.
+
+# What is this about?
+GenerativeAI 4 Finance consists of following parts
+
+### Foundational models for finance (Refer vs-neev repository)
+- 🌱 Large Foundational models built from scratch. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management. 
+   (Refer vs-neev repository)
+### High level reusable components (Refer vs-tantra repository)
+- 💞️ Necessary for domain specific solutions 
+### Examples of Co-Pilots and applications
+- 📫 Co-Pilots(Kind of like Jarvis from Iron Man) for every one using finance. Eg. Co-Pilot for borowwers and lenders providing suggestions 
 
 # What is the need?
 - Existing core technologies in Generative AI are around content and its variations, but not for Financial Data & Decision making.
@@ -15,17 +26,6 @@ How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance
 - Propserity - AI will generate a lot of new wealth. However use cases must bring collaboration between Corporates & different parts of society. So benefits are shared.
 - Planet - A productivity increase with innovation reduces net footprint on planet.
 
-# What is this about?
-GenerativeAI 4 Finance consists of following parts
-
-### Foundational models for finance (vs-neev)
-- 🌱 Large Foundational models built from scratch. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management. 
-   (Refer vs-neev repository)
-### High level reusable components (vs-tantra)
-- 💞️ Necessary for domain specific solutions (Refer vs-tantra repository)
-### Examples of Co-Pilots and applications
-- 📫 Co-Pilots(Kind of like Jarvis from Iron Man) for every one using finance. Eg. Co-Pilot for borowwers and lenders providing suggestions 
-
 We will build our technology stack, tools from scratch.
 ### 👀 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
 
@@ -35,12 +35,17 @@ We will build our technology stack, tools from scratch.
 - [Embedded Finance](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Lending-&-Co%E2%80%90Lending-Use-Cases-for-GenerativeAI-4-Finance)
 - Asset & Wealth Management (TBD-Contributions invited)
 - More (TBD-Contributions invited)
-# Knowledge Base
-- [GenerativeAI Glossary](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/GenerativeAI-Glossary)
-- [Books]((TBD-Contributions invited)
-- [Research Papers](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Generative-AI-4-Finance-%E2%80%90-Research-Papers)
 
-# [AI Infra from Bigtech]((TBD-Contributions invited)
+# Generative AI Illustrative Architecture
+  This is not complete but just examplary. Certain improvements need to be done and are known.
+  These may be done in upcoming versions.  
+  ![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
+  
+# How are Vaayu & GenerativeAI 4 Finance related?
+Vaayushop is focused on use cases for Lending & will be involved in building foundational models and core frameworks.
+It will be making some parts of its code as open-source.
+
+# AI Infra from Bigtech (TBD-Contributions invited)
 
 # Interesting Developments in Generative AI
   - [Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
@@ -48,18 +53,18 @@ We will build our technology stack, tools from scratch.
   - [Cohere, developer of cloud agnostic models raises $270m from NVIDIA, Oracle](https://www.reuters.com/technology/ai-startup-cohere-raises-270-mln-nvidia-backed-funding-round-2023-06-08/)
   - [A14Bharat, backed by MSFT & Nilekani could well be the first foundation model from India](https://ai4bharat.iitm.ac.in/)
 
-# [Foundational Models](TBD-Contributions invited)
+# Knowledge Base
+- [GenerativeAI Glossary](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/GenerativeAI-Glossary)
+- [Books]((TBD-Contributions invited)
+- [Research Papers](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Generative-AI-4-Finance-%E2%80%90-Research-Papers)
+
+# Foundational Models(TBD-Contributions invited)
 
 ### How to participate
 - 👀 Start referring use cases below and you can start contributing more use cases for your domain.
 - 🌱 Create, Train, Fine-tuen models
 - 🌱 Create high level librarires, tools for others to build upon
 - 💞️ Give us star, share, Follow
-
-# Generative AI Illustrative Architecture
-  This is not complete but just examplary. Certain improvements need to be done and are known.
-  These may be done in upcoming versions.  
-![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
 
 <!---
 GenerativeAI4Finance/GenerativeAI4Finance is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
