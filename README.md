@@ -1,82 +1,70 @@
-- 👋 Hi from GenerativeAI4Finance team!! You have been using OpenAI & chatGPT for Text, & Audio. How cool is to build a "Generative AI platform for Finance" from scratch!
-  Kind of Jarvis from Iron Man exclusively for Finance. Jarvis Avatar for users, IT professionals, Bankers and everyone needing or using Finance.
-  You read it right.
-  Totally from scratch - Right from a foundational model to different forms of prompts, co-pilots,
-  tools It's Generative AI for use cases in Lending, Investment Banking, Trading, Banking as a Service and so on.
-  And later expanding to Wealth management & Asset Management. We will build our own technology stack, tools from scratch.
-- 👀 Let's collect use cases, set of tools, AI infra already available and so on.
-- 🌱 Let's start from a "Hello World" but then build something remarkable for the World.
-- 💞️ Let your imagination and coding skills come together. Start from the use cases you think should be built. Think of Co-Pilots for various roles.
-- 📫 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
+👋 Hi from the GenerativeAI4Finance team!
+
+- You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
+- How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance that does that. And it's built from scratch.
+
+# What is this about?
+GenerativeAI 4 Finance consists of following parts
+
+### Foundational models for finance (Refer vs-neev repository)
+- 🌱 Large Foundational models built from scratch. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management. 
+   (Refer vs-neev repository)
+### High level reusable components (Refer vs-tantra repository)
+- 💞️ Necessary for domain specific solutions 
+### Examples of Co-Pilots and applications
+- 📫 Co-Pilots(Kind of like Jarvis from Iron Man) for every one using finance. Eg. Co-Pilot for borowwers and lenders providing suggestions 
+
+# What is the need?
+- Existing core technologies in Generative AI are around content and its variations, but not for Financial Data & Decision making.
+- Framework for quickly building domain specific platform does not exist. Frameworks provided by BigTech are fairly low level. As an analogy - If BigTech's framework was python, GenerativeAI4Finance is Pandas.
+- Enterprises and MSMEs need their more specific implementations than Generalized ones provided.
+  -  Eg. An Enterprise would want its knowledge base to queried in natural language only for its internal purposes and its own specific customizations
+  -  Another example a small business would want an integeration with CRM for its sales leads.
+  
+# Mission
+- People - AI should benefit all. Vaayushop has started focus on MSMEs. GenerativeAI 4 Finance must expedite its benefits to all levels of society.
+- Propserity - AI will generate a lot of new wealth. However use cases must bring collaboration between Corporates & different parts of society. So benefits are shared.
+- Planet - A productivity increase with innovation reduces net footprint on planet.
+
+We will build our technology stack, tools from scratch.
+### 👀 Reach out for more at admin@vaayushop.com. GenerativeAI4Finance is part of Vaayushop. (https://www.vaayushop.com/)
+
+# Use Cases
+- [Lending, Co-Lending & Supply Chain Finance](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Lending-&-Co%E2%80%90Lending-Use-Cases-for-GenerativeAI-4-Finance)
+- [Investment Banking](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Investment-Banking-Use-Cases-for-Generative-AI-4-Finance)
+- [Embedded Finance](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Lending-&-Co%E2%80%90Lending-Use-Cases-for-GenerativeAI-4-Finance)
+- Asset & Wealth Management (TBD-Contributions invited)
+- More (TBD-Contributions invited)
+
+# Generative AI Illustrative Architecture
+  This is not complete but just examplary. Certain improvements need to be done and are known.
+  These may be done in upcoming versions.  
+  ![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
+  
+# How are Vaayu & GenerativeAI 4 Finance related?
+Vaayushop is focused on use cases for Lending & will be involved in building foundational models and core frameworks.
+It will be making some parts of its code as open-source.
+
+# AI Infra from Bigtech (TBD-Contributions invited)
 
 # Interesting Developments in Generative AI
   - [Elon Musk launches XAI to build AGI(Aritificial General Intelligence) ](https://x.ai/)
   - [Vaayushop Building its own AGI stack for Business Lending ](https://www.vaayushop.com/)
-
   - [Cohere, developer of cloud agnostic models raises $270m from NVIDIA, Oracle](https://www.reuters.com/technology/ai-startup-cohere-raises-270-mln-nvidia-backed-funding-round-2023-06-08/)
   - [A14Bharat, backed by MSFT & Nilekani could well be the first foundation model from India](https://ai4bharat.iitm.ac.in/)
 
-  # Generative AI Illustrative Architecture
-  This is not complete but just examplary. Certain improvements need to be done and are known.
-  These may be done in upcoming versions.  
-![Vaayu FM   Architecture (1)](https://github.com/atulmehra/GenerativeAI4Finance/assets/65443697/24e162dd-86ce-49d2-b8f3-fb49ad70bf88)
+# Knowledge Base
+- [GenerativeAI Glossary](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/GenerativeAI-Glossary)
+- [Books]((TBD-Contributions invited)
+- [Research Papers](https://github.com/GenerativeAI4Finance/GenerativeAI4Finance/wiki/Generative-AI-4-Finance-%E2%80%90-Research-Papers)
 
-# Interesting Glossary
+# Foundational Models(TBD-Contributions invited)
 
-
-# AI Infra from BigTech
-
-
-# Books
-
-# Use Cases for Finance
-  ## Lending
-  - Sales Co-Pilot for humans that predicts probability of sales, explains products, gives best offers
-  - Sales Co-Pilot  for digital channels like at checkouts, embedded finance
-  - Sales Admin Co-Pilot which predicts the sales and suggests strategies to achieve sales targets
-  - Portfolio Manager Co-Pilot which suggests ways to increase profits, sector allocation of loans
-  ### Customer Onboarding
-  ### Document Checker
-  ### Underwriter
-  ### Credit Management
-  - Credit Manager Co-pilot to design a credit policy and predict its outcome. Cuts down cycle from years to minutes
-
-  ## Borrowing
-  - AI financial advisor for Small Business owners. Suggests which source to use, when to borrow money and from who and how to do that at lowest prices.
-  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
-  - AI Co-Pilot for Chief Financial Officer to increase profit by deploying free cash. Assists in cash management, liqiquidity based on future and suggests pro-active actions.
-
-  ## Supply chain finance
-  - AI financial advisor for Small Business owners to get off-balance sheet funding & access alternate financing sources based on transaction data about sales and more.
-  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Helps them get access to multiple banks offering supply chain finance. Suggests the best prices and match for multiple segments and help borrow at minimum interest rate and get off-balance sheet funding.
-
-  - AI Co-Pilot for Chief Financial Officer Large Enterprises. Suggests how to increase profits, cash management & liquidity prediction and reduce cost of funds.
-
- ## Investment Banking
-
- ## Wealth Management
-
- # Interesting Glossary
-
-
-# Cloud AI Infra
-
-# Foundation models
-  ## Open-Source Foundation Models
-  ## Closed-Source Foundation Models
-
-
-# Books
-
-# Interesting Research Papers
-- [Recurrent neural networks, long short-term memory, Attention based networks](https://arxiv.org/abs/1706.03762)
-- [Comprehensive Hierarchy Aware Multi-label Predictions](https://arxiv.org/abs/2206.08653)
-- [Transformer-Based Deep Learning Model for Stock Price Prediction](https://arxiv.org/abs/2208.08300)
-- [Financial Time Series Forecasting using CNN and Transformer](https://arxiv.org/abs/2208.08300)
-- [Temporal Data Meets LLM -- Explainable Financial Time Series Forecasting](https://arxiv.org/abs/2208.08300)
-- [Transformer models in Finance](https://quantdare.com/transformers-is-attention-all-we-need-in-finance-part-ii/)
-- [Inside Large Language Models](https://lifearchitect.ai/models/)
-
+### How to participate
+- 👀 Start referring use cases below and you can start contributing more use cases for your domain.
+- 🌱 Create, Train, Fine-tuen models
+- 🌱 Create high level librarires, tools for others to build upon
+- 💞️ Give us star, share, Follow
 
 <!---
 GenerativeAI4Finance/GenerativeAI4Finance is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
