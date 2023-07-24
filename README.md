@@ -1,7 +1,7 @@
 👋 Hi from the GenerativeAI4Finance team!
 
 - You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
-- How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance from scratch together.
+- How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance that does that. And it's built from scratch.
 
 # What is this about?
 GenerativeAI 4 Finance consists of following parts
