@@ -7,8 +7,10 @@
 GenerativeAI 4 Finance consists of following parts
 
 ### Foundational models for finance (Refer vs-neev repository)
-- 🌱 Large Foundational models built from scratch. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management. 
+- 🌱 Small Reasoning Foundational models built from scratch for Banking. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management, Reducing GNPA, Cybersecurity
    (Refer vs-neev repository)
+### Innovation & technologies we work on
+Our team works on Edge of AI & emerging technologies like JEPA world models, Financial Intelligence, Decision infra
 ### High level reusable components (Refer vs-tantra repository)
 - 💞️ Necessary for domain specific solutions 
 ### Examples of Co-Pilots and applications
@@ -20,6 +22,13 @@ GenerativeAI 4 Finance consists of following parts
 - Enterprises and MSMEs need their more specific implementations than Generalized ones provided.
   -  Eg. An Enterprise would want its knowledge base to queried in natural language only for its internal purposes and its own specific customizations
   -  Another example a small business would want an integeration with CRM for its sales leads.
+
+# Who we are
+- This repository is maintained & supported by Vaayushop team - a Deeptch Entperirse AI Infra for Decisions Forbes India Top 100, NVIDIA Inception member & IDFC-Moneycontrol-CNBC - Leap to unicorn company.
+- You may read more about us at hindustantimes.com/cities/pune-news/startup-mantra-vaayushop-builds-specialised-ai-coworkers-101778874964956.html Or   [https://www.vaayushop.com/blog/](https://www.vaayushop.com/blog/category/ai-advance-innovation/agi/)
+- Our team also co-founded an Open Deeptech AI Research lab - iidalabs.org
+
+We will build our technology stack, tools from scratch.
   
 # Mission
 - People - AI should benefit all. Vaayushop has started focus on MSMEs. GenerativeAI 4 Finance must expedite its benefits to all levels of society.
