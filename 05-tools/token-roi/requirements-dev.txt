@@ -1,0 +1,11 @@
+# pip is this project's package manager. Dependencies are declared in
+# pyproject.toml; this file is the one-command entry point for a dev environment:
+#
+#   python -m venv .venv
+#   source .venv/bin/activate          # Windows: .venv\Scripts\activate
+#   pip install -r requirements-dev.txt
+#
+# Runtime dependencies are deliberately unpinned: a library has to stay
+# compatible with whatever versions its host application already resolves.
+# Pin in the *application*, not here.
+-e .[dev,tokenizers,otlp]

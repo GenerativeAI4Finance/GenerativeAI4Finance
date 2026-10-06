@@ -1,0 +1,138 @@
+# tokenmeter -> InfluxDB 3 collector.
+#
+# IMPORTANT: this needs otel/opentelemetry-collector-CONTRIB. The core
+# `otel/opentelemetry-collector` image ships no vendor exporters, so it has no
+# influxdbexporter, no file_storage, and no cumulativetodelta.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # MUST be first in every pipeline. It can only shed load it sees before
+  # anything else has buffered it; putting `batch` ahead of it means the
+  # batcher accumulates exactly the memory the limiter is trying to protect.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
+
+  # On the metrics path every resource attribute becomes a tag
+  # unconditionally, so trimming here keeps the metric tables narrow as well
+  # as the spans `attributes` blob small.
+  resource/trim:
+    attributes:
+      - { key: telemetry.sdk.language, action: delete }
+      - { key: telemetry.sdk.name,     action: delete }
+      - { key: telemetry.sdk.version,  action: delete }
+
+  # Last processor, immediately before the exporter.
+  batch:
+    timeout: 5s
+    send_batch_size: 1000
+    send_batch_max_size: 2000
+
+exporters:
+  influxdb:
+    # confighttp defaults the path to /api/v2/write when it is unspecified.
+    # InfluxDB 3 is reached through that v2-compatible write API.
+    endpoint: ${env:INFLUXDB3_URL}
+    token: ${env:INFLUXDB3_TOKEN}
+    org: ${env:INFLUXDB3_ORG}            # required by the exporter; vestigial on v3 Core
+    bucket: ${env:INFLUXDB3_DATABASE}    # on v3 this IS the database name
+    timeout: 10s
+    precision: ns
+    v1_compatibility:
+      enabled: false                     # v3 speaks the v2 write API with a token
+
+    metrics_schema: telegraf-prometheus-v1
+
+    # ---------------------------------------------------------------------
+    # THIS LIST IS THE SCHEMA, not an indexing hint.
+    #
+    # otel2influx/traces.go does exactly one of two things with every span
+    # attribute: if it is named here it becomes a TAG (its own column);
+    # otherwise it is json.Marshal'ed together with all the other unlisted
+    # attributes into ONE string field called `attributes`. There is no
+    # per-attribute field, and InfluxDB 3 SQL has no reliable JSON
+    # extraction -- so anything missing from this list cannot be summed,
+    # filtered, or grouped. Ever.
+    #
+    # Adding an entry later does NOT backfill existing rows. One-way door.
+    # ---------------------------------------------------------------------
+    span_dimensions:
+      # identity
+      - service.name
+      - tokenmeter.environment
+      - tokenmeter.app_version
+      # what was called
+      - gen_ai.provider.name
+      - gen_ai.operation.name
+      - gen_ai.request.model
+      - gen_ai.response.model
+      # who it belongs to
+      - gen_ai.conversation.id
+      - gen_ai.agent.name
+      # trust
+      - tokenmeter.token_source
+      - gen_ai.usage.cost.currency
+      # metadata ALLOWLIST. Add one key at a time, and only when you can name
+      # the GROUP BY you want it for. Never a free-text or UUID key: it
+      # becomes a permanent column that cannot be removed.
+      - tokenmeter.metadata.user_id
+      # Measures. Tagging numbers normally explodes series count -- not here:
+      # otel2influx forces `span_id` into the tag set, so this table is
+      # ALREADY one-series-per-row. These add zero series, only
+      # dictionary-encoded Parquet columns, and it is the only way to make
+      # them aggregable at all. Do not "fix" this.
+      - gen_ai.usage.input_tokens
+      - gen_ai.usage.output_tokens
+      - gen_ai.usage.cache_read.input_tokens
+      - gen_ai.usage.cache_write.input_tokens
+      - gen_ai.usage.cost
+
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+      storage: file_storage/influx       # survives collector restarts
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  file_storage/influx:
+    directory: /var/lib/otelcol/storage
+    timeout: 10s
+    compaction:
+      on_start: true
+      directory: /var/lib/otelcol/storage
+
+service:
+  extensions: [health_check, file_storage/influx]
+  pipelines:
+    traces:
+      receivers:  [otlp]
+      processors: [memory_limiter, resource/trim, batch]
+      exporters:  [influxdb]
+    metrics:
+      receivers:  [otlp]
+      processors: [memory_limiter, resource/trim, batch]
+      exporters:  [influxdb]
+    # No logs pipeline on purpose: the app sets OtelConfig(emit_logs=False).
+    # tokenmeter gives the span and the log identical attributes, and the
+    # log's only differentiator -- event_name="tokenmeter.token_usage" -- is
+    # discarded by otel2influx/logs.go. Exporting both doubles write volume
+    # for zero extra information.
+  telemetry:
+    logs:
+      level: info
+      encoding: json

@@ -1,0 +1,36 @@
+# Local tokenmeter -> collector -> InfluxDB 3 stack.
+# Bring up:  docker compose up -d        (see influxdb3/bootstrap.md first)
+
+services:
+  influxdb3:
+    image: influxdb:3-core          # pin to a patch version for real deployments
+    command:
+      - influxdb3
+      - serve
+      - --node-id=node0
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3
+    ports:
+      - "8181:8181"
+    volumes:
+      - influxdb3-data:/var/lib/influxdb3
+
+  otelcol:
+    # CONTRIB, not core -- core has no influxdbexporter. Pinned, not :latest,
+    # because otel2influx's table layout is an implementation detail that has
+    # changed before.
+    image: otel/opentelemetry-collector-contrib:0.161.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    depends_on: [influxdb3]
+    env_file: ./otelcol/.env
+    ports:
+      - "4317:4317"     # OTLP/gRPC  <- tokenmeter points here
+      - "4318:4318"     # OTLP/HTTP
+      - "13133:13133"   # health_check
+    volumes:
+      - ./otelcol/config.yaml:/etc/otelcol/config.yaml:ro
+      - otelcol-queue:/var/lib/otelcol/storage
+
+volumes:
+  influxdb3-data:
+  otelcol-queue:
