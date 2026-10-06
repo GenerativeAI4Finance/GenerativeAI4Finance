@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# pip is the package manager here; other managers' lock files are not tracked.
+uv.lock
+poetry.lock
+Pipfile.lock
+
+# deploy/ secrets -- the InfluxDB token lives here, never in the config
+.env
+deploy/otelcol/.env

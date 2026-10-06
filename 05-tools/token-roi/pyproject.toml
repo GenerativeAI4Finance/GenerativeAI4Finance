@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tokenmeter"
+version = "0.1.0"
+description = "Drop-in LLM token usage metering, emitted as OpenTelemetry GenAI telemetry."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "pydantic>=2.7",
+    "opentelemetry-api>=1.30",
+    "opentelemetry-sdk>=1.30",
+]
+
+[project.optional-dependencies]
+tokenizers = ["tiktoken>=0.7"]
+otlp = [
+    "opentelemetry-exporter-otlp-proto-grpc>=1.30",
+    "opentelemetry-exporter-otlp-proto-http>=1.30",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tokenmeter"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = [".venv"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG", "PTH", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "ARG002"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["tiktoken.*", "opentelemetry.exporter.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["error"]
