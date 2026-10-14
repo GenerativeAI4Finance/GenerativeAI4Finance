@@ -1,0 +1,45 @@
+{
+  "case_id": "G4F-EDD-002",
+  "subject_type": "company",
+  "jurisdiction": "CA",
+  "review_date": "2026-10-13",
+  "risk_categories": [
+    "adverse_media",
+    "geographic_risk",
+    "ownership_opacity"
+  ],
+  "source_records": [
+    {
+      "source_id": "SRC-101",
+      "source_type": "adverse_media",
+      "description": "Fictional sample article created for schema testing.",
+      "url": "https://example.org/fictional-sample-article",
+      "checked_date": "2026-10-13"
+    },
+    {
+      "source_id": "SRC-102",
+      "source_type": "registry",
+      "description": "Fictional registry record requiring further review.",
+      "checked_date": "2026-10-13"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "F-101",
+      "category": "adverse_media",
+      "summary": "A fictional sample article contains an unverified allegation requiring human review.",
+      "severity": "medium",
+      "disposition": "unresolved"
+    },
+    {
+      "finding_id": "F-102",
+      "category": "ownership_opacity",
+      "summary": "The fictional case requires additional documentation to clarify the ownership structure.",
+      "severity": "low",
+      "disposition": "unresolved"
+    }
+  ],
+  "confidence": 0.61,
+  "analyst_notes": "Fictional training example only. These findings do not describe a real company.",
+  "review_status": "escalated"
+}

@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-edd-case.schema.json",
+  "title": "GenerativeAI4Finance Enhanced Due Diligence Case",
+  "description": "Structured schema for documenting a fictional Enhanced Due Diligence (EDD) review case.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "subject_type",
+    "jurisdiction",
+    "review_date",
+    "risk_categories",
+    "source_records",
+    "findings",
+    "confidence",
+    "review_status"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^G4F-EDD-[0-9]{3,}$",
+      "description": "Unique case identifier, for example G4F-EDD-001."
+    },
+    "subject_type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "company",
+        "organization",
+        "trust",
+        "other"
+      ]
+    },
+    "jurisdiction": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Two-letter ISO 3166-1 alpha-2 country code."
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of review in YYYY-MM-DD format."
+    },
+    "risk_categories": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "sanctions",
+          "politically_exposed_person",
+          "adverse_media",
+          "ownership_opacity",
+          "geographic_risk",
+          "financial_crime",
+          "identity_verification",
+          "other"
+        ]
+      }
+    },
+    "source_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "source_type",
+          "description",
+          "checked_date"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "registry",
+              "sanctions_list",
+              "adverse_media",
+              "internal_record",
+              "identity_document",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "checked_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_id",
+          "category",
+          "summary",
+          "severity"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^F-[0-9]{3,}$"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "sanctions",
+              "politically_exposed_person",
+              "adverse_media",
+              "ownership_opacity",
+              "geographic_risk",
+              "financial_crime",
+              "identity_verification",
+              "other"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "unresolved",
+              "false_positive",
+              "substantiated",
+              "mitigated"
+            ]
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Analyst confidence in the overall assessment, from 0 to 1."
+    },
+    "analyst_notes": {
+      "type": "string",
+      "maxLength": 5000,
+      "description": "Optional notes. Do not include real personal or confidential data."
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_review",
+        "completed",
+        "escalated"
+      ]
+    }
+  }
+}
