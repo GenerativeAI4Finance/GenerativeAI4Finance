@@ -613,6 +613,9 @@ class AuditLog:
         self._events: list[dict] = []
         self._states: dict = {}
         self._size = 0
+        # Check the path before exclusive_lock creates <path>.lock next to it.
+        if self.path.is_dir():
+            raise AuditError(f"{self.path} is a directory, not a log file")
         if not create and not self.path.exists():
             raise IntegrityError(
                 f"{self.path} does not exist (pass create=True to start a new log)"

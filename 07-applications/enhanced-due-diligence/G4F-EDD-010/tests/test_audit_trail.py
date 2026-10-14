@@ -672,6 +672,15 @@ def test_append_waits_for_the_lock(log):
     new_finding(log)
 
 
+@pytest.mark.parametrize("create", [True, False])
+def test_directory_path_is_refused_without_a_lock_file(tmp_path, create):
+    path = tmp_path / "logdir"
+    path.mkdir()
+    with pytest.raises(AuditError, match="is a directory"):
+        AuditLog(path, KEY, create=create)
+    assert not (tmp_path / "logdir.lock").exists()
+
+
 def test_append_is_fsynced(log, monkeypatch):
     calls = []
     real_fsync = os.fsync
