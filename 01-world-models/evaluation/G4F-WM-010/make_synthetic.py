@@ -23,18 +23,18 @@ SCENARIOS = {
 }
 
 
-def sigmoid(z):
+def sigmoid(z: float) -> float:
     return 1 / (1 + np.exp(-z))
 
 
-def state_probs(x, horizon, shift):
+def state_probs(x: float, horizon: int, shift: float) -> tuple[float, float, float]:
     """Probabilities of (current, delinquent, default) at the horizon."""
     p_default = sigmoid(-3.2 + 0.9 * x + 0.05 * horizon + shift)
     p_delinquent = (1 - p_default) * sigmoid(-2.0 + 0.6 * x + 0.5 * shift)
     return 1 - p_default - p_delinquent, p_delinquent, p_default
 
 
-def generate(seed=7):
+def generate(seed: int = 7) -> tuple[pd.DataFrame, pd.DataFrame]:
     rng = np.random.default_rng(seed)
     preds, outs = [], []
     for scenario, (n_entities, true_shift, model_shift) in SCENARIOS.items():
@@ -63,7 +63,7 @@ def generate(seed=7):
     return pd.DataFrame(preds), pd.DataFrame(outs)
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", default="examples")
@@ -71,8 +71,9 @@ def main(argv=None):
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     preds, outs = generate(args.seed)
-    preds.to_csv(out / "predictions.csv", index=False)
-    outs.to_csv(out / "outcomes.csv", index=False)
+    # LF on every platform, so the files and their sha256 are the same everywhere
+    preds.to_csv(out / "predictions.csv", index=False, lineterminator="\n")
+    outs.to_csv(out / "outcomes.csv", index=False, lineterminator="\n")
     print(f"wrote {len(preds)} rows to {out}")
 
 

@@ -4,12 +4,25 @@ Everything here works on plain numpy arrays so it can be checked against
 scikit-learn in the tests without depending on it at runtime.
 """
 
+from collections.abc import Callable, Mapping
+
 import numpy as np
+from numpy.typing import ArrayLike
 
+# Forecasts are clipped to [LOG_LOSS_EPS, 1 - LOG_LOSS_EPS] before taking logs,
+# so a confident miss costs about 34.5 instead of infinity. Current
+# scikit-learn clips at machine epsilon (about 2.2e-16) instead, so the two
+# only differ for forecasts within 1e-15 of 0 or 1.
 LOG_LOSS_EPS = 1e-15
+MAX_BINS = 100
+
+UNDEFINED = "undefined on every resample"
+ZERO_WIDTH = "zero width: the lower and upper resample quantiles are equal"
+
+MetricFn = Callable[[np.ndarray, np.ndarray], float | None]
 
 
-def check_binary(y, p):
+def check_binary(y: ArrayLike, p: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
     y = np.asarray(y)
     p = np.asarray(p, dtype=float)
     if y.shape != p.shape or y.ndim != 1:
@@ -25,12 +38,25 @@ def check_binary(y, p):
     return y.astype(int), p
 
 
-def brier(y, p):
+def check_int(name: str, value: int, lo: int, hi: int | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+        raise TypeError(f"{name} must be an integer, got {value!r}")
+    if value < lo or (hi is not None and value > hi):
+        bounds = f"between {lo} and {hi}" if hi is not None else f"at least {lo}"
+        raise ValueError(f"{name} must be {bounds}, got {value}")
+    return int(value)
+
+
+def check_n_bins(n_bins: int) -> int:
+    return check_int("n_bins", n_bins, 1, MAX_BINS)
+
+
+def brier(y: ArrayLike, p: ArrayLike) -> float:
     y, p = check_binary(y, p)
     return float(np.mean((p - y) ** 2))
 
 
-def log_loss(y, p, eps=LOG_LOSS_EPS):
+def log_loss(y: ArrayLike, p: ArrayLike, eps: float = LOG_LOSS_EPS) -> float:
     y, p = check_binary(y, p)
     p = np.clip(p, eps, 1 - eps)
     return float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))
@@ -48,7 +74,7 @@ def _average_ranks(x):
     return ranks
 
 
-def roc_auc(y, p):
+def roc_auc(y: ArrayLike, p: ArrayLike) -> float | None:
     """Mann-Whitney form of ROC AUC. Returns None if only one class is present."""
     y, p = check_binary(y, p)
     n_pos = int(y.sum())
@@ -59,7 +85,7 @@ def roc_auc(y, p):
     return float((ranks[y == 1].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
-def average_precision(y, p):
+def average_precision(y: ArrayLike, p: ArrayLike) -> float | None:
     """Area under the precision-recall curve, step-wise (same definition as sklearn).
 
     Returns None if only one class is present, to match the AUC behaviour.
@@ -78,9 +104,13 @@ def average_precision(y, p):
     return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
 
 
-def bin_edges(p, n_bins, strategy):
+def bin_edges(p: ArrayLike | None, n_bins: int, strategy: str) -> np.ndarray:
+    n_bins = check_n_bins(n_bins)
     if strategy == "width":
-        return np.linspace(0.0, 1.0, n_bins + 1)
+        # k / n_bins is correctly rounded, so every edge is the same float as
+        # the decimal it stands for (0.3, not the 0.30000000000000004 that
+        # np.linspace gives) and a forecast of exactly 0.3 lands in [0.3, 0.4).
+        return np.arange(n_bins + 1) / n_bins
     if strategy == "mass":
         edges = np.quantile(p, np.linspace(0.0, 1.0, n_bins + 1))
         edges[0], edges[-1] = 0.0, 1.0
@@ -88,12 +118,14 @@ def bin_edges(p, n_bins, strategy):
     raise ValueError(f"unknown binning strategy: {strategy}")
 
 
-def assign_bins(p, edges):
+def assign_bins(p: ArrayLike, edges: np.ndarray) -> np.ndarray:
     # bins are [lo, hi) except the last one which also takes p == 1.0
     return np.clip(np.searchsorted(edges, p, side="right") - 1, 0, len(edges) - 2)
 
 
-def reliability_table(y, p, n_bins=10, strategy="width"):
+def reliability_table(
+    y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width"
+) -> list[dict]:
     """Per-bin counts, mean forecast and observed event rate.
 
     Empty bins are kept in the table with n=0 and null rates so the reader
@@ -117,10 +149,13 @@ def reliability_table(y, p, n_bins=10, strategy="width"):
                 "observed_rate": float(y[mask].mean()) if n else None,
             }
         )
+    # defensive: every row must land in exactly one bin
+    if sum(r["n"] for r in rows) != len(y):
+        raise RuntimeError("reliability bin counts do not add up to the number of rows")
     return rows
 
 
-def ece(y, p, n_bins=10, strategy="width"):
+def ece(y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width") -> float:
     """Expected calibration error: sum over bins of n_k/N * |observed_k - predicted_k|."""
     rows = reliability_table(y, p, n_bins, strategy)
     n = sum(r["n"] for r in rows)
@@ -129,13 +164,24 @@ def ece(y, p, n_bins=10, strategy="width"):
     )
 
 
-def murphy_decomposition(y, p, n_bins=10):
+def mce(y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width") -> float:
+    """Maximum calibration error: the largest |observed_k - predicted_k| over non-empty bins.
+
+    It is usually set by one of the smallest bins, so read it with that bin's count.
+    """
+    rows = reliability_table(y, p, n_bins, strategy)
+    return float(max(abs(r["observed_rate"] - r["mean_predicted"]) for r in rows if r["n"]))
+
+
+def murphy_decomposition(y: ArrayLike, p: ArrayLike, n_bins: int = 10) -> dict[str, float]:
     """Brier = reliability - resolution + uncertainty + within_bin.
 
     The classic Murphy (1973) identity is exact only when every forecast in a
     bin has the same value. With binned continuous forecasts there is an extra
-    term (within-bin variance minus within-bin covariance, see Stephenson et
-    al. 2008). We report it as `within_bin` so the parts always add up.
+    term (within-bin variance minus twice the within-bin covariance, see
+    Stephenson et al. 2008). It is reported as `within_bin`, computed as the
+    remainder so the parts always add up; the tests check it against the
+    direct formula.
     """
     y, p = check_binary(y, p)
     rows = reliability_table(y, p, n_bins, "width")
@@ -154,7 +200,35 @@ def murphy_decomposition(y, p, n_bins=10):
     }
 
 
-def check_multiclass(labels, probs, classes):
+def reliability_debiased(y: ArrayLike, p: ArrayLike, n_bins: int = 10) -> float:
+    """Murphy reliability with the sampling noise of each bin's observed rate taken out.
+
+    The plug-in reliability sum_k n_k/N (predicted_k - observed_k)^2 is the
+    squared calibration error, and binomial noise in observed_k pushes it up
+    even for a perfectly calibrated forecaster. Subtracting the unbiased
+    estimate of that noise, observed_k (1 - observed_k) / (n_k - 1), gives the
+    debiased estimator of Kumar, Liang and Ma (2019). It is unbiased when the
+    rows in a bin share one true event probability and slightly low otherwise,
+    so it can come out a little below 0 when the gap is within noise. A bin
+    with a single row has no variance estimate and keeps its plug-in term.
+    """
+    y, p = check_binary(y, p)
+    rows = reliability_table(y, p, n_bins, "width")
+    n = len(y)
+    total = 0.0
+    for r in rows:
+        if not r["n"]:
+            continue
+        term = (r["mean_predicted"] - r["observed_rate"]) ** 2
+        if r["n"] > 1:
+            term -= r["observed_rate"] * (1 - r["observed_rate"]) / (r["n"] - 1)
+        total += r["n"] / n * term
+    return float(total)
+
+
+def check_multiclass(
+    labels: ArrayLike, probs: ArrayLike, classes: list[str]
+) -> tuple[np.ndarray, np.ndarray]:
     labels = np.asarray(labels)
     probs = np.asarray(probs, dtype=float)
     if probs.ndim != 2 or probs.shape != (len(labels), len(classes)):
@@ -167,24 +241,28 @@ def check_multiclass(labels, probs, classes):
         raise ValueError("state probabilities must sum to 1 on every row")
     unknown = set(labels.tolist()) - set(classes)
     if unknown:
-        raise ValueError(f"observed states not in the predicted classes: {sorted(unknown)}")
+        raise ValueError(
+            f"observed states not in the predicted classes: {sorted(map(str, unknown))}"
+        )
     onehot = (labels[:, None] == np.asarray(classes)[None, :]).astype(float)
     return onehot, probs
 
 
-def multiclass_brier(labels, probs, classes):
+def multiclass_brier(labels: ArrayLike, probs: ArrayLike, classes: list[str]) -> float:
     """Sum over classes of squared error, averaged over rows. Range [0, 2]."""
     onehot, probs = check_multiclass(labels, probs, classes)
     return float(np.mean(np.sum((probs - onehot) ** 2, axis=1)))
 
 
-def multiclass_log_loss(labels, probs, classes, eps=LOG_LOSS_EPS):
+def multiclass_log_loss(
+    labels: ArrayLike, probs: ArrayLike, classes: list[str], eps: float = LOG_LOSS_EPS
+) -> float:
     onehot, probs = check_multiclass(labels, probs, classes)
     p_true = np.clip(np.sum(probs * onehot, axis=1), eps, 1.0)
     return float(-np.mean(np.log(p_true)))
 
 
-def percentile_ci(values, level=0.95):
+def percentile_ci(values: list[float | None], level: float = 0.95) -> list[float] | None:
     values = np.asarray([v for v in values if v is not None], dtype=float)
     if len(values) == 0:
         return None
@@ -193,9 +271,21 @@ def percentile_ci(values, level=0.95):
     return [float(lo), float(hi)]
 
 
-def bootstrap(y, p, metric_fns, n_boot=500, seed=0, level=0.95):
+def bootstrap(
+    y: ArrayLike,
+    p: ArrayLike,
+    metric_fns: Mapping[str, MetricFn],
+    n_boot: int = 500,
+    seed: int = 0,
+    level: float = 0.95,
+) -> dict[str, dict]:
     """Percentile bootstrap over rows. Resamples where a metric is undefined
-    (e.g. AUC on a single-class draw) are dropped and counted."""
+    (e.g. AUC on a single-class draw) are dropped and counted.
+
+    An interval of zero width (tiny or constant samples) carries no
+    information, so it is returned as None with a reason rather than as [x, x].
+    """
+    n_boot = check_int("n_boot", n_boot, 1)
     y, p = check_binary(y, p)
     rng = np.random.default_rng(seed)
     draws = {name: [] for name in metric_fns}
@@ -205,8 +295,15 @@ def bootstrap(y, p, metric_fns, n_boot=500, seed=0, level=0.95):
             draws[name].append(fn(y[i], p[i]))
     out = {}
     for name, vals in draws.items():
+        ci = percentile_ci(vals, level)
+        reason = None
+        if ci is None:
+            reason = UNDEFINED
+        elif ci[0] == ci[1]:
+            ci, reason = None, ZERO_WIDTH
         out[name] = {
-            "ci": percentile_ci(vals, level),
+            "ci": ci,
+            "ci_null_reason": reason,
             "undefined_draws": sum(v is None for v in vals),
         }
     return out
