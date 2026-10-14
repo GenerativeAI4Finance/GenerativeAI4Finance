@@ -1,0 +1,36 @@
+{
+  "case_id": "G4F-EDD-001",
+  "subject_type": "company",
+  "jurisdiction": "GB",
+  "review_date": "2026-10-12",
+  "risk_categories": [
+    "ownership_opacity"
+  ],
+  "source_records": [
+    {
+      "source_id": "SRC-001",
+      "source_type": "registry",
+      "description": "Fictional registry extract for Example Orchard Trading Ltd.",
+      "url": "https://example.org/fictional-registry-record",
+      "checked_date": "2026-10-12"
+    },
+    {
+      "source_id": "SRC-002",
+      "source_type": "internal_record",
+      "description": "Fictional internal onboarding summary.",
+      "checked_date": "2026-10-12"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "F-001",
+      "category": "ownership_opacity",
+      "summary": "The fictional case file does not clearly describe the ownership chain; further documentation is recommended.",
+      "severity": "low",
+      "disposition": "unresolved"
+    }
+  ],
+  "confidence": 0.78,
+  "analyst_notes": "Fictional training example only. Request a clearer ownership chart before closing the review.",
+  "review_status": "in_review"
+}
