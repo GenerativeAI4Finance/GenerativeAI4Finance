@@ -1,14 +1,14 @@
 """Write examples/audit_log.jsonl from a fictional review scenario.
 
-All names, ids and evidence references are made up. The redaction key below is
-a demo value only; a real key would live outside the repository.
+All names, ids and evidence references are made up. The key below is a demo
+value only; a real key would be random and live outside the repository.
 """
 
 from pathlib import Path
 
-from audit_trail import Actor, AuditLog
+from audit_trail import KEY_ENV, Actor, AuditLog
 
-DEMO_KEY = b"demo-key-not-for-real-use"
+DEMO_KEY = b"demo-key-not-for-real-use-edd010"
 OUT = Path(__file__).parent / "examples" / "audit_log.jsonl"
 
 TIMES = [
@@ -33,7 +33,7 @@ def build(path: Path) -> AuditLog:
         path.unlink()
     path.parent.mkdir(parents=True, exist_ok=True)
     times = iter(TIMES)
-    log = AuditLog(path, DEMO_KEY, clock=lambda: next(times))
+    log = AuditLog(path, DEMO_KEY, clock=lambda: next(times), create=True)
 
     analyst = Actor("analyst-07", "analyst")
     reviewer = Actor("reviewer-02", "reviewer")
@@ -112,4 +112,5 @@ def build(path: Path) -> AuditLog:
 if __name__ == "__main__":
     log = build(OUT)
     print(f"wrote {len(log.events)} events to {OUT}")
-    print(f"head hash: {log.head}")
+    print(f"head: {log.head}")
+    print(f"verify with {KEY_ENV}={DEMO_KEY.decode()} and --head {log.head}")
