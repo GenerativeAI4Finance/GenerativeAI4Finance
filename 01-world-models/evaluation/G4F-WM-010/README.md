@@ -54,7 +54,7 @@ What is checked before anything is scored (each failure stops the run with a
   or `1` and `"1"` for an entity count as duplicates
 - every prediction has exactly one outcome and the other way round
 - `p_event` and `p_state_*` are numeric and in [0, 1] (NaN and inf rejected);
-  `p_state_*` sums to 1 on every row; `event` is 0 or 1
+  `p_state_*` sums to 1 on every row; `event` is 0 or 1 (booleans rejected)
 - `next_state` is never missing and every value has a `p_state_` column
 - if there is a `default` state, `p_event` must equal `p_state_default` and
   `event` must equal `next_state == default`, so the binary and multi-state

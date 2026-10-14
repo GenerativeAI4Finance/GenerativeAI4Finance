@@ -204,3 +204,11 @@ def test_event_flag_must_be_zero_or_one():
     outs.loc[0, "event"] = 2
     with pytest.raises(ContractError, match="0 or 1"):
         join(preds, outs)
+
+
+@pytest.mark.parametrize("flags", [[False, True, True], [0, True, 1]])
+def test_boolean_event_rejected(flags):
+    preds, outs = frames()
+    outs["event"] = pd.Series(flags, dtype=object if 0 in flags else bool)
+    with pytest.raises(ContractError, match="not boolean"):
+        join(preds, outs)

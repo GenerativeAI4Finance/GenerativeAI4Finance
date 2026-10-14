@@ -8,6 +8,7 @@ import datetime as dt
 import re
 from os import PathLike
 
+import numpy as np
 import pandas as pd
 
 SCENARIOS = ("baseline", "normal", "stress")
@@ -118,6 +119,8 @@ def validate(predictions: pd.DataFrame, outcomes: pd.DataFrame) -> None:
     if ((p < 0) | (p > 1)).any():
         raise ContractError("p_event values must be in [0, 1]")
 
+    if outcomes["event"].map(lambda v: isinstance(v, (bool, np.bool_))).any():
+        raise ContractError("event must be 0 or 1, not boolean True/False")
     if not outcomes["event"].isin([0, 1]).all():
         raise ContractError("event must be 0 or 1")
 
