@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "g4f-edd-010/audit-event.schema.json",
+  "title": "EDD finding audit event",
+  "description": "One line of the append-only audit log. Sensitive finding fields are stored as keyed digests, never in clear text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seq",
+    "finding_id",
+    "event_type",
+    "actor_id",
+    "actor_role",
+    "timestamp",
+    "reason",
+    "refs",
+    "status_before",
+    "status_after",
+    "previous_event_seq",
+    "changes",
+    "prev_hash",
+    "hash"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "seq": { "type": "integer", "minimum": 1 },
+    "finding_id": { "type": "string", "minLength": 1 },
+    "event_type": {
+      "enum": ["created", "edited", "submitted", "approved", "rejected", "escalated", "closed"]
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pseudonymous id. Do not put names or emails here."
+    },
+    "actor_role": { "enum": ["analyst", "reviewer", "senior_reviewer"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "reason": { "type": ["string", "null"] },
+    "refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "References to related records, for example case:CASE-0042 or evidence:EV-101."
+    },
+    "status_before": {
+      "enum": [null, "draft", "under_review", "approved", "rejected", "escalated"]
+    },
+    "status_after": {
+      "enum": ["draft", "under_review", "approved", "rejected", "escalated", "closed"]
+    },
+    "previous_event_seq": {
+      "type": ["integer", "null"],
+      "description": "seq of the previous event for the same finding."
+    },
+    "changes": {
+      "type": "object",
+      "description": "Field-level diff. Only fields that actually changed are listed.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": { "from": {}, "to": {} }
+      }
+    },
+    "prev_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "$defs": {
+    "redacted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["redacted", "hmac_sha256"],
+      "properties": {
+        "redacted": { "const": true },
+        "hmac_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}
