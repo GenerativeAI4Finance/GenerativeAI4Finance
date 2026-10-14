@@ -1,0 +1,80 @@
+"""Write a small seeded synthetic example in the input contract format.
+
+Every number here is made up. The stress scenario raises the true default
+rate but the "predictor" does not see the shift, so it under-predicts there.
+That is the failure the report is meant to surface.
+
+    python make_synthetic.py --seed 7 --out examples
+"""
+
+import argparse
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+AS_OF = ["2025-01-31", "2025-07-31"]
+HORIZONS = [6, 12]
+# (entities, true logit shift, shift the predictor assumes)
+SCENARIOS = {
+    "baseline": (300, 0.0, 0.0),
+    "normal": (300, 0.3, 0.2),
+    "stress": (200, 1.3, 0.2),
+}
+
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def state_probs(x, horizon, shift):
+    """Probabilities of (current, delinquent, default) at the horizon."""
+    p_default = sigmoid(-3.2 + 0.9 * x + 0.05 * horizon + shift)
+    p_delinquent = (1 - p_default) * sigmoid(-2.0 + 0.6 * x + 0.5 * shift)
+    return 1 - p_default - p_delinquent, p_delinquent, p_default
+
+
+def generate(seed=7):
+    rng = np.random.default_rng(seed)
+    preds, outs = [], []
+    for scenario, (n_entities, true_shift, model_shift) in SCENARIOS.items():
+        for e in range(n_entities):
+            entity = f"SYN-{e:04d}"
+            for as_of in AS_OF:
+                for h in HORIZONS:
+                    x = rng.normal()
+                    true = state_probs(x, h, true_shift)
+                    # the predictor sees a noisy version of the risk score
+                    x_hat = x + rng.normal(scale=0.3)
+                    _, p_del, p_def = state_probs(x_hat, h, model_shift)
+                    p_del, p_def = round(float(p_del), 6), round(float(p_def), 6)
+                    state = rng.choice(["current", "delinquent", "default"], p=true)
+                    key = {"entity_id": entity, "as_of": as_of, "horizon": h, "scenario": scenario}
+                    preds.append(
+                        {
+                            **key,
+                            "p_event": p_def,
+                            "p_state_current": round(1 - p_del - p_def, 6),
+                            "p_state_delinquent": p_del,
+                            "p_state_default": p_def,
+                        }
+                    )
+                    outs.append({**key, "event": int(state == "default"), "next_state": state})
+    return pd.DataFrame(preds), pd.DataFrame(outs)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--out", default="examples")
+    args = ap.parse_args(argv)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    preds, outs = generate(args.seed)
+    preds.to_csv(out / "predictions.csv", index=False)
+    outs.to_csv(out / "outcomes.csv", index=False)
+    print(f"wrote {len(preds)} rows to {out}")
+
+
+if __name__ == "__main__":
+    main()
