@@ -80,9 +80,9 @@ in the manifest so it is visible how much data a policy throws away.
 `make_splits` raises `ValueError` instead of returning a result when the
 fractions (for the entity policies) are not three positive finite numbers
 summing to 1, when a cutoff and the timestamps disagree on
-timezone-awareness, when `valid_start >= test_start`, when `entity_id` or `timestamp` has missing
-values, when `(entity, timestamp)` is duplicated, or when train, valid or
-test would end up with no rows.
+timezone-awareness, when `valid_start >= test_start`, when `entity_id` or
+`timestamp` has missing values, when `(entity, timestamp)` is duplicated,
+or when train, valid or test would end up with no rows.
 
 The result is fully determined by the data, the policy, the cutoffs, the
 embargo, the fractions and the seed. Row order does not matter.
@@ -299,9 +299,13 @@ features), empty splits, bad labels and mismatched timezones.
   ones that only lift performance a bit, will pass. It is a smoke test, not
   proof of a clean dataset.
 - Near-duplicate detection assumes a copy keeps the same row order and at
-  most about 5% of rows missing. Heavier edits (noise above roughly 10% of a
-  standard deviation, resampled or reordered history, several rows removed)
-  are missed. Candidate pairs come from exact hashing and a 10-nearest
+  most about 5% of rows missing. The allowance is 5% of the longer history,
+  rounded down, and never less than one row, so a 36-row history tolerates
+  1 unmatched row: a copy with one row dropped is caught, one with 2 of 36
+  dropped is missed. It is not widened because that would raise false
+  positives. Heavier edits (noise above roughly 10% of a standard
+  deviation, resampled or reordered history, several rows removed) are
+  missed. Candidate pairs come from exact hashing and a 10-nearest
   neighbour search on a summary, so a copy whose summary is far from the
   original can be missed in a large panel. Entities with fewer than 5
   distinct rows are not compared.

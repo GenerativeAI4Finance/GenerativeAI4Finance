@@ -221,6 +221,23 @@ def test_clone_variants_found_under_time_entity(panel, variant):
     assert {source, clone_id} in found
 
 
+def test_missing_row_tolerance_boundary(panel):
+    """The allowance is 5% of the longer history (at least 1 row): with
+    fewer than 40 rows that is one row, so two dropped rows are missed."""
+    df, spec = panel
+    source = "E017"
+    df2, clone_id = with_clone(df, spec, source, "exact")
+    assert 20 <= (df2[spec.entity_col] == source).sum() < 40
+    clone_rows = df2.index[df2[spec.entity_col] == clone_id]
+    res = split(df2, spec, "time_entity")
+    for dropped, caught in ((1, True), (2, False)):
+        trimmed = df2.drop(clone_rows[[10, 20][:dropped]]).reset_index(drop=True)
+        labels = res.labels.drop(clone_rows[[10, 20][:dropped]]).reset_index(drop=True)
+        out = check_near_duplicates(trimmed, labels, spec)
+        found = [{e for e, _ in p["entities"]} for p in out.get("pairs", [])]
+        assert ({source, clone_id} in found) is caught
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_unrelated_entities_are_not_flagged(seed):
     df, spec = cached_panel(seed=seed)
