@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from conftest import TEST_START, VALID_START
 
-from splits import DROP, make_splits
+from splits import DROP, entity_bucket, make_splits
 
 
 def split(df, spec, policy, **kw):
@@ -60,7 +60,9 @@ def test_entity_split_keeps_entities_whole(panel):
     res = split(df, spec, "entity", fractions=(0.6, 0.2, 0.2))
     per_entity = res.labels.groupby(df[spec.entity_col]).nunique()
     assert (per_entity == 1).all()
-    assert res.manifest["entities"] == {"train": 36, "valid": 12, "test": 12}
+    # Entities are placed by hash, so the shares are close to the fractions
+    # but not exact.
+    assert res.manifest["entities"] == {"train": 37, "valid": 13, "test": 10}
 
 
 def test_manifest_records_what_is_needed_to_rerun(panel):
@@ -84,3 +86,124 @@ def test_bad_inputs_are_rejected(panel):
         split(df, spec, "entity", fractions=(0.5, 0.5, 0.5))
     with pytest.raises(ValueError, match="duplicate"):
         split(pd.concat([df, df.head(1)]), spec, "entity")
+
+
+def test_assignment_hash_is_fixed_for_a_fixed_input(panel):
+    df, spec = panel
+    m = split(df, spec, "time_entity", seed=0).manifest
+    # If this changes, the split policy changed and old splits cannot be
+    # reproduced. Update it only on purpose.
+    assert m["rows"] == {"train": 688, "valid": 63, "test": 72, "drop": 1337}
+    assert m["assignment_sha256"].startswith("3ed93b79")
+    assert 0 <= entity_bucket("E000", 0) < 1
+
+
+def test_entity_assignment_is_stable_when_other_entities_change(panel):
+    df, spec = panel
+    before = (
+        split(df, spec, "entity", seed=2).labels.groupby(df[spec.entity_col]).first()
+    )
+    removed = {"E003", "E010", "E044"}
+    extra = df[df[spec.entity_col] == "E001"].copy()
+    extra[spec.entity_col] = "NEW1"
+    changed = pd.concat(
+        [df[~df[spec.entity_col].isin(removed)], extra], ignore_index=True
+    )
+    res = split(changed, spec, "entity", seed=2)
+    after = res.labels.groupby(changed[spec.entity_col]).first()
+    kept = [e for e in before.index if e not in removed]
+    assert (after[kept] == before[kept]).all()
+
+
+def test_entity_split_with_too_few_entities_raises(panel):
+    df, spec = panel
+    two = df[df[spec.entity_col].isin(["E000", "E001"])]
+    with pytest.raises(ValueError, match="would be empty"):
+        split(two, spec, "entity")
+
+
+def test_time_split_with_cutoffs_past_the_data_raises(panel):
+    df, spec = panel
+    with pytest.raises(ValueError, match="would be empty"):
+        split(df, spec, "time", valid_start="2030-01-01", test_start="2031-01-01")
+
+
+@pytest.mark.parametrize(
+    "fractions",
+    [
+        (0.5, 0.5, 0.5),
+        (1.0, 0.0, 0.0),
+        (0.8, 0.2),
+        (-0.1, 0.6, 0.5),
+        (float("nan"), 0.5, 0.5),
+        "abc",
+        None,
+    ],
+)
+def test_bad_fractions_are_rejected(panel, fractions):
+    df, spec = panel
+    with pytest.raises(ValueError, match="fractions"):
+        split(df, spec, "entity", fractions=fractions)
+
+
+def test_boundary_rows_are_included_where_documented(panel):
+    df, spec = panel
+    res = split(df, spec, "time")
+    times = df[spec.time_col]
+    label_at = lambda ts: set(res.labels[times == pd.Timestamp(ts)])
+    # t == valid_start / test_start opens the later split.
+    assert label_at(VALID_START) == {"valid"}
+    assert label_at(TEST_START) == {"test"}
+    # t + horizon == valid_start is the last train row; the next month is dropped.
+    assert label_at("2022-04-01") == {"train"}
+    assert label_at("2022-05-01") == {DROP}
+    assert label_at("2023-01-01") == {"valid"}
+    assert label_at("2023-02-01") == {DROP}
+
+
+def test_embargo_counts_toward_the_boundary(panel):
+    df, spec = panel
+    res = split(df, spec, "time", embargo=pd.Timedelta(days=1))
+    times = df[spec.time_col]
+    # 2022-04-01 + 3 months + 1 day is past valid_start.
+    assert set(res.labels[times == pd.Timestamp("2022-04-01")]) == {DROP}
+
+
+def test_timezone_mismatch_is_rejected_and_aware_data_works(panel):
+    df, spec = panel
+    aware = df.copy()
+    aware[spec.time_col] = aware[spec.time_col].dt.tz_localize("UTC")
+    aware["dpd_observed_at"] = aware["dpd_observed_at"].dt.tz_localize("UTC")
+    with pytest.raises(ValueError, match="timezone"):
+        split(aware, spec, "time")
+    ok = split(
+        aware,
+        spec,
+        "time",
+        valid_start="2022-07-01T00:00:00+00:00",
+        test_start="2023-04-01T00:00:00+00:00",
+    )
+    naive = split(df, spec, "time")
+    assert ok.manifest["rows"] == naive.manifest["rows"]
+    # Same wall clock in another zone is a different instant, so a different hash.
+    assert ok.manifest["assignment_sha256"] != naive.manifest["assignment_sha256"]
+    with pytest.raises(ValueError, match="timezone"):
+        split(
+            df,
+            spec,
+            "time",
+            valid_start="2022-07-01T00:00:00+00:00",
+            test_start="2023-04-01T00:00:00+00:00",
+        )
+
+
+def test_missing_entity_ids_and_timestamps_are_rejected(panel):
+    df, spec = panel
+    no_id = df.copy()
+    no_id.loc[no_id.index[0], spec.entity_col] = None
+    with pytest.raises(ValueError, match="missing values"):
+        split(no_id, spec, "entity")
+    no_time = df.copy()
+    no_time.loc[no_time.index[0], spec.time_col] = pd.NaT
+    with pytest.raises(ValueError, match="NaT"):
+        split(no_time, spec, "time")

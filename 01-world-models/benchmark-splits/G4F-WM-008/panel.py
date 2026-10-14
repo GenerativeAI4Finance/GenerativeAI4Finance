@@ -29,8 +29,31 @@ class PanelSpec:
         missing = [c for c in needed if c not in df.columns]
         if missing:
             raise ValueError(f"missing columns: {missing}")
-        if not pd.api.types.is_datetime64_any_dtype(df[self.time_col]):
+        if df.empty:
+            raise ValueError("the panel has no rows")
+        times = df[self.time_col]
+        if not pd.api.types.is_datetime64_any_dtype(times):
             raise ValueError(f"{self.time_col} must be a datetime column")
+        if times.isna().any():
+            raise ValueError(
+                f"{self.time_col} has {int(times.isna().sum())} missing values (NaT)"
+            )
+        n_missing = int(df[self.entity_col].isna().sum())
+        if n_missing:
+            raise ValueError(f"{self.entity_col} has {n_missing} missing values")
+        if not pd.api.types.is_numeric_dtype(df[self.target_col]):
+            raise ValueError(
+                f"target {self.target_col} must be numeric (0/1 for a binary target)"
+            )
+        for col in self.observed_at.values():
+            seen = df[col]
+            if not pd.api.types.is_datetime64_any_dtype(seen):
+                raise ValueError(f"observed_at column {col} must be a datetime column")
+            if (seen.dt.tz is None) != (times.dt.tz is None):
+                raise ValueError(
+                    f"observed_at column {col} and {self.time_col} must both be "
+                    "timezone-aware or both naive"
+                )
         if df.duplicated([self.entity_col, self.time_col]).any():
             raise ValueError("duplicate (entity, timestamp) rows")
 

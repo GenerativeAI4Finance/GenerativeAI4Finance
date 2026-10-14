@@ -1,4 +1,6 @@
+import copy
 import sys
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -11,6 +13,17 @@ VALID_START = "2022-07-01"
 TEST_START = "2023-04-01"
 
 
+@cache
+def _panel(**kwargs):
+    return make_panel(**kwargs)
+
+
+def cached_panel(**kwargs):
+    """make_panel, built once per argument set. Callers get their own copy."""
+    df, spec = _panel(**kwargs)
+    return df.copy(), copy.deepcopy(spec)
+
+
 @pytest.fixture
 def panel():
-    return make_panel(seed=0)
+    return cached_panel(seed=0)

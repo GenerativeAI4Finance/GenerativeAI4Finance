@@ -3,19 +3,20 @@
 Policies:
   time         out-of-time split with a purge gap of horizon + embargo
                before each later split. Entities may appear in several splits.
-  entity       entities are shuffled with a seed and assigned whole to one
-               split. Time is ignored.
+  entity       each entity is assigned whole to one split by a seeded hash of
+               its id. Time is ignored.
   time_entity  both: a row is kept only if its time window and its entity
                group agree. Strictest option.
 
 Rows that fall in a purge gap (or in the wrong entity group) get the label
-"drop" and should not be used for training or scoring.
+"drop" and should not be used for training or scoring. A split that would
+end up with no rows is an error, not an empty result.
 """
 
 import hashlib
+import math
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 from panel import PanelSpec
@@ -41,32 +42,69 @@ def _time_labels(times, valid_start, test_start, horizon, embargo) -> pd.Series:
     return labels
 
 
+def _check_fractions(fractions) -> tuple[float, float, float]:
+    try:
+        values = tuple(float(f) for f in fractions)
+    except (TypeError, ValueError):
+        raise ValueError("fractions must be three numbers summing to 1") from None
+    if (
+        len(values) != 3
+        or not all(math.isfinite(f) and f > 0 for f in values)
+        or abs(sum(values) - 1) > 1e-9
+    ):
+        raise ValueError(
+            f"fractions must be three positive numbers summing to 1, got {fractions}"
+        )
+    return values
+
+
+def entity_bucket(entity, seed: int) -> float:
+    """Map an entity id to a number in [0, 1) using sha256 of "seed:id".
+
+    The value depends only on the seed and the id itself, so adding or
+    removing other entities never moves an entity to another split.
+    """
+    digest = hashlib.sha256(f"{seed}:{entity}".encode()).digest()
+    return int.from_bytes(digest[:8], "big") / 2**64
+
+
 def _entity_groups(entities: pd.Series, fractions, seed: int) -> dict:
-    uniq = np.array(sorted(entities.unique()))
-    order = np.random.default_rng(seed).permutation(len(uniq))
-    n_train = round(fractions[0] * len(uniq))
-    n_valid = round(fractions[1] * len(uniq))
+    train_cut = fractions[0]
+    valid_cut = fractions[0] + fractions[1]
     groups = {}
-    for rank, idx in enumerate(order):
-        if rank < n_train:
-            groups[uniq[idx]] = "train"
-        elif rank < n_train + n_valid:
-            groups[uniq[idx]] = "valid"
+    for entity in entities.unique():
+        u = entity_bucket(entity, seed)
+        if u < train_cut:
+            groups[entity] = "train"
+        elif u < valid_cut:
+            groups[entity] = "valid"
         else:
-            groups[uniq[idx]] = "test"
+            groups[entity] = "test"
     return groups
 
 
 def assignment_hash(df: pd.DataFrame, labels: pd.Series, spec: PanelSpec) -> str:
+    # %z keeps the UTC offset, so the same wall clock in two time zones
+    # (different instants) gives a different hash. Naive data has no offset.
     keyed = pd.DataFrame(
         {
             "e": df[spec.entity_col].astype(str),
-            "t": df[spec.time_col].dt.strftime("%Y-%m-%dT%H:%M:%S"),
+            "t": df[spec.time_col].dt.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             "s": labels.astype(str),
         }
     ).sort_values(["e", "t"])
     payload = "\n".join(keyed["e"] + "|" + keyed["t"] + "|" + keyed["s"])
     return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _cutoff(value, name: str, times: pd.Series) -> pd.Timestamp:
+    ts = pd.Timestamp(value)
+    if (ts.tz is None) != (times.dt.tz is None):
+        raise ValueError(
+            f"{name} ({ts}) and the timestamps ({times.dtype}) must both be "
+            "timezone-aware or both naive"
+        )
+    return ts
 
 
 def make_splits(
@@ -92,15 +130,16 @@ def make_splits(
     if uses_time:
         if valid_start is None or test_start is None:
             raise ValueError(f"policy {policy!r} needs valid_start and test_start")
-        valid_start, test_start = pd.Timestamp(valid_start), pd.Timestamp(test_start)
+        times = df[spec.time_col]
+        valid_start = _cutoff(valid_start, "valid_start", times)
+        test_start = _cutoff(test_start, "test_start", times)
         if valid_start >= test_start:
             raise ValueError("valid_start must be before test_start")
         time_labels = _time_labels(
-            df[spec.time_col], valid_start, test_start, spec.horizon, embargo
+            times, valid_start, test_start, spec.horizon, embargo
         )
     if uses_entity:
-        if len(fractions) != 3 or abs(sum(fractions) - 1) > 1e-9:
-            raise ValueError("fractions must be three numbers summing to 1")
+        fractions = _check_fractions(fractions)
         groups = _entity_groups(df[spec.entity_col], fractions, seed)
         entity_labels = df[spec.entity_col].map(groups)
 
@@ -111,6 +150,18 @@ def make_splits(
     else:
         labels = time_labels.where(time_labels == entity_labels, DROP)
     labels = labels.rename("split")
+
+    rows = {s: int((labels == s).sum()) for s in (*SPLITS, DROP)}
+    empty = [s for s in SPLITS if rows[s] == 0]
+    if empty:
+        detail = f"rows per split: {rows}"
+        if uses_entity:
+            per_group = {s: list(groups.values()).count(s) for s in SPLITS}
+            detail += f"; entities per group: {per_group}"
+        raise ValueError(
+            f"split(s) {empty} would be empty ({detail}). Use more entities, "
+            "other fractions or seed, or move the cutoffs."
+        )
 
     kept = labels != DROP
     manifest = {
@@ -123,7 +174,7 @@ def make_splits(
         "embargo": str(embargo) if uses_time else None,
         "entity_disjoint": uses_entity,
         "time_ordered": uses_time,
-        "rows": {s: int((labels == s).sum()) for s in (*SPLITS, DROP)},
+        "rows": rows,
         "entities": {
             s: int(df.loc[labels == s, spec.entity_col].nunique()) for s in SPLITS
         },
