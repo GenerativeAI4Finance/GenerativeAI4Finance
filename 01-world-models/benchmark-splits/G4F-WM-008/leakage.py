@@ -12,7 +12,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from panel import PanelSpec
+from panel import PanelSpec, horizon_ends
 from splits import DROP, SPLITS
 
 
@@ -297,7 +297,7 @@ def check_near_duplicates(
 
 def check_time_order(df, labels, spec: PanelSpec) -> dict:
     times = df[spec.time_col]
-    window_ends = times + spec.horizon
+    window_ends = horizon_ends(times, spec.horizon)
     bounds = {
         s: (times[labels == s].min(), window_ends[labels == s].max())
         for s in SPLITS
@@ -531,7 +531,7 @@ def check_target_leakage(
     # Separate Series avoid overwriting input features or schema columns
     # with temporary _kept, _y or _window_end metadata.
     by_entity = y.groupby(data[spec.entity_col], sort=False)
-    window_ends = (data[spec.time_col] + spec.horizon).groupby(
+    window_ends = horizon_ends(data[spec.time_col], spec.horizon).groupby(
         data[spec.entity_col], sort=False
     )
     unseen, seen = {}, {}

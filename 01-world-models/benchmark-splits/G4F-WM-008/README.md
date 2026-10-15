@@ -311,7 +311,8 @@ under all three policies.
 
 ## Tests
 
-210 tests run with `python -m pytest` on Python 3.12. Regression cases also
+259 tests pass with `python -m pytest` and `python -m pytest -W error` on
+Python 3.12 with the pinned dependencies, with zero warnings. Regression cases also
 cover invalid and overflowing horizons, embargoes and cutoffs; nanosecond
 hash differences for naive and timezone-aware data; delimiter and entity
 type hash collisions; arbitrary helper names as feature and schema columns;
@@ -321,6 +322,15 @@ even when gaps on opposite sides cancel their displacement.
 Time-order tests inspect every actual outcome-window end, including a valid
 absolute-year offset whose window ends are not in prediction-time order,
 and retain a relative-calendar-offset control.
+
+`tests/test_panel.py` covers the shared horizon arithmetic used by validation,
+splits and leakage checks. Supported offsets retain pandas' vectorized behavior,
+including calendar hours across daylight saving transitions; replacement and
+other nonvectorized offsets use explicit Timestamp arithmetic without warning
+suppression. Tests cover nanoseconds, finer output resolution, timezone and
+index preservation, normalization, business offsets, and still-unseen lagged
+targets. The capability probe mirrors a private pandas 3.0.6 method and must be
+rechecked when upgrading the pinned pandas dependency.
 
 `tests/test_splits.py` covers reproducibility (same seed, shuffled row
 order, different seed), a fixed assignment hash, stable entity assignment

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from panel import PanelSpec
+from panel import PanelSpec, horizon_ends
 
 SPLITS = ("train", "valid", "test")
 DROP = "drop"
@@ -37,7 +37,7 @@ def _time_labels(times, valid_start, test_start, horizon, embargo) -> pd.Series:
     labels = pd.Series(DROP, index=times.index, dtype=object)
     # A row's outcome window (plus embargo) must close before the next split starts.
     try:
-        window_end = times + horizon + embargo
+        window_end = horizon_ends(times, horizon) + embargo
     except (ValueError, TypeError, OverflowError) as exc:
         raise ValueError("horizon plus embargo must be finite on every row") from exc
     if window_end.isna().any():

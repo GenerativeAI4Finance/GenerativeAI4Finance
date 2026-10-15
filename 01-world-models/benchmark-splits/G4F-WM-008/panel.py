@@ -10,6 +10,28 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 
+def horizon_ends(times: pd.Series, horizon: pd.DateOffset | pd.Timedelta) -> pd.Series:
+    """Apply an outcome horizon without pandas' implicit scalar fallback."""
+    if isinstance(horizon, pd.DateOffset):
+        try:
+            # Pinned pandas 3.0.6 uses this private capability check before
+            # falling back to scalar arithmetic with a PerformanceWarning.
+            # Recheck the dispatch when upgrading pandas. An empty probe keeps
+            # supported offsets on the native vectorized path, including DST.
+            horizon._apply_array(
+                pd.DatetimeIndex([], dtype="datetime64[ns]").to_numpy()
+            )
+        except NotImplementedError:
+            # Keep Timestamp arithmetic: converting to Python datetime would
+            # lose nanoseconds. Let pandas infer any finer output resolution.
+            return pd.Series(
+                [timestamp + horizon for timestamp in times],
+                index=times.index,
+                name=times.name,
+            )
+    return times + horizon
+
+
 @dataclass
 class PanelSpec:
     feature_cols: list[str]
@@ -41,7 +63,7 @@ class PanelSpec:
         valid_horizon = isinstance(self.horizon, (pd.DateOffset, pd.Timedelta))
         if valid_horizon:
             try:
-                ends = times + self.horizon
+                ends = horizon_ends(times, self.horizon)
                 valid_horizon = bool(ends.notna().all() and (ends > times).all())
             except (ValueError, TypeError, OverflowError):
                 valid_horizon = False
