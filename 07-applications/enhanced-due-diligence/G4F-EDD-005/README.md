@@ -23,6 +23,17 @@ python -m entity_resolution data/synthetic_companies.json
 python -m pytest
 ```
 
+The task's GitHub Actions workflow runs the tests and Ruff checks on Python 3.12
+on Linux and Windows when this folder or its workflow changes. To run the same
+checks locally from this folder:
+
+```
+python -m pip install -r requirements.txt ruff==0.17.0
+python -m pytest
+python -m ruff check .
+python -m ruff format --check .
+```
+
 Useful flags: `--hide-no-match` to drop low scores, `--json` for machine-readable output, `--config my_config.json` to override thresholds or weights. Bad input (a missing name, an unknown field, a misspelt config key) stops the run with an `error:` line and exit code 2 instead of a traceback. Files are read as UTF-8, and the CLI writes UTF-8 whatever the console code page is.
 
 Sample output of `python -m entity_resolution data/synthetic_companies.json --hide-no-match`:
