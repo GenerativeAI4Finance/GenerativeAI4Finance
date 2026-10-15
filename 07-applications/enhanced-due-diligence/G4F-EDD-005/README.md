@@ -159,7 +159,7 @@ Names in different scripts are compared only against variants in the same script
 
 Cross-script pairs are kept in `needs review` unless a same-scheme ID conflict vetoes them. Matching-ID pairs score at least `needs_review`, with a possible-rename note when name similarity is low. An unverified ID difference does not force a review label; the remaining evidence determines whether the pair is `no match` or `needs review`.
 
-Labels use the score before display rounding. Scores normally display one decimal place; extra precision is retained when rounding would cross a label threshold or violate a configured cap or floor.
+Name similarity and normalization coverage keep full precision for scoring and threshold checks, including in the structured evidence. Readable name-similarity notes round to one decimal place. Labels use the total score before display rounding. Total scores normally display one decimal place; extra precision is retained when rounding would cross a label threshold or violate a configured cap or floor.
 
 **5. Review decisions.** A `MatchResult` is immutable and always reports its status as `unconfirmed`. The matcher never confirms anything. `record_decision(result, reviewer, accepted, note)` returns a separate record with `confirmed` or `rejected`, the reviewer's name (blank names are rejected) and the score and label the reviewer was shown. It does not change the result; storing the decision is up to the caller.
 

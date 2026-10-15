@@ -230,7 +230,8 @@ def test_same_name_different_jurisdiction_is_no_match(results):
 
 def test_shared_first_word_only_is_no_match(results):
     r = results[("REG-006", "VEN-007")]
-    assert r.score == 41.9
+    assert r.evidence["name"]["score"] == pytest.approx(48.97959183673469)
+    assert r.score == 41.8
     assert r.label == NO_MATCH
 
 
@@ -370,6 +371,60 @@ def test_cross_script_review_floor_and_ceiling_survive_rounding():
 
     assert config.needs_review <= result.score < config.likely_match
     assert result.label == NEEDS_REVIEW
+
+
+@pytest.mark.parametrize(
+    ("other_name", "registration_id", "thresholds", "expected_label"),
+    [
+        ("Kestrel Papers", "SYN-1", {"likely_match": 97.594}, NEEDS_REVIEW),
+        ("Kestrel Print", "SYN-1", {"likely_match": 84.99}, LIKELY_MATCH),
+        ("Kestrel Papers", None, {"needs_review": 72.594}, NO_MATCH),
+        ("Kestrel Print", None, {"needs_review": 59.99}, NEEDS_REVIEW),
+    ],
+)
+def test_name_similarity_keeps_full_precision_through_resolution(
+    other_name, registration_id, thresholds, expected_label, tmp_path, capsys
+):
+    records = [
+        Record(
+            "A", "Kestrel Paper", registration_id=registration_id, jurisdiction="GB"
+        ),
+        Record("B", other_name, registration_id=registration_id, jurisdiction="GB"),
+    ]
+    config = MatchConfig(**thresholds)
+
+    (result,) = resolve(records, config).matches
+
+    assert result.label == expected_label
+    assert resolve_module._label(result.score, config) == expected_label
+    assert record_decision(result, "analyst", True)["score"] == result.score
+    path = tmp_path / "records.json"
+    write_records(path, [dataclasses.asdict(record) for record in records])
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps(thresholds), encoding="utf-8")
+    assert main([str(path), "--config", str(config_path), "--json"]) == 0
+    (shown,) = json.loads(capsys.readouterr().out)["matches"]
+    assert (shown["score"], shown["label"]) == (result.score, expected_label)
+
+
+@pytest.mark.parametrize(
+    ("stars", "min_coverage", "expected_label"),
+    [(5, 0.4442, LIKELY_MATCH), (7, 0.3638, NEEDS_REVIEW)],
+)
+def test_name_coverage_keeps_full_precision_through_resolution(
+    stars, min_coverage, expected_label
+):
+    a, b = pair(
+        "Acme" + "\u2605" * stars,
+        "Acme" + "\u2605" * stars,
+        registration_id="SYN-1",
+        jurisdiction="GB",
+    )
+
+    (result,) = resolve([a, b], MatchConfig(min_name_coverage=min_coverage)).matches
+
+    assert result.evidence["name"]["coverage"] == 4 / (4 + stars)
+    assert result.label == expected_label
 
 
 def test_a_lowered_likely_match_still_needs_an_id():

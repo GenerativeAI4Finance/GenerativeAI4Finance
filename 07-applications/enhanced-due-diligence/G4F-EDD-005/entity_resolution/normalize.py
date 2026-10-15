@@ -216,7 +216,7 @@ def normalize_name(name: str) -> NormalizedName:
     core = " ".join(tokens)
     scripts = frozenset(_script(c) for c in core if unicodedata.category(c)[0] == "L")
     total = kept + lost
-    coverage = round(kept / total, 3) if total else 0.0
+    coverage = kept / total if total else 0.0
     return NormalizedName(
         raw=name, core=core, legal_form=legal_form, scripts=scripts, coverage=coverage
     )

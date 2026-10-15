@@ -434,13 +434,13 @@ def generate_candidates(
     token_blocks: dict[str, list[int]] = {}
     for i, record in enumerate(records):
         if record._id_key:
-            key = (record._jurisdiction_key or "", record._id_key)
-            schemes = id_blocks.setdefault(key, {})
+            id_key = (record._jurisdiction_key or "", record._id_key)
+            schemes = id_blocks.setdefault(id_key, {})
             schemes.setdefault(record._scheme_key, []).append(i)
         for token in record._blocking_tokens:
             token_blocks.setdefault(token, []).append(i)
 
-    pairs = set()
+    pairs: set[tuple[int, int]] = set()
     skipped = []
     for (jurisdiction, reg_id), schemes in id_blocks.items():
         for scheme, members in schemes.items():
@@ -502,16 +502,15 @@ def _best_name_score(left: Record, right: Record) -> dict:
     by character similarity, so those pairs are skipped. If every combination
     is cross-script the result has no score and is flagged for human review.
     """
-    best = None
+    best: dict | None = None
     for lv in left._variants:
         for rv in right._variants:
             if lv.norm.non_latin_scripts != rv.norm.non_latin_scripts:
                 continue
             score = fuzz.token_sort_ratio(lv.norm.core, rv.norm.core)
-            if best is None or score > best["_raw"]:
+            if best is None or score > best["score"]:
                 best = {
-                    "_raw": score,
-                    "score": round(score, 1),
+                    "score": score,
                     "left": lv.text,
                     "right": rv.text,
                     "left_normalized": lv.norm.core,
@@ -521,7 +520,6 @@ def _best_name_score(left: Record, right: Record) -> dict:
                     "coverage": min(lv.norm.coverage, rv.norm.coverage),
                 }
     if best is not None:
-        del best["_raw"]
         return best
     lv, rv = left._variants[0], right._variants[0]
     return {
@@ -591,7 +589,7 @@ def score_pair(
     else:
         score = name["score"] * config.name_weight
         notes.append(
-            f"name similarity {name['score']} ({name['left_normalized']!r} vs {name['right_normalized']!r})"
+            f"name similarity {round(name['score'], 1)} ({name['left_normalized']!r} vs {name['right_normalized']!r})"
         )
         if name["alias_used"]:
             notes.append(
@@ -675,7 +673,7 @@ def score_pair(
             name_score = name["score"]
             if name_score is not None and name_score < config.needs_review:
                 notes.append(
-                    f"registration ID matches but the names differ (similarity {name_score}); "
+                    f"registration ID matches but the names differ (similarity {round(name_score, 1)}); "
                     "this may be a renamed company, or a wrong ID, so it needs review"
                 )
             score = max(score, config.needs_review)
