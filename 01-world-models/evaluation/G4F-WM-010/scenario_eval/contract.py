@@ -7,8 +7,9 @@ row should stop the run, not quietly drop out of the metrics.
 import datetime as dt
 import re
 from decimal import Decimal, InvalidOperation
+from io import StringIO
 from os import PathLike
-from typing import BinaryIO
+from typing import BinaryIO, TextIO
 
 import numpy as np
 import pandas as pd
@@ -195,15 +196,36 @@ def _check_event_matches_state(p_event, p_state, outcomes):
 
 
 def load(
-    predictions_path: str | PathLike | BinaryIO, outcomes_path: str | PathLike | BinaryIO
+    predictions_path: str | PathLike | BinaryIO | TextIO,
+    outcomes_path: str | PathLike | BinaryIO | TextIO,
 ) -> pd.DataFrame:
     # Keep raw horizon text so CSV inference cannot round large integers via float64.
     text = {"entity_id": str, "as_of": str, "horizon": str, "from_state": str, "next_state": str}
-    # Only empty fields are missing. Labels such as "NA", "NULL" and "nan"
-    # are legitimate entity/state names, not pandas' default missing tokens.
-    predictions = pd.read_csv(predictions_path, dtype=text, keep_default_na=False, na_values=[""])
-    outcomes = pd.read_csv(outcomes_path, dtype=text, keep_default_na=False, na_values=[""])
+    predictions = _read_csv(predictions_path, "predictions", text)
+    outcomes = _read_csv(outcomes_path, "outcomes", text)
     return join(predictions, outcomes)
+
+
+def _read_csv(source, name, text):
+    # read_csv's handle adapter (under the pinned pandas version) preserves
+    # existing path/stream decoding and inferred compression. Freeze its text
+    # so header validation and data parsing cannot observe different inputs.
+    with pd.io.common.get_handle(
+        source, "r", encoding="utf-8", compression="infer", is_text=True
+    ) as h:
+        snapshot = StringIO(h.handle.read())
+    # header=None exposes original names before pandas silently renames
+    # duplicates. Reuse its CSV parser for quoted names, BOMs and blank lines.
+    header = pd.read_csv(snapshot, header=None, nrows=1, dtype=str, keep_default_na=False).iloc[0]
+    duplicates = sorted(set(header[header.duplicated()].tolist()))
+    if duplicates:
+        raise ContractError(f"{name} has duplicate CSV column names: {duplicates}")
+    snapshot.seek(0)
+    # Only empty fields are missing; NA/NULL/nan remain valid string labels.
+    # Round-trip parsing keeps forecasts exactly on k/n_bins in their bin.
+    return pd.read_csv(
+        snapshot, dtype=text, keep_default_na=False, na_values=[""], float_precision="round_trip"
+    )
 
 
 def join(predictions: pd.DataFrame, outcomes: pd.DataFrame) -> pd.DataFrame:

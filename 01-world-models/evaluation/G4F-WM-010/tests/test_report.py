@@ -174,6 +174,51 @@ def test_cli_hashes_the_bytes_it_scores_when_inputs_are_replaced(tmp_path, monke
     assert all(original_hashes[p.name]["sha256"] != cli.sha256(p) for p in (pred_path, out_path))
 
 
+def test_cli_preserves_six_bin_boundary_calibration(tmp_path):
+    key = {"entity_id": ["a", "b"], "as_of": "2025-01-31", "horizon": 6, "scenario": "baseline"}
+    preds = pd.DataFrame({**key, "p_event": [1 / 6, 0.1]})
+    outs = pd.DataFrame({**key, "event": [1, 0]})
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    output = tmp_path / "report"
+    cli.main(
+        [
+            "--predictions",
+            str(pred_path),
+            "--outcomes",
+            str(out_path),
+            "--out",
+            str(output),
+            "--n-bins",
+            "6",
+            "--n-boot",
+            "1",
+        ]
+    )
+    binary = json.loads(output.with_suffix(".json").read_text())["scenarios"]["baseline"]["binary"]
+    assert binary["ece_equal_width"] == pytest.approx(7 / 15)
+    assert [r["n"] for r in binary["reliability_equal_width"]] == [1, 1, 0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("which,column", [("predictions", "p_event"), ("outcomes", "event")])
+def test_cli_rejects_duplicate_csv_headers_without_writing(tmp_path, which, column):
+    key = {"entity_id": ["a"], "as_of": "2025-01-31", "horizon": 6, "scenario": "baseline"}
+    preds = pd.DataFrame({**key, "p_event": [0.2]})
+    outs = pd.DataFrame({**key, "event": [0]})
+    frame = preds if which == "predictions" else outs
+    frame.insert(len(frame.columns), column, "conflicting", allow_duplicates=True)
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    output = tmp_path / "result" / "report"
+    with pytest.raises(ContractError, match="duplicate CSV"):
+        cli.main(
+            ["--predictions", str(pred_path), "--outcomes", str(out_path), "--out", str(output)]
+        )
+    assert not output.parent.exists()
+
+
 def state_frame(n=240, seed=5, with_from=True):
     rng = np.random.default_rng(seed)
     states = ["current", "late", "default"]

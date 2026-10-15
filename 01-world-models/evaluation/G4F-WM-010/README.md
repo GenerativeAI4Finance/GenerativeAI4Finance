@@ -42,7 +42,7 @@ What is checked before anything is scored (each failure stops the run with a
 - required columns are present; prediction columns (`p_event`, `p_state_*`,
   `from_state`) are not in the outcomes file, outcome columns (`event`,
   `next_state`) are not in the predictions file, and no column other than the
-  key is in both
+  key is in both; duplicate CSV column names are rejected before parsing data
 - no missing values in the key; `scenario` is one of the three labels. In CSVs,
   empty fields are missing, while literal entity/state labels such as `NA`,
   `NULL` and `nan` stay strings
@@ -129,7 +129,9 @@ reason, never 0 or 0.5. A scenario with no rows is reported as `null`.
 Equal-width edges are `k / n_bins`, computed so that each edge is the same
 float as the decimal it stands for (0.3, not 0.30000000000000004). Bins are
 `[lo, hi)`, except the last, which also takes 1.0. A forecast of exactly 0.3
-therefore lands in `[0.3, 0.4)`. scikit-learn's `calibration_curve` uses
+therefore lands in `[0.3, 0.4)`. CSV probabilities use round-trip float parsing,
+so values such as `1/6` keep the same float and bin assignment as in-memory
+forecasts. scikit-learn's `calibration_curve` uses
 `(lo, hi]` bins with `np.linspace` edges, so a forecast that sits exactly on
 an edge can land in a different bin. Everywhere else the two agree: the tests
 compare the reliability tables on continuous forecasts for both the equal-width

@@ -1,3 +1,6 @@
+import csv
+from io import BytesIO, StringIO
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -300,3 +303,126 @@ def test_csv_still_rejects_empty_entity_and_state_labels(tmp_path, column):
     outs.to_csv(out_path, index=False)
     with pytest.raises(ContractError, match="missing"):
         load(pred_path, out_path)
+
+
+@pytest.mark.parametrize("n_bins", [6, 7, 49, 100])
+def test_csv_round_trips_event_and_state_probabilities_at_bin_edges(tmp_path, n_bins):
+    probabilities = np.arange(n_bins + 1) / n_bins
+    key = {
+        "entity_id": [f"edge-{i}" for i in range(len(probabilities))],
+        "as_of": "2025-01-31",
+        "horizon": 6,
+        "scenario": "baseline",
+    }
+    preds = pd.DataFrame(
+        {
+            **key,
+            "p_event": probabilities,
+            "p_state_current": 1 - probabilities,
+            "p_state_default": probabilities,
+        }
+    )
+    event = np.arange(len(probabilities)) % 2
+    outs = pd.DataFrame(
+        {**key, "event": event, "next_state": np.where(event, "default", "current")}
+    )
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    pd.testing.assert_frame_equal(load(pred_path, out_path), join(preds, outs), check_exact=True)
+
+
+@pytest.mark.parametrize(
+    "which,column",
+    [
+        ("predictions", "p_event"),
+        ("predictions", "entity_id"),
+        ("predictions", "p_state_default"),
+        ("outcomes", "event"),
+        ("outcomes", "horizon"),
+        ("outcomes", "next_state"),
+    ],
+)
+@pytest.mark.parametrize("quoted_bom", [False, True])
+def test_csv_rejects_duplicate_original_headers(tmp_path, which, column, quoted_bom):
+    preds, outs = with_states()
+    frame = preds if which == "predictions" else outs
+    frame.insert(len(frame.columns), column, "conflicting", allow_duplicates=True)
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    options = {
+        "index": False,
+        "encoding": "utf-8-sig" if quoted_bom else "utf-8",
+        "quoting": csv.QUOTE_ALL if quoted_bom else csv.QUOTE_MINIMAL,
+    }
+    preds.to_csv(pred_path, **options)
+    outs.to_csv(out_path, **options)
+    with pytest.raises(ContractError, match=f"{which}.*duplicate CSV.*{column}"):
+        load(pred_path, out_path)
+
+
+@pytest.mark.parametrize("kind", ["path", "gzip", "binary", "text"])
+def test_csv_header_validation_preserves_quotes_bom_blank_lines_and_streams(tmp_path, kind):
+    preds, outs = frames()
+    preds['source, "kind"\nline'] = ["NA", "NULL", "nan"]
+    pred_text = "\ufeff\n \t\n" + preds.to_csv(
+        index=False, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
+    out_text = "\ufeff\n \t\n" + outs.to_csv(
+        index=False, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
+    if kind == "binary":
+        sources = [BytesIO(t.encode()) for t in (pred_text, out_text)]
+    elif kind == "text":
+        sources = [StringIO(t) for t in (pred_text, out_text)]
+    else:
+        import gzip
+
+        sources = [tmp_path / f"{name}.csv{'.gz' if kind == 'gzip' else ''}" for name in ("p", "o")]
+        for path, text in zip(sources, (pred_text, out_text)):
+            path.write_bytes(gzip.compress(text.encode()) if kind == "gzip" else text.encode())
+    pd.testing.assert_frame_equal(load(*sources), join(preds, outs))
+
+
+@pytest.mark.parametrize(
+    "contents,error",
+    [
+        (b"", pd.errors.EmptyDataError),
+        (b"\xef\xbb\xbf\n \t\n", pd.errors.EmptyDataError),
+        (b"\xff", UnicodeDecodeError),
+    ],
+)
+def test_csv_header_validation_preserves_empty_and_encoding_errors(contents, error):
+    _, outs = frames()
+    with pytest.raises(error):
+        load(BytesIO(contents), StringIO(outs.to_csv(index=False)))
+
+
+def test_csv_header_and_data_use_one_snapshot_when_file_is_replaced(tmp_path, monkeypatch):
+    preds, outs = frames()
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    original_read_csv = pd.read_csv
+    replaced = False
+
+    def replace_after_header(*args, **kwargs):
+        nonlocal replaced
+        frame = original_read_csv(*args, **kwargs)
+        if kwargs.get("header", "infer") is None and not replaced:
+            preds.assign(p_event=0.9).to_csv(pred_path, index=False)
+            replaced = True
+        return frame
+
+    monkeypatch.setattr(pd, "read_csv", replace_after_header)
+    pd.testing.assert_frame_equal(load(pred_path, out_path), join(preds, outs), check_exact=True)
+    assert replaced
+
+
+def test_csv_rejects_duplicate_quoted_names_with_delimiters_and_newlines():
+    preds, outs = frames()
+    column = 'source, "kind"\nline'
+    preds[column] = "original"
+    preds.insert(len(preds.columns), column, "conflicting", allow_duplicates=True)
+    with pytest.raises(ContractError, match="duplicate CSV") as exc:
+        load(StringIO(preds.to_csv(index=False)), StringIO(outs.to_csv(index=False)))
+    assert repr(column) in str(exc.value)
