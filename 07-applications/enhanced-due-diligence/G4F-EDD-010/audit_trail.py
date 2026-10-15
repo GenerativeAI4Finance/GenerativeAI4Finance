@@ -18,6 +18,7 @@ import errno
 import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import sys
@@ -255,6 +256,13 @@ def _no_constant(name):
     raise _Refused(f"{name} is not allowed")
 
 
+def _finite_float(text):
+    value = float(text)
+    if not math.isfinite(value):
+        raise _Refused("non-finite numbers are not allowed")
+    return value
+
+
 def parse_lines(data: bytes, first_line: int = 1):
     """Yield (line number, event, size in bytes) for each line of a log.
 
@@ -270,6 +278,7 @@ def parse_lines(data: bytes, first_line: int = 1):
                 data[pos:nl].decode("utf-8"),
                 object_pairs_hook=_no_duplicates,
                 parse_constant=_no_constant,
+                parse_float=_finite_float,
             )
         except _Refused as exc:
             raise IntegrityError(f"line {n}: {exc}") from None
@@ -520,6 +529,11 @@ def verify_events(events, key, expected_head=None) -> Head:
     return _head_of(events)
 
 
+def _single_link(path, stat):
+    if stat.st_nlink > 1:
+        raise AuditError(f"{path} has hard links; writers require a single-link log")
+
+
 @contextmanager
 def exclusive_lock(path, timeout: float = 10.0):
     """Hold an exclusive lock on ``<path>.lock`` while the block runs.
@@ -528,7 +542,13 @@ def exclusive_lock(path, timeout: float = 10.0):
     system drops the lock when the holder exits, so a crashed writer does not
     leave a stale lock behind. The empty .lock file itself stays.
     """
-    path = Path(path)
+    # Symlinks use the target's sidecar. Hard-link aliases have no canonical
+    # pathname, so refuse them instead of selecting independent locks.
+    path = Path(path).resolve()
+    try:
+        _single_link(path, path.stat())
+    except FileNotFoundError:
+        pass  # A new log will be created while this lock is held.
     lock_path = path.with_name(path.name + ".lock")
     fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
     try:
@@ -538,6 +558,10 @@ def exclusive_lock(path, timeout: float = 10.0):
                 raise AuditError(f"timed out waiting for {lock_path}")
             time.sleep(0.01)
         try:
+            try:
+                _single_link(path, path.stat())
+            except FileNotFoundError:
+                pass
             yield
         finally:
             _unlock(fd)
@@ -606,13 +630,14 @@ class AuditLog:
         expected_head=None,
         lock_timeout: float = 10.0,
     ):
-        self.path = Path(path)
+        self.path = Path(path).resolve()
         self._keys = _as_keys(key)
         self.clock = clock
         self.lock_timeout = lock_timeout
         self._events: list[dict] = []
         self._states: dict = {}
         self._size = 0
+        self._prefix_hash = hashlib.sha256()
         # Check the path before exclusive_lock creates <path>.lock next to it.
         if self.path.is_dir():
             raise AuditError(f"{self.path} is a directory, not a log file")
@@ -660,24 +685,35 @@ class AuditLog:
         return exclusive_lock(self.path, self.lock_timeout)
 
     def _refresh(self) -> None:
-        # Called with the lock held. Reads only what was added since last time.
+        # Called with the lock held. Check the bytes already read before using
+        # cached state, even if an edit preserved their length or valid HMACs.
         try:
             with self.path.open("rb") as fh:
-                if os.fstat(fh.fileno()).st_size < self._size:
+                stat = os.fstat(fh.fileno())
+                _single_link(self.path, stat)
+                if stat.st_size < self._size:
                     raise IntegrityError(
                         f"{self.path} is shorter than when it was last read"
                         " (truncated?)"
                     )
-                fh.seek(self._size)
+                prefix = fh.read(self._size)
+                if hashlib.sha256(prefix).digest() != self._prefix_hash.digest():
+                    raise IntegrityError(
+                        f"{self.path}: previously read prefix has changed"
+                    )
                 data = fh.read()
         except FileNotFoundError:
             raise IntegrityError(f"{self.path} no longer exists") from None
-        for line, event, size in parse_lines(data, len(self._events) + 1):
-            prev = self._events[-1] if self._events else None
-            fid, new = _checked(event, self._states, prev, self._keys, line)
-            self._states[fid] = new
-            self._events.append(event)
-            self._size += size
+        events, states = self._events.copy(), self._states.copy()
+        for line, event, _ in parse_lines(data, len(events) + 1):
+            prev = events[-1] if events else None
+            fid, new = _checked(event, states, prev, self._keys, line)
+            states[fid] = new
+            events.append(event)
+        # A malformed suffix must not partially advance the cached state.
+        self._events, self._states = events, states
+        self._size += len(data)
+        self._prefix_hash.update(data)
 
     def _stored(self, finding_id, field, value):
         if value is None or field not in SENSITIVE_FIELDS:
@@ -726,10 +762,12 @@ class AuditLog:
 
             data = (json.dumps(event, sort_keys=True, allow_nan=False) + "\n").encode()
             with self.path.open("ab") as fh:
+                _single_link(self.path, os.fstat(fh.fileno()))
                 fh.write(data)
                 fh.flush()
                 os.fsync(fh.fileno())
             self._size += len(data)
+            self._prefix_hash.update(data)
             self._events.append(event)
             self._states[fid] = new_state
         return copy.deepcopy(event)

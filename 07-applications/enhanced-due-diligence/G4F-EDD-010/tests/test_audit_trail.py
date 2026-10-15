@@ -565,6 +565,50 @@ def test_writer_notices_log_shortened_under_it(log):
         log.approve("F-1", REVIEWER, reason="ok")
 
 
+@pytest.mark.parametrize("operation", ["refresh", "append"])
+@pytest.mark.parametrize("suffix", [False, True])
+@pytest.mark.parametrize("resigned", [False, True])
+def test_writer_refuses_changed_prefix(log, operation, suffix, resigned):
+    new_finding(log)
+    original_size = log.path.stat().st_size
+    if suffix:
+        other = AuditLog(log.path, KEY, clock=ticking_clock())
+        new_finding(other, "F-2")
+    events = read_events(log.path)
+    events[0]["changes"]["title"]["to"] = "Registry GAP"
+    if resigned:
+        resign(events, KEY)
+        verify_events(events, KEY)  # Even a valid rewrite changes known history.
+    write_lines(log.path, events)
+    assert len(log.path.read_bytes().splitlines(keepends=True)[0]) == original_size
+    changed = log.path.read_bytes()
+    before = log.events
+    with pytest.raises(IntegrityError, match="previously read prefix has changed"):
+        if operation == "refresh":
+            log.refresh()
+        else:
+            log.submit("F-1", ANALYST)
+    assert log.path.read_bytes() == changed
+    assert log.events == before
+
+
+def test_failed_refresh_does_not_cache_a_partial_suffix(log):
+    new_finding(log)
+    before = log.events
+    other = AuditLog(log.path, KEY, clock=ticking_clock())
+    new_finding(other, "F-2")
+    valid = log.path.read_bytes()
+    with log.path.open("ab") as fh:
+        fh.write(b'{"incomplete":')
+    with pytest.raises(IntegrityError, match="line 3 is incomplete"):
+        log.refresh()
+    assert log.events == before
+    assert log.state("F-2") is None
+    log.path.write_bytes(valid)
+    log.refresh()
+    assert log.head == other.head
+
+
 # copies in and out
 
 
@@ -672,6 +716,74 @@ def test_append_waits_for_the_lock(log):
     new_finding(log)
 
 
+def test_hard_link_aliases_are_refused(log):
+    new_finding(log)
+    alias = log.path.with_name("alias.jsonl")
+    os.link(log.path, alias)
+    before = log.path.read_bytes()
+    for path in (log.path, alias):
+        with pytest.raises(AuditError, match="has hard links"):
+            AuditLog(path, KEY)
+    assert not alias.with_suffix(".jsonl.lock").exists()
+    assert log.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("operation", ["refresh", "append"])
+def test_writer_refuses_hard_link_added_after_open(log, operation):
+    new_finding(log)
+    os.link(log.path, log.path.with_name("alias.jsonl"))
+    before = log.path.read_bytes()
+    with pytest.raises(AuditError, match="has hard links"):
+        if operation == "refresh":
+            log.refresh()
+        else:
+            log.submit("F-1", ANALYST)
+    assert log.path.read_bytes() == before
+
+
+def test_concurrent_hard_link_writers_are_refused(log):
+    new_finding(log)
+    alias = log.path.with_name("alias.jsonl")
+    os.link(log.path, alias)
+    before = log.path.read_bytes()
+    child = """
+import sys
+sys.path.insert(0, sys.argv[1])
+from audit_trail import AuditError, AuditLog
+try:
+    AuditLog(sys.argv[2], sys.argv[3].encode())
+except AuditError as exc:
+    assert "has hard links" in str(exc)
+else:
+    raise AssertionError("hard-linked writer was accepted")
+"""
+    procs = [
+        subprocess.Popen(
+            [sys.executable, "-B", "-c", child, str(HERE), str(path), KEY.decode()]
+        )
+        for path in (log.path, alias, log.path, alias)
+    ]
+    assert [p.wait(timeout=120) for p in procs] == [0, 0, 0, 0]
+    assert log.path.read_bytes() == before
+    alias.unlink()
+    assert AuditLog(log.path, KEY).head == log.head
+
+
+def test_symlink_alias_uses_target_lock(log):
+    alias = log.path.with_name("alias.jsonl")
+    try:
+        alias.symlink_to(log.path)
+    except OSError as exc:
+        pytest.skip(f"symlink creation is unavailable: {exc}")
+    writer = AuditLog(alias, KEY, lock_timeout=0.05)
+    with exclusive_lock(log.path), pytest.raises(AuditError, match="timed out"):
+        new_finding(writer)
+    assert not alias.with_suffix(".jsonl.lock").exists()
+    new_finding(writer)
+    log.refresh()
+    assert log.head == writer.head
+
+
 @pytest.mark.parametrize("create", [True, False])
 def test_directory_path_is_refused_without_a_lock_file(tmp_path, create):
     path = tmp_path / "logdir"
@@ -724,6 +836,8 @@ def test_writer_does_not_append_after_a_torn_line(log):
         (b"[1, 2]\n", "not a JSON object"),
         (b"5\n", "not a JSON object"),
         (b'{"seq": NaN}\n', "NaN is not allowed"),
+        (b'{"seq": 1e400}\n', "non-finite numbers are not allowed"),
+        (b'{"changes": {"title": {"to": [-1e400]}}}\n', "non-finite numbers"),
     ],
 )
 def test_bad_lines_are_refused(example, line, message):
@@ -744,6 +858,25 @@ def test_duplicate_keys_are_refused(example, cli_key, capsys):
         read_events(example.path)
     assert main(["verify", str(example.path)]) == 1
     assert "duplicate key" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("number", ["1e400", "-1e400"])
+@pytest.mark.parametrize("command", ["verify", "state"])
+def test_non_finite_float_is_an_integrity_failure(
+    example, cli_key, capsys, number, command
+):
+    # Use an otherwise complete event so verification would reach HMAC encoding.
+    data = example.path.read_bytes().replace(
+        b'"to": "medium"', f'"to": {number}'.encode(), 1
+    )
+    example.path.write_bytes(data)
+    with pytest.raises(IntegrityError, match="line 1: non-finite numbers"):
+        AuditLog(example.path, DEMO_KEY)
+    args = [command, str(example.path)]
+    if command == "state":
+        args.append("F-001")
+    assert main(args) == 1
+    assert "FAILED: line 1: non-finite numbers" in capsys.readouterr().out
 
 
 # keys and redaction

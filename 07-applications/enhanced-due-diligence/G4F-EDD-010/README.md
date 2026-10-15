@@ -173,10 +173,16 @@ exit with 1.
 ## Several writers and interrupted writes
 
 Each append takes an exclusive lock on a `<log>.lock` file next to the log
-(`fcntl.flock` on Linux and macOS, `msvcrt.locking` on Windows), reads anything
-other writers have appended since, checks the new event against that, writes
-it and calls `fsync` before returning. So several `AuditLog` objects, in one
-process or in several, can append to the same file without forking the chain.
+(`fcntl.flock` on Linux and macOS, `msvcrt.locking` on Windows), checks that
+the previously read bytes are unchanged, reads anything other writers have
+appended since, checks the new event against that, writes it and calls `fsync`
+before returning. Several `AuditLog` objects, in one process or in several,
+can append to the same file without forking the chain when they share this
+lock. Symlink paths resolve to the target before choosing the lock. Writers
+refuse files with multiple hard links, including links added after opening,
+because hard-link aliases could otherwise choose different sidecar locks.
+Checking the existing prefix reads it again on each refresh or append, so
+the read cost grows with the log size.
 The operating system drops the lock when a writer exits or dies, so there is no
 stale lock to clean up; the empty `.lock` file stays. Waiting for the lock
 gives up after `lock_timeout` seconds (10 by default) with an `AuditError`.
@@ -223,7 +229,9 @@ it meets any regulation or standard.
 
 - The lock only coordinates writers that go through `AuditLog`, and it relies
   on file locks working on the storage, which some network file systems do not
-  guarantee.
+  guarantee. Keep the log path and its lock file stable: replacing either file
+  or adding aliases while a write is in progress is outside this coordination
+  model. Writers require a filesystem that reports hard-link counts.
 - The hash chain shows tampering but does not prevent it, and verifying needs
   the same secret as writing. Public-key signatures would separate the two but
   need a library outside the standard library.
