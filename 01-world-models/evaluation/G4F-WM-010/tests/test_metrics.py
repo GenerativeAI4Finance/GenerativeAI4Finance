@@ -138,6 +138,14 @@ def test_equal_width_edges_are_the_decimal_values():
     assert edges.tolist() == [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 
+@pytest.mark.parametrize("container", [list, tuple])
+def test_equal_mass_edges_accept_array_like_probabilities(container):
+    p = container([0.1, 0.1, 0.3, 0.7, 0.9])
+    expected = np.quantile(p, np.linspace(0.0, 1.0, 5))
+    expected[0], expected[-1] = 0.0, 1.0
+    assert np.array_equal(m.bin_edges(p, 4, "mass"), expected)
+
+
 @pytest.mark.parametrize("n_bins", [1, 2, 3, 4, 5, 7, 10, 20, 49, 100])
 def test_grid_values_land_in_the_bin_they_open(n_bins):
     # k / n_bins opens bin k, and 1.0 stays in the last bin

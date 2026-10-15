@@ -177,6 +177,29 @@ Options: `--seed` (default 0), `--n-boot` (default 500), `--n-bins` (default 10,
 1 to 100), `--pooled`. `--out` is a path without extension; a trailing `.json`
 or `.md` is dropped and any other dot is kept.
 
+### Development checks
+
+From this directory, install the pinned development tools in the same virtual
+environment as the runtime dependencies, then run:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m mypy
+python -m pytest
+python -m ruff check .
+python -m ruff format --check .
+python -m ruff check --select S evaluate.py make_synthetic.py scenario_eval
+python -m pip check
+```
+
+The local mypy configuration checks all six runtime sources, including bodies
+of functions without annotations, using the pinned pandas stubs. The CSV
+loader's private pandas handle adapter has a narrow protocol for its tested
+text-reading interface because pandas-stubs covers the public API.
+
+The task's GitHub Actions workflow runs pytest, Ruff and mypy on Python 3.12
+for Linux and Windows when this folder or its workflow changes.
+
 ## Report format
 
 `evaluate.py` writes `<out>.json` and `<out>.md`. The JSON has:

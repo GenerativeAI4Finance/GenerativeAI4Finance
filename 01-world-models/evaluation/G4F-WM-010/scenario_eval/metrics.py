@@ -5,9 +5,10 @@ scikit-learn in the tests without depending on it at runtime.
 """
 
 from collections.abc import Callable, Mapping
+from typing import TypedDict, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 # Forecasts are clipped to [LOG_LOSS_EPS, 1 - LOG_LOSS_EPS] before taking logs,
 # so a confident miss costs about 34.5 instead of infinity. Current
@@ -19,10 +20,21 @@ MAX_BINS = 100
 UNDEFINED = "undefined on every resample"
 ZERO_WIDTH = "zero width: the lower and upper resample quantiles are equal"
 
-MetricFn = Callable[[np.ndarray, np.ndarray], float | None]
+FloatArray = NDArray[np.float64]
+IntArray = NDArray[np.int_]
+MetricFn = Callable[[IntArray, FloatArray], float | None]
 
 
-def check_binary(y: ArrayLike, p: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
+class ReliabilityBin(TypedDict):
+    bin: int
+    lower: float
+    upper: float
+    n: int
+    mean_predicted: float | None
+    observed_rate: float | None
+
+
+def check_binary(y: ArrayLike, p: ArrayLike) -> tuple[IntArray, FloatArray]:
     y = np.asarray(y)
     if np.iscomplexobj(y):
         raise ValueError("binary outcomes must be real values 0 or 1")
@@ -108,7 +120,7 @@ def average_precision(y: ArrayLike, p: ArrayLike) -> float | None:
     return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
 
 
-def bin_edges(p: ArrayLike | None, n_bins: int, strategy: str) -> np.ndarray:
+def bin_edges(p: ArrayLike | None, n_bins: int, strategy: str) -> FloatArray:
     n_bins = check_n_bins(n_bins)
     if strategy == "width":
         # k / n_bins is correctly rounded, so every edge is the same float as
@@ -116,7 +128,7 @@ def bin_edges(p: ArrayLike | None, n_bins: int, strategy: str) -> np.ndarray:
         # np.linspace gives) and a forecast of exactly 0.3 lands in [0.3, 0.4).
         return np.arange(n_bins + 1) / n_bins
     if strategy == "mass":
-        edges = np.quantile(p, np.linspace(0.0, 1.0, n_bins + 1))
+        edges = np.quantile(np.asarray(p), np.linspace(0.0, 1.0, n_bins + 1))
         edges[0], edges[-1] = 0.0, 1.0
         return edges
     raise ValueError(f"unknown binning strategy: {strategy}")
@@ -129,7 +141,7 @@ def assign_bins(p: ArrayLike, edges: np.ndarray) -> np.ndarray:
 
 def reliability_table(
     y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width"
-) -> list[dict]:
+) -> list[ReliabilityBin]:
     """Per-bin counts, mean forecast and observed event rate.
 
     Empty bins are kept in the table with n=0 and null rates so the reader
@@ -139,7 +151,7 @@ def reliability_table(
     y, p = check_binary(y, p)
     edges = bin_edges(p, n_bins, strategy)
     idx = assign_bins(p, edges)
-    rows = []
+    rows: list[ReliabilityBin] = []
     for k in range(len(edges) - 1):
         mask = idx == k
         n = int(mask.sum())
@@ -164,7 +176,12 @@ def ece(y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width") -
     rows = reliability_table(y, p, n_bins, strategy)
     n = sum(r["n"] for r in rows)
     return float(
-        sum(r["n"] / n * abs(r["observed_rate"] - r["mean_predicted"]) for r in rows if r["n"])
+        # Nonempty bins always have both rates; empty bins retain None in the report.
+        sum(
+            r["n"] / n * abs(cast(float, r["observed_rate"]) - cast(float, r["mean_predicted"]))
+            for r in rows
+            if r["n"]
+        )
     )
 
 
@@ -174,7 +191,13 @@ def mce(y: ArrayLike, p: ArrayLike, n_bins: int = 10, strategy: str = "width") -
     It is usually set by one of the smallest bins, so read it with that bin's count.
     """
     rows = reliability_table(y, p, n_bins, strategy)
-    return float(max(abs(r["observed_rate"] - r["mean_predicted"]) for r in rows if r["n"]))
+    return float(
+        max(
+            abs(cast(float, r["observed_rate"]) - cast(float, r["mean_predicted"]))
+            for r in rows
+            if r["n"]
+        )
+    )
 
 
 def murphy_decomposition(y: ArrayLike, p: ArrayLike, n_bins: int = 10) -> dict[str, float]:
@@ -191,8 +214,14 @@ def murphy_decomposition(y: ArrayLike, p: ArrayLike, n_bins: int = 10) -> dict[s
     rows = reliability_table(y, p, n_bins, "width")
     n = len(y)
     base_rate = y.mean()
-    rel = sum(r["n"] / n * (r["mean_predicted"] - r["observed_rate"]) ** 2 for r in rows if r["n"])
-    res = sum(r["n"] / n * (r["observed_rate"] - base_rate) ** 2 for r in rows if r["n"])
+    rel = sum(
+        r["n"] / n * (cast(float, r["mean_predicted"]) - cast(float, r["observed_rate"])) ** 2
+        for r in rows
+        if r["n"]
+    )
+    res = sum(
+        r["n"] / n * (cast(float, r["observed_rate"]) - base_rate) ** 2 for r in rows if r["n"]
+    )
     unc = base_rate * (1 - base_rate)
     bs = float(np.mean((p - y) ** 2))
     return {
@@ -223,9 +252,11 @@ def reliability_debiased(y: ArrayLike, p: ArrayLike, n_bins: int = 10) -> float:
     for r in rows:
         if not r["n"]:
             continue
-        term = (r["mean_predicted"] - r["observed_rate"]) ** 2
+        predicted = cast(float, r["mean_predicted"])
+        observed = cast(float, r["observed_rate"])
+        term = (predicted - observed) ** 2
         if r["n"] > 1:
-            term -= r["observed_rate"] * (1 - r["observed_rate"]) / (r["n"] - 1)
+            term -= observed * (1 - observed) / (r["n"] - 1)
         total += r["n"] / n * term
     return float(total)
 
@@ -269,11 +300,11 @@ def multiclass_log_loss(
 
 
 def percentile_ci(values: list[float | None], level: float = 0.95) -> list[float] | None:
-    values = np.asarray([v for v in values if v is not None], dtype=float)
-    if len(values) == 0:
+    defined_values = np.asarray([v for v in values if v is not None], dtype=float)
+    if len(defined_values) == 0:
         return None
     alpha = (1 - level) / 2
-    lo, hi = np.quantile(values, [alpha, 1 - alpha])
+    lo, hi = np.quantile(defined_values, [alpha, 1 - alpha])
     return [float(lo), float(hi)]
 
 
@@ -294,7 +325,7 @@ def bootstrap(
     n_boot = check_int("n_boot", n_boot, 1)
     y, p = check_binary(y, p)
     rng = np.random.default_rng(seed)
-    draws = {name: [] for name in metric_fns}
+    draws: dict[str, list[float | None]] = {name: [] for name in metric_fns}
     for _ in range(n_boot):
         i = rng.integers(0, len(y), len(y))
         for name, fn in metric_fns.items():

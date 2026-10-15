@@ -6,10 +6,11 @@ row should stop the run, not quietly drop out of the metrics.
 
 import datetime as dt
 import re
+from contextlib import AbstractContextManager
 from decimal import Decimal, InvalidOperation
 from io import StringIO
 from os import PathLike
-from typing import BinaryIO, TextIO
+from typing import BinaryIO, Literal, Protocol, TextIO, cast
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,28 @@ OUTCOME_COLUMNS = ("event", "next_state")
 EVENT_STATE = "default"
 TOLERANCE = 1e-6
 MAX_HORIZON = 2**63 - 1
+
+CSVSource = str | PathLike[str] | PathLike[bytes] | BinaryIO | TextIO
+
+
+class _TextHandles(Protocol):
+    handle: TextIO
+
+
+class _HandleAdapter(Protocol):
+    def get_handle(
+        self,
+        source: CSVSource,
+        mode: Literal["r"],
+        *,
+        encoding: str,
+        compression: Literal["infer"],
+        is_text: Literal[True],
+    ) -> AbstractContextManager[_TextHandles]: ...
+
+
+class _PandasIO(Protocol):
+    common: _HandleAdapter
 
 
 class ContractError(ValueError):
@@ -196,8 +219,8 @@ def _check_event_matches_state(p_event, p_state, outcomes):
 
 
 def load(
-    predictions_path: str | PathLike | BinaryIO | TextIO,
-    outcomes_path: str | PathLike | BinaryIO | TextIO,
+    predictions_path: CSVSource,
+    outcomes_path: CSVSource,
 ) -> pd.DataFrame:
     # Keep raw horizon text so CSV inference cannot round large integers via float64.
     text = {"entity_id": str, "as_of": str, "horizon": str, "from_state": str, "next_state": str}
@@ -206,11 +229,13 @@ def load(
     return join(predictions, outcomes)
 
 
-def _read_csv(source, name, text):
+def _read_csv(source: CSVSource, name: str, text: dict[str, type[str]]) -> pd.DataFrame:
     # read_csv's handle adapter (under the pinned pandas version) preserves
     # existing path/stream decoding and inferred compression. Freeze its text
     # so header validation and data parsing cannot observe different inputs.
-    with pd.io.common.get_handle(
+    # pandas-stubs covers the public API; this private adapter is described by
+    # the narrow text-reading protocol exercised by our CSV compatibility tests.
+    with cast(_PandasIO, pd.io).common.get_handle(
         source, "r", encoding="utf-8", compression="infer", is_text=True
     ) as h:
         snapshot = StringIO(h.handle.read())

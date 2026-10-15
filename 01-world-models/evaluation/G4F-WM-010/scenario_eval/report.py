@@ -203,7 +203,7 @@ def evaluate(
     seed = m.check_int("seed", seed, 0)
     n_boot = m.check_int("n_boot", n_boot, 1)
     n_bins = m.check_n_bins(n_bins)
-    scenarios = {}
+    scenarios: dict[str, dict[str, object] | None] = {}
     for i, name in enumerate(SCENARIOS):
         part = df[df["scenario"] == name]
         if len(part) == 0:
