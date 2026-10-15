@@ -65,6 +65,11 @@ Rules:
 - Edits are only allowed in `draft` or `rejected`. Closed is final.
 - An edit that changes nothing is refused.
 
+Field comparisons use canonical JSON, so changes such as `true` to `1` or
+`1` to `1.0` are recorded, including inside lists and objects. Object key
+order alone does not count as a change. Values with object keys that collide
+when converted to JSON are refused rather than silently losing a value.
+
 A refused action raises `AuditError` and writes nothing. Data passed in is
 copied, and `events`, returned events and `state()` hand out copies, so
 changing them in the caller cannot alter the log or the rules applied to it.

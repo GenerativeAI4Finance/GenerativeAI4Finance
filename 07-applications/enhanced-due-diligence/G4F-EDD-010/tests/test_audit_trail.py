@@ -831,6 +831,8 @@ def test_writer_does_not_append_after_a_torn_line(log):
     "line, message",
     [
         (b"{not json\n", "not valid JSON"),
+        (b'{"title": "\xff"}\n', "not valid JSON"),
+        (b'{"changes": {"title": {"to": 1, "to": 2}}}\n', "duplicate key 'to'"),
         (b"\n", "not valid JSON"),
         (b"null\n", "not a JSON object"),
         (b"[1, 2]\n", "not a JSON object"),
@@ -1136,3 +1138,140 @@ def test_cli_reports_rule_violations(example, cli_key, capsys):
     write_lines(example.path, events)
     assert main(["state", str(example.path), "F-002"]) == 1
     assert "FAILED: line 13: role 'reviewer' cannot" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [(True, 1), (False, 0), (1, 1.0), ([True], [1]), ({"x": False}, {"x": 0})],
+)
+def test_edits_preserve_json_type_changes(log, before, after):
+    log.create("F-1", ANALYST, {"confidence": before})
+    event = log.edit("F-1", ANALYST, {"confidence": after}, "Correct value type")
+    change = event["changes"]["confidence"]
+    assert json.dumps(change["from"]) == json.dumps(before)
+    assert json.dumps(change["to"]) == json.dumps(after)
+    reopened = AuditLog(log.path, KEY)
+    assert json.dumps(reopened.state("F-1")["fields"]["confidence"]) == json.dumps(
+        after
+    )
+    assert json.dumps(
+        log.state("F-1", upto_seq=1)["fields"]["confidence"]
+    ) == json.dumps(before)
+
+
+@pytest.mark.parametrize(
+    "before, forged",
+    [(True, 1), (False, 0), (1, 1.0), ([True], [1]), ({"x": False}, {"x": 0})],
+)
+def test_replay_refuses_from_value_with_wrong_json_type(log, before, forged):
+    log.create("F-1", ANALYST, {"confidence": before})
+    log.edit("F-1", ANALYST, {"confidence": "high"}, "Correct confidence")
+    events = log.events
+    events[1]["changes"]["confidence"]["from"] = forged
+    resign(events, KEY, start=1)
+    write_lines(log.path, events)
+    with pytest.raises(IntegrityError, match="line 2: confidence: 'from'"):
+        AuditLog(log.path, KEY)
+
+
+def test_reordered_object_fields_are_still_a_noop(log):
+    log.create("F-1", ANALYST, {"confidence": {"a": 1, "b": 2}})
+    before = log.path.read_bytes()
+    with pytest.raises(AuditError, match="does not change anything"):
+        log.edit("F-1", ANALYST, {"confidence": {"b": 2, "a": 1}}, "Reorder")
+    assert log.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("command", ["verify", "state"])
+@pytest.mark.parametrize("bad_hash", ["\ud800", "é" * 64, "0" * 63])
+def test_malformed_hash_is_an_integrity_failure(
+    example, cli_key, capsys, command, bad_hash
+):
+    events = example.events
+    events[0]["hash"] = bad_hash
+    write_lines(example.path, events)
+    with pytest.raises(IntegrityError, match="line 1: content does not match its hash"):
+        AuditLog(example.path, DEMO_KEY)
+    args = [command, str(example.path)]
+    if command == "state":
+        args.append("F-001")
+    assert main(args) == 1
+    assert "FAILED: line 1: content does not match its hash" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "timestamp", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-01:00"]
+)
+def test_clock_outside_utc_range_is_refused_without_writing(log, timestamp):
+    log.clock = lambda: timestamp
+    with pytest.raises(
+        AuditError, match="timestamp is outside the supported UTC range"
+    ):
+        new_finding(log)
+    assert log.path.read_bytes() == b""
+    assert log.events == []
+
+
+@pytest.mark.parametrize("command", ["verify", "state"])
+@pytest.mark.parametrize(
+    "timestamp", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-01:00"]
+)
+def test_stored_timestamp_outside_utc_range_fails_integrity(
+    example, cli_key, capsys, command, timestamp
+):
+    events = example.events
+    events[0]["timestamp"] = timestamp
+    write_lines(example.path, resign(events, DEMO_KEY))
+    with pytest.raises(IntegrityError, match="line 1: timestamp is outside"):
+        AuditLog(example.path, DEMO_KEY)
+    args = [command, str(example.path)]
+    if command == "state":
+        args.append("F-001")
+    assert main(args) == 1
+    assert "FAILED: line 1: timestamp is outside" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("seq", [-1, True, 1.0, "1", None])
+def test_typed_checkpoint_requires_non_negative_integer_seq(example, seq):
+    # Negative indexing used to accept the penultimate event as a checkpoint.
+    checkpoint = Head(seq, example.events[-2]["hash"])
+    with pytest.raises(AuditError, match="non-negative integer SEQ"):
+        verify_events(example.events, DEMO_KEY, checkpoint)
+
+
+@pytest.mark.parametrize("digest", [None, 1, "\ud800", "0" * 63])
+def test_typed_checkpoint_requires_hash(example, digest):
+    with pytest.raises(AuditError, match="SHA256 hash"):
+        AuditLog(example.path, DEMO_KEY, expected_head=Head(1, digest))
+
+
+def test_oversized_checkpoint_seq_is_a_cli_argument_error(example, cli_key, capsys):
+    previous_limit = sys.get_int_max_str_digits()
+    try:
+        limit = sys.int_info.default_max_str_digits
+        sys.set_int_max_str_digits(limit)
+        text = "9" * (limit + 1) + ":" + GENESIS_HASH
+        with pytest.raises(AuditError, match="SEQ is too large"):
+            Head.parse(text)
+        assert main(["verify", str(example.path), "--head", text]) == 2
+        assert "head SEQ is too large" in capsys.readouterr().err
+    finally:
+        sys.set_int_max_str_digits(previous_limit)
+
+
+def test_colliding_nested_json_keys_are_refused_without_writing(log):
+    with pytest.raises(AuditError, match="plain JSON data"):
+        log.create("F-1", ANALYST, {"summary": {1: "first", "1": "second"}})
+    assert log.path.read_bytes() == b""
+
+
+@pytest.mark.parametrize("reason", [object(), float("nan"), float("inf")])
+def test_unserializable_reason_is_refused_without_writing(log, reason):
+    with pytest.raises(AuditError, match="plain JSON data"):
+        log.create("F-1", ANALYST, {}, reason=reason)
+    assert log.path.read_bytes() == b""
+
+
+def test_unhashable_actor_role_is_refused():
+    with pytest.raises(AuditError, match="unknown role"):
+        Actor("analyst-1", [])

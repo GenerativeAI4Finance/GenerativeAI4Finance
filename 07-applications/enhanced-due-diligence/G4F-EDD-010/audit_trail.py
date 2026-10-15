@@ -140,7 +140,7 @@ class Actor:
                 " digits, '.', '_' or '-'), not a name or email"
             )
         object.__setattr__(self, "id", norm)
-        if self.role not in ROLES:
+        if not isinstance(self.role, str) or self.role not in ROLES:
             raise AuditError(f"unknown role: {self.role}")
 
 
@@ -186,13 +186,26 @@ class Head(NamedTuple):
         m = isinstance(text, str) and re.fullmatch(r"([0-9]+):([0-9a-f]{64})", text)
         if not m:
             raise AuditError("a head looks like SEQ:HASH, e.g. 13:5f81...")
-        return cls(int(m[1]), m[2])
+        try:
+            seq = int(m[1])
+        except ValueError:
+            raise AuditError("head SEQ is too large") from None
+        return cls(seq, m[2])
 
 
 def canonical(obj) -> bytes:
-    return json.dumps(
-        obj, sort_keys=True, separators=(",", ":"), allow_nan=False
-    ).encode()
+    try:
+        return json.dumps(
+            obj, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+    except (TypeError, ValueError, RecursionError):
+        raise AuditError("values must be plain JSON data") from None
+
+
+def _same_value(left, right) -> bool:
+    # Python considers True == 1 and False == 0, including inside containers.
+    # Changes must compare the JSON that is actually recorded in the log.
+    return canonical(left) == canonical(right)
 
 
 def _mac(event: dict, keys: Keys) -> str:
@@ -236,7 +249,10 @@ def parse_ts(ts) -> datetime:
 
 def to_utc(ts: str) -> str:
     """The form timestamps are stored in: ISO 8601 in UTC."""
-    return parse_ts(ts).astimezone(UTC).isoformat()
+    try:
+        return parse_ts(ts).astimezone(UTC).isoformat()
+    except OverflowError:
+        raise AuditError("timestamp is outside the supported UTC range") from None
 
 
 class _Refused(ValueError):
@@ -282,7 +298,7 @@ def parse_lines(data: bytes, first_line: int = 1):
             )
         except _Refused as exc:
             raise IntegrityError(f"line {n}: {exc}") from None
-        except ValueError:
+        except (ValueError, RecursionError):
             raise IntegrityError(f"line {n}: not valid JSON") from None
         if not isinstance(event, dict):
             raise IntegrityError(f"line {n}: not a JSON object")
@@ -344,9 +360,9 @@ def _check_changes(changes, etype: str, fields: dict) -> None:
     for field, change in changes.items():
         if not isinstance(change, dict) or change.keys() != {"from", "to"}:
             raise AuditError(f"{field}: a change needs exactly 'from' and 'to'")
-        if change["from"] != fields.get(field):
+        if not _same_value(change["from"], fields.get(field)):
             raise AuditError(f"{field}: 'from' is not the value before this event")
-        if change["to"] == change["from"]:
+        if _same_value(change["to"], change["from"]):
             raise AuditError(f"{field}: 'to' is the same as 'from'")
         if field in SENSITIVE_FIELDS and not (
             change["to"] is None or _is_digest(change["to"])
@@ -380,8 +396,10 @@ def _check_event(event, states: dict, prev: dict | None, keys: Keys):
             f"written with key id {event['key_id']!r} but the key given has id"
             f" {keys.key_id!r} (wrong key?)"
         )
-    if not isinstance(event["hash"], str) or not hmac.compare_digest(
-        event["hash"].encode(), _mac(event, keys).encode()
+    if (
+        not isinstance(event["hash"], str)
+        or not HEX64.fullmatch(event["hash"])
+        or not hmac.compare_digest(event["hash"], _mac(event, keys))
     ):
         raise AuditError("content does not match its hash")
 
@@ -431,9 +449,9 @@ def _check_event(event, states: dict, prev: dict | None, keys: Keys):
         raise AuditError(f"previous_event_seq should be {last_seq}, not {found!r}")
 
     # separation of duties
-    if etype in INDEPENDENT and actor in current["authors"]:
+    if current is not None and etype in INDEPENDENT and actor in current["authors"]:
         raise AuditError(f"{actor} worked on {fid} and cannot review it")
-    if before == "escalated":
+    if current is not None and before == "escalated":
         if role != "senior_reviewer":
             raise AuditError("only a senior_reviewer can decide an escalated finding")
         if actor == current["escalated_by"]:
@@ -482,6 +500,13 @@ def _head_of(events: list[dict]) -> Head:
 
 def _check_head(events: list[dict], expected) -> None:
     expected = expected if isinstance(expected, Head) else Head.parse(expected)
+    if (
+        type(expected.seq) is not int
+        or expected.seq < 0
+        or not isinstance(expected.hash, str)
+        or not HEX64.fullmatch(expected.hash)
+    ):
+        raise AuditError("a head needs a non-negative integer SEQ and a SHA256 hash")
     if expected.seq > len(events):
         raise IntegrityError(
             f"log has {len(events)} events but the expected head is at seq"
@@ -606,8 +631,10 @@ def _copy_fields(fields) -> dict:
     if unknown:
         raise AuditError(f"unknown fields: {sorted(unknown)}")
     try:
-        return json.loads(json.dumps(fields, allow_nan=False))
-    except (TypeError, ValueError):
+        return json.loads(
+            json.dumps(fields, allow_nan=False), object_pairs_hook=_no_duplicates
+        )
+    except (TypeError, ValueError, RecursionError):
         raise AuditError("field values must be plain JSON data") from None
 
 
@@ -737,7 +764,7 @@ class AuditLog:
             changes = {}
             for field, value in (updates or {}).items():
                 new = self._stored(finding_id, field, value)
-                if new != old.get(field):
+                if not _same_value(new, old.get(field)):
                     changes[field] = {"from": old.get(field), "to": new}
             event = {
                 "schema_version": SCHEMA_VERSION,
@@ -833,6 +860,7 @@ def main(argv=None):
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    states: dict = {}
     try:
         events = read_events(args.log)
         if args.cmd == "verify" and not events:
