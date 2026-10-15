@@ -119,7 +119,7 @@ Transliteration of Latin spellings is handled by a small placeholder table (`Shr
 
 **2. Candidate generation (blocking).** Records are only compared if they share a registration ID or a distinctive name token. These are two kinds of block with separate limits:
 
-- ID blocks group records with the same ID within a jurisdiction (the key includes the jurisdiction, so the same number in two countries does not pair up). IDs are strong evidence, so `max_id_block_size` is high (1000).
+- ID blocks group records with the same ID, jurisdiction and named scheme. Unlabelled IDs form their own block and can also pair with each compatible named scheme, subject to a separate size check. Different named schemes never share an ID block, so unrelated schemes cannot push a valid same-scheme block over its limit. IDs are strong evidence, so `max_id_block_size` is high (1000).
 - Name-token blocks group records sharing a distinctive word. Words that show up in lots of company names (`trading`, `exports`, `international`...) are not used as keys. Blocks bigger than `max_block_size` (50) are not compared, so one very common token doesn't blow up into every possible pair.
 
 A skipped block is never silent. `generate_candidates` and `resolve` return the skipped blocks (kind, key, size, limit, pairs not compared), the CLI prints a warning listing them, and `--json` includes a `skipped_blocks` list. Pairs in a skipped block are still found if they share some other block, for example an ID.
@@ -141,10 +141,11 @@ Then these rules apply:
 |---|---|
 | Different registration IDs from the same scheme and jurisdiction | score capped at 30 (`id_conflict_cap`) |
 | No matching registration ID | score capped at 79.9, just under `likely_match` (`no_id_cap`) |
-| Names in different scripts, or much of a name lost in cleanup | pair is routed to review: score kept between `needs_review` and just under `likely_match` |
+| Names in different scripts | score kept between `needs_review` and just under `likely_match`, unless a same-scheme ID conflict vetoes the pair |
+| Much of a name lost in cleanup | score kept below `likely_match` |
 | Matching registration ID | score at least `needs_review`, with a note when the names differ (possible rename) |
 
-The result is clipped to 0..100. IDs are only compared when both records have the same jurisdiction, and a conflict needs both records to name the same `id_scheme`. If the scheme is not given on both, two different IDs might be different kinds of number (a company number and a tax number), so the evidence says `unverified`, the pair stays below a likely match, and it is not vetoed. IDs with different schemes are not compared at all. Each result lists which of these fired in `evidence.notes`, plus the name pair that gave the best similarity and whether an alias was involved.
+The result is clipped to 0..100. IDs are only compared when both records have the same jurisdiction, and a conflict needs both records to name the same `id_scheme`. If either scheme is missing, two different IDs might be different kinds of number (a company number and a tax number), so the evidence says `unverified` and the ID difference is not treated as a conflict. The pair's label still depends on its name and other evidence; it can be `no match` or `needs review`. IDs with different named schemes are not compared or combined into one ID block. Each result lists which of these fired in `evidence.notes`, plus the name pair that gave the best similarity and whether an alias was involved.
 
 Names in different scripts are compared only against variants in the same script, which an alias can supply. If no variant pair shares a script, `evidence.cross_script` is true and `evidence.name.score` is null.
 
@@ -156,7 +157,9 @@ Names in different scripts are compared only against variants in the same script
 | needs review | score >= 55 |
 | no match | below 55 |
 
-Where a call is doubtful, the pair goes to a person rather than being decided by the code: unlabelled ID differences, cross-script names and renamed companies all end up in "needs review".
+Cross-script pairs are kept in `needs review` unless a same-scheme ID conflict vetoes them. Matching-ID pairs score at least `needs_review`, with a possible-rename note when name similarity is low. An unverified ID difference does not force a review label; the remaining evidence determines whether the pair is `no match` or `needs review`.
+
+Labels use the score before display rounding. Scores normally display one decimal place; extra precision is retained when rounding would cross a label threshold or violate a configured cap or floor.
 
 **5. Review decisions.** A `MatchResult` is immutable and always reports its status as `unconfirmed`. The matcher never confirms anything. `record_decision(result, reviewer, accepted, note)` returns a separate record with `confirmed` or `rejected`, the reviewer's name (blank names are rejected) and the score and label the reviewer was shown. It does not change the result; storing the decision is up to the caller.
 

@@ -321,9 +321,12 @@ class SkippedBlock:
     key: str
     size: int
     limit: int
+    omitted_pairs: int | None = None
 
     @property
     def pairs_not_compared(self) -> int:
+        if self.omitted_pairs is not None:
+            return self.omitted_pairs
         return self.size * (self.size - 1) // 2
 
     def describe(self) -> str:
@@ -416,10 +419,10 @@ def generate_candidates(
 ) -> Candidates:
     """Return record pairs that share at least one blocking key.
 
-    Records sharing a registration ID (within a jurisdiction) form ID blocks.
-    Records sharing a distinctive name token form name blocks. The two kinds
-    have separate size limits. A block over its limit is not compared, and is
-    listed in `skipped_blocks` so the gap is visible.
+    Records sharing a registration ID, jurisdiction and compatible scheme
+    form ID blocks. Records sharing a distinctive name token form name blocks.
+    The two kinds have separate size limits. An oversized compatible block is
+    not compared, and is listed in `skipped_blocks` so the gap is visible.
 
     This step only narrows down what gets scored. Pairs with no shared
     identifier or distinctive name token are never compared, so a match that
@@ -427,27 +430,56 @@ def generate_candidates(
     """
     config = config or MatchConfig()
     _check_unique(records)
-    id_blocks: dict[tuple[str, str], list[int]] = {}
+    id_blocks: dict[tuple[str, str], dict[str | None, list[int]]] = {}
     token_blocks: dict[str, list[int]] = {}
     for i, record in enumerate(records):
         if record._id_key:
             key = (record._jurisdiction_key or "", record._id_key)
-            id_blocks.setdefault(key, []).append(i)
+            schemes = id_blocks.setdefault(key, {})
+            schemes.setdefault(record._scheme_key, []).append(i)
         for token in record._blocking_tokens:
             token_blocks.setdefault(token, []).append(i)
 
     pairs = set()
     skipped = []
-    for (jurisdiction, reg_id), members in id_blocks.items():
-        if len(members) > config.max_id_block_size:
+    for (jurisdiction, reg_id), schemes in id_blocks.items():
+        for scheme, members in schemes.items():
             key = f"{jurisdiction or '(no jurisdiction)'}:{reg_id}"
-            skipped.append(
-                SkippedBlock(
-                    "registration ID", key, len(members), config.max_id_block_size
+            if scheme:
+                key = f"{jurisdiction or '(no jurisdiction)'}:{scheme}:{reg_id}"
+            if len(members) > config.max_id_block_size:
+                skipped.append(
+                    SkippedBlock(
+                        "registration ID", key, len(members), config.max_id_block_size
+                    )
                 )
-            )
-            continue
-        pairs.update(combinations(members, 2))
+            else:
+                pairs.update(combinations(members, 2))
+
+        # A record without a scheme can still match an equal ID from a named
+        # scheme, as score_pair treats that exact ID as a match. Compare only
+        # those compatible cross-scheme pairs; two different named schemes are
+        # never combined into one oversized block.
+        unlabelled = schemes.get(None, [])
+        for scheme, members in schemes.items():
+            if scheme is None or not unlabelled:
+                continue
+            size = len(unlabelled) + len(members)
+            key = f"{jurisdiction or '(no jurisdiction)'}:{reg_id}:unlabelled+{scheme}"
+            if size > config.max_id_block_size:
+                skipped.append(
+                    SkippedBlock(
+                        "registration ID",
+                        key,
+                        size,
+                        config.max_id_block_size,
+                        omitted_pairs=len(unlabelled) * len(members),
+                    )
+                )
+            else:
+                pairs.update(
+                    (min(i, j), max(i, j)) for i in unlabelled for j in members
+                )
     for token, members in token_blocks.items():
         if len(members) > config.max_block_size:
             skipped.append(
@@ -613,11 +645,14 @@ def score_pair(
         score -= config.legal_form_mismatch_penalty
         notes.append(f"legal forms differ ({left_family} vs {right_family})")
 
+    score_floor, score_ceiling = 0.0, 100.0
     if id_status == "conflict":
+        score_ceiling = config.id_conflict_cap
         score = min(score, config.id_conflict_cap)
     else:
         if id_status != "match":
             cap = config.effective_no_id_cap
+            score_ceiling = min(score_ceiling, cap)
             if score > cap:
                 score = cap
                 notes.append(
@@ -625,14 +660,18 @@ def score_pair(
                     "and cannot be a likely match"
                 )
         if name["coverage"] < config.min_name_coverage:
+            score_ceiling = min(score_ceiling, config.review_ceiling)
             notes.append(
                 f"only {name['coverage']:.0%} of a name survived normalisation, "
                 "so the score is limited and the pair needs a human check"
             )
             score = min(score, config.review_ceiling)
         if cross_script:
+            score_floor = config.needs_review
+            score_ceiling = min(score_ceiling, config.review_ceiling)
             score = min(max(score, config.needs_review), config.review_ceiling)
         if id_status == "match":
+            score_floor = config.needs_review
             name_score = name["score"]
             if name_score is not None and name_score < config.needs_review:
                 notes.append(
@@ -640,7 +679,12 @@ def score_pair(
                     "this may be a renamed company, or a wrong ID, so it needs review"
                 )
             score = max(score, config.needs_review)
-    score = round(max(0.0, min(100.0, score)), 1)
+    exact_score = max(0.0, min(100.0, score))
+    display_score = max(score_floor, min(score_ceiling, round(exact_score, 1)))
+    label = _label(exact_score, config)
+    if _label(display_score, config) != label:
+        # Keep a displayed score from crossing a configured label boundary.
+        display_score = exact_score
 
     evidence = _freeze(
         {
@@ -651,9 +695,7 @@ def score_pair(
             "notes": notes,
         }
     )
-    return MatchResult(
-        left.record_id, right.record_id, score, _label(score, config), evidence
-    )
+    return MatchResult(left.record_id, right.record_id, display_score, label, evidence)
 
 
 def resolve(records: list[Record], config: MatchConfig | None = None) -> Resolution:

@@ -211,6 +211,16 @@ def test_different_ids_without_a_named_scheme_go_to_review_not_veto():
     assert any("scheme is not given" in note for note in r.evidence["notes"])
 
 
+def test_unverified_different_ids_can_still_score_as_no_match():
+    a = Record("A", "Ashgrove Dairy", registration_id="SYN-1", jurisdiction="GB")
+    b = Record("B", "Pelham Widgets", registration_id="SYN-2", jurisdiction="GB")
+
+    result = score_pair(a, b)
+
+    assert result.evidence["registration_id"] == "unverified"
+    assert result.label == NO_MATCH
+
+
 def test_same_name_different_jurisdiction_is_no_match(results):
     r = results[("REG-004", "VEN-004")]
     assert r.evidence["same_jurisdiction"] is False
@@ -258,6 +268,108 @@ def test_no_id_cap_is_configurable():
     a, b = pair("Kestrel Paper", "Kestrel Paper", jurisdiction="GB", city="York")
     assert score_pair(a, b, MatchConfig(no_id_cap=60)).score == 60.0
     assert score_pair(a, b, MatchConfig(no_id_cap=60)).label == NEEDS_REVIEW
+
+
+def test_rounding_does_not_cross_configured_label_boundaries():
+    a, b = pair("Kestrel Paper", "Kestrel Paper", jurisdiction="GB", city="York")
+    no_id = score_pair(a, b, MatchConfig(no_id_cap=79.99))
+    assert no_id.score == 79.99
+    assert no_id.label == NEEDS_REVIEW
+
+    left = Record(
+        "C",
+        "Kestrel Paper",
+        registration_id="SYN-1",
+        id_scheme="GB",
+        jurisdiction="GB",
+        city="York",
+    )
+    right = Record(
+        "D",
+        "Kestrel Paper",
+        registration_id="SYN-2",
+        id_scheme="GB",
+        jurisdiction="GB",
+        city="York",
+    )
+    conflict = score_pair(
+        left,
+        right,
+        MatchConfig(id_conflict_cap=54.99, allow_id_conflict_review=True),
+    )
+    assert conflict.score == 54.99
+    assert conflict.label == NO_MATCH
+
+    left = Record(
+        "E",
+        "Ashgrove Dairy",
+        registration_id="SYN-3",
+        id_scheme="GB",
+        jurisdiction="GB",
+    )
+    right = Record(
+        "F",
+        "Pelham Widgets",
+        registration_id="SYN-3",
+        id_scheme="GB",
+        jurisdiction="GB",
+    )
+    renamed = score_pair(left, right, MatchConfig(needs_review=55.04))
+    assert renamed.score == 55.04
+    assert renamed.label == NEEDS_REVIEW
+
+
+@pytest.mark.parametrize("cap", [60.06, 79.99])
+def test_rounding_preserves_no_id_cap_even_within_the_same_label(cap):
+    a, b = pair("Kestrel Paper", "Kestrel Paper", jurisdiction="GB", city="York")
+    result = score_pair(a, b, MatchConfig(no_id_cap=cap))
+
+    assert result.score <= cap
+    assert result.label == NEEDS_REVIEW
+
+
+def test_rounding_preserves_conflict_cap_even_within_the_same_label():
+    shared = {"id_scheme": "CIN", "jurisdiction": "GB", "city": "York"}
+    a = Record("A", "Kestrel Paper", registration_id="SYN-1", **shared)
+    b = Record("B", "Kestrel Paper", registration_id="SYN-2", **shared)
+
+    result = score_pair(a, b, MatchConfig(id_conflict_cap=30.06))
+
+    assert result.score == 30.06
+    assert result.label == NO_MATCH
+
+
+@pytest.mark.parametrize(
+    ("name_weight", "id_bonus", "needs_review", "likely_match"),
+    [(0.4504, 0, 55.02, 80), (0.4496, 25, 55, 80)],
+)
+def test_labels_use_the_score_before_display_rounding(
+    name_weight, id_bonus, needs_review, likely_match
+):
+    a, b = pair(
+        "Kestrel Paper", "Kestrel Paper", registration_id="SYN-1", jurisdiction="GB"
+    )
+    config = MatchConfig(
+        name_weight=name_weight,
+        id_match_bonus=id_bonus,
+        needs_review=needs_review,
+        likely_match=likely_match,
+    )
+
+    result = score_pair(a, b, config)
+
+    assert result.label == NEEDS_REVIEW
+    assert needs_review <= result.score < likely_match
+
+
+def test_cross_script_review_floor_and_ceiling_survive_rounding():
+    a, b = pair("Северный Ветер", "Severnyi Veter", jurisdiction="RU")
+    config = MatchConfig(needs_review=55.01, likely_match=55.02)
+
+    result = score_pair(a, b, config)
+
+    assert config.needs_review <= result.score < config.likely_match
+    assert result.label == NEEDS_REVIEW
 
 
 def test_a_lowered_likely_match_still_needs_an_id():
@@ -399,6 +511,124 @@ def test_shared_identifier_is_a_blocking_key():
     a = Record("A", "Ashgrove Dairy Ltd", registration_id="SYN-GB-1", jurisdiction="GB")
     b = Record("B", "AD Foods Ltd", registration_id="syn gb 1", jurisdiction="GB")
     assert len(generate_candidates([a, b]).pairs) == 1
+
+
+def test_id_blocks_keep_schemes_separate_when_a_mixed_block_is_oversized():
+    records = []
+    for i in range(499):
+        scheme = f"registry-{i}"
+        records.extend(
+            [
+                Record(
+                    f"OTHER-{i}-A",
+                    f"Vantor{i:04d}A",
+                    registration_id="SHARED-1",
+                    id_scheme=scheme,
+                    jurisdiction="GB",
+                ),
+                Record(
+                    f"OTHER-{i}-B",
+                    f"Quillon{i:04d}B",
+                    registration_id="SHARED-1",
+                    id_scheme=scheme,
+                    jurisdiction="GB",
+                ),
+            ]
+        )
+    records.append(
+        Record(
+            "OTHER-SINGLE",
+            "Farnham Group",
+            registration_id="SHARED-1",
+            id_scheme="registry-single",
+            jurisdiction="GB",
+        )
+    )
+    records.extend(
+        [
+            Record(
+                "RENAMED-OLD",
+                "Ashgrove Dairy",
+                registration_id="SHARED-1",
+                id_scheme="CIN",
+                jurisdiction="GB",
+            ),
+            Record(
+                "RENAMED-NEW",
+                "Pelham Widgets",
+                registration_id="SHARED-1",
+                id_scheme="CIN",
+                jurisdiction="GB",
+            ),
+        ]
+    )
+
+    candidates = generate_candidates(records)
+    pair_ids = {(a.record_id, b.record_id) for a, b in candidates.pairs}
+
+    assert ("RENAMED-OLD", "RENAMED-NEW") in pair_ids
+    assert candidates.skipped_blocks == []
+
+
+def test_same_id_with_one_missing_scheme_remains_a_candidate():
+    labelled = Record(
+        "A",
+        "Ashgrove Dairy",
+        registration_id="SYN-1",
+        id_scheme="CIN",
+        jurisdiction="GB",
+    )
+    unlabelled = Record(
+        "B", "Pelham Widgets", registration_id="SYN-1", jurisdiction="GB"
+    )
+
+    assert generate_candidates([labelled, unlabelled]).pairs == [(labelled, unlabelled)]
+
+
+def test_different_named_schemes_do_not_block_by_id_alone():
+    cin = Record(
+        "A",
+        "Ashgrove Dairy",
+        registration_id="SYN-1",
+        id_scheme="CIN",
+        jurisdiction="GB",
+    )
+    gstin = Record(
+        "B",
+        "Pelham Widgets",
+        registration_id="SYN-1",
+        id_scheme="GSTIN",
+        jurisdiction="GB",
+    )
+
+    assert generate_candidates([cin, gstin]).pairs == []
+
+
+@pytest.mark.parametrize(("unlabelled_count", "limit"), [(1, 3), (2, 3)])
+def test_unlabelled_cross_scheme_blocks_report_only_omitted_cross_pairs(
+    unlabelled_count, limit
+):
+    records = [
+        Record("A", "Ashgrove Dairy", registration_id="SYN-1", id_scheme="CIN"),
+        Record("B", "Pelham Widgets", registration_id="SYN-1", id_scheme="CIN"),
+    ] + [
+        Record(f"U{i}", f"Quillon{i:03d}", registration_id="SYN-1")
+        for i in range(unlabelled_count)
+    ]
+
+    candidates = generate_candidates(records, MatchConfig(max_id_block_size=limit))
+    pairs = {(a.record_id, b.record_id) for a, b in candidates.pairs}
+
+    assert ("A", "B") in pairs
+    if unlabelled_count == 1:
+        assert pairs == {("A", "B"), ("A", "U0"), ("B", "U0")}
+        assert candidates.skipped_blocks == []
+    else:
+        assert pairs == {("A", "B"), ("U0", "U1")}
+        (block,) = candidates.skipped_blocks
+        assert block.size == 4
+        assert block.pairs_not_compared == 4
+        assert block.to_dict()["pairs_not_compared"] == 4
 
 
 def test_identifier_blocks_are_namespaced_by_jurisdiction():
