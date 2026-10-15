@@ -14,6 +14,7 @@ end up with no rows is an error, not an empty result.
 """
 
 import hashlib
+import json
 import math
 from dataclasses import dataclass
 
@@ -35,7 +36,12 @@ class SplitResult:
 def _time_labels(times, valid_start, test_start, horizon, embargo) -> pd.Series:
     labels = pd.Series(DROP, index=times.index, dtype=object)
     # A row's outcome window (plus embargo) must close before the next split starts.
-    window_end = times + horizon + embargo
+    try:
+        window_end = times + horizon + embargo
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise ValueError("horizon plus embargo must be finite on every row") from exc
+    if window_end.isna().any():
+        raise ValueError("horizon plus embargo must be finite on every row")
     labels[window_end <= valid_start] = "train"
     labels[(times >= valid_start) & (window_end <= test_start)] = "valid"
     labels[times >= test_start] = "test"
@@ -84,21 +90,31 @@ def _entity_groups(entities: pd.Series, fractions, seed: int) -> dict:
 
 
 def assignment_hash(df: pd.DataFrame, labels: pd.Series, spec: PanelSpec) -> str:
-    # Keep all nine fractional digits and the UTC offset. strftime's %f
-    # truncates nanoseconds, making different assignments share a hash.
-    keyed = pd.DataFrame(
-        {
-            "e": df[spec.entity_col].astype(str),
-            "t": df[spec.time_col].map(lambda ts: ts.isoformat(timespec="nanoseconds")),
-            "s": labels.astype(str),
-        }
-    ).sort_values(["e", "t"])
-    payload = "\n".join(keyed["e"] + "|" + keyed["t"] + "|" + keyed["s"])
+    # JSON escapes delimiters inside ids; joining pipe/newline-delimited
+    # triples lets one id imitate several rows. Preserve native id types,
+    # all nine fractional digits and the UTC offset as well.
+    records = [
+        [
+            f"{type(entity).__module__}.{type(entity).__qualname__}",
+            str(entity),
+            timestamp.isoformat(timespec="nanoseconds"),
+            str(label),
+        ]
+        for entity, timestamp, label in zip(
+            df[spec.entity_col], df[spec.time_col], labels, strict=True
+        )
+    ]
+    payload = json.dumps(sorted(records), ensure_ascii=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def _cutoff(value, name: str, times: pd.Series) -> pd.Timestamp:
-    ts = pd.Timestamp(value)
+    try:
+        ts = pd.Timestamp(value)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise ValueError(f"{name} must be a finite timestamp") from exc
+    if pd.isna(ts):
+        raise ValueError(f"{name} must be a finite timestamp")
     if (ts.tz is None) != (times.dt.tz is None):
         raise ValueError(
             f"{name} ({ts}) and the timestamps ({times.dtype}) must both be "

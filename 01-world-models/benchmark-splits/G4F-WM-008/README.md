@@ -39,7 +39,9 @@ PanelSpec(
 `(entity_id, timestamp)` must be unique, and `entity_id` and `timestamp`
 must have no missing values.
 `horizon` must be a pandas `DateOffset` or `Timedelta` whose window end is
-finite and no earlier than its prediction timestamp on every row. An
+finite and strictly later than its prediction timestamp on every row. Zero
+and negative horizons are rejected. Unsupported or overflowing calendar arithmetic
+raises `ValueError`. An
 explicit `embargo` must be a finite, nonnegative pandas `Timedelta`.
 
 ## Split policy
@@ -86,7 +88,8 @@ summing to 1, when a cutoff and the timestamps disagree on
 timezone-awareness, when `valid_start >= test_start`, when `entity_id` or
 `timestamp` has missing values, when `(entity, timestamp)` is duplicated,
 or when train, valid or test would end up with no rows.
-Invalid or negative horizons and embargoes also raise, under every policy.
+Invalid, zero or negative horizons and invalid or negative embargoes also
+raise, under every policy. Zero embargo is supported.
 
 The result is fully determined by the data, the policy, the cutoffs, the
 embargo, the fractions and the seed. Row order does not matter.
@@ -106,7 +109,7 @@ do not apply to the selected policy.
 | `split_sizes` | train, valid or test has no rows | all |
 | `entity_overlap` | an entity has kept rows in more than one split | `entity`, `time_entity` |
 | `near_duplicate_trajectories` | two entities in different splits have feature histories that match within a tolerance (see below) | `entity`, `time_entity` |
-| `time_order` | for an earlier split A and later split B, `max_t(A) + horizon > min_t(B)` | `time`, `time_entity` |
+| `time_order` | for an earlier split A and later split B, `max(t + horizon for t in A) > min_t(B)` | `time`, `time_entity` |
 | `feature_timestamps` | a kept row with a feature value has an `observed_at` after its `t`, or no `observed_at` at all | all, if `observed_at` is set |
 | `post_outcome_fields` | the target or a declared post-outcome column is a feature, or a feature looks like it is only set after the outcome | all |
 | `target_leakage` | a feature copies the target, or predicts it almost perfectly (see below) | all |
@@ -250,7 +253,7 @@ print(to_json(report))
     "embargo": "0 days 00:00:00",
     "rows": {"train": 608, "valid": 84, "test": 90, "drop": 1378},
     "entities": {"train": 38, "valid": 12, "test": 10},
-    "assignment_sha256": "077eec2c...",
+    "assignment_sha256": "b47fca86...",
     "spec": {"...": "..."}
   }
 }
@@ -261,11 +264,15 @@ print(to_json(report))
 the split is 1368 / 432 / 360 rows with nothing dropped and `time_order` is
 skipped; with `--policy time` the two entity checks are skipped.)
 
-`assignment_sha256` is a hash of the sorted `(entity, timestamp, split)`
-triples, preserving all nine fractional second digits and the UTC offset.
-Timestamp serialization now preserves nanoseconds; hashes produced by the
-earlier microsecond format will differ even when row assignments agree.
-The fixed hash regression pins the new representation.
+`assignment_sha256` hashes sorted JSON records containing the entity's
+native type and string value, timestamp and split. JSON escapes pipes and
+newlines in entity ids, so one id cannot imitate multiple assignment rows.
+Timestamps preserve all nine fractional second digits and the UTC offset.
+Hashes produced by either earlier delimiter format (microsecond or
+nanosecond timestamps) will differ even when row assignments agree.
+The fixed hash regression pins the new representation. Feature and schema
+column names may include the checkers' former helper names such as `_entity`
+and `_window_end`; the checks keep metadata outside the input columns.
 
 ## Historical measurements
 
@@ -304,11 +311,16 @@ under all three policies.
 
 ## Tests
 
-131 tests run with `python -m pytest` on Python 3.12. Regression cases also
-cover invalid horizons and embargoes, nanosecond hash differences for
-naive and timezone-aware data, and zero cross-split comparison coverage.
+198 tests run with `python -m pytest` on Python 3.12. Regression cases also
+cover invalid and overflowing horizons, embargoes and cutoffs; nanosecond
+hash differences for naive and timezone-aware data; delimiter and entity
+type hash collisions; arbitrary helper names as feature and schema columns;
+nullable numeric/text feature missing values; and zero cross-split comparison coverage.
 An alignment regression ensures the total unmatched-row budget is enforced,
 even when gaps on opposite sides cancel their displacement.
+Time-order tests inspect every actual outcome-window end, including a valid
+absolute-year offset whose window ends are not in prediction-time order,
+and retain a relative-calendar-offset control.
 
 `tests/test_splits.py` covers reproducibility (same seed, shuffled row
 order, different seed), a fixed assignment hash, stable entity assignment

@@ -40,11 +40,14 @@ class PanelSpec:
             )
         valid_horizon = isinstance(self.horizon, (pd.DateOffset, pd.Timedelta))
         if valid_horizon:
-            ends = times + self.horizon
-            valid_horizon = bool(ends.notna().all() and (ends >= times).all())
+            try:
+                ends = times + self.horizon
+                valid_horizon = bool(ends.notna().all() and (ends > times).all())
+            except (ValueError, TypeError, OverflowError):
+                valid_horizon = False
         if not valid_horizon:
             raise ValueError(
-                "horizon must be a DateOffset or Timedelta that is nonnegative "
+                "horizon must be a DateOffset or Timedelta that is positive "
                 "and finite on every row"
             )
         n_missing = int(df[self.entity_col].isna().sum())

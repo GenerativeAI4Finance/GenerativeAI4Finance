@@ -63,18 +63,24 @@ def _entity_trajectories(df, labels, spec: PanelSpec, features) -> dict:
     original, so comparing only kept rows would never match them.
     """
     feats = df[features].astype(float)
-    z = ((feats - feats.mean()) / feats.std(ddof=0)).reset_index(drop=True)
-    z["_entity"] = df[spec.entity_col].astype(str).to_numpy()
-    z["_time"] = df[spec.time_col].reset_index(drop=True)
-    z["_split"] = labels.to_numpy()
-    z = z.sort_values(["_entity", "_time"], kind="stable")
+    z = ((feats - feats.mean()) / feats.std(ddof=0)).to_numpy()
+    times = df[spec.time_col].reset_index(drop=True)
+    split_values = labels.to_numpy()
 
     out = {}
-    for entity, part in z.groupby("_entity", sort=True):
-        splits = sorted(set(part["_split"]) - {DROP})
+    # Keep metadata outside the feature frame: arbitrary feature names may
+    # legitimately be _entity, _time or _split. Preserve native entity keys
+    # as well, so e.g. integer 1 and string "1" remain different entities.
+    for entity, positions in df.groupby(spec.entity_col, sort=False).indices.items():
+        positions = times.iloc[positions].sort_values(kind="stable").index.to_numpy()
+        splits = sorted(set(split_values[positions]) - {DROP})
         if splits:
-            out[entity] = ("+".join(splits), part[features].to_numpy())
+            out[entity] = ("+".join(splits), z[positions])
     return out
+
+
+def _entity_sort_key(entity):
+    return (str(entity), type(entity).__module__, type(entity).__qualname__)
 
 
 def _summary(z: np.ndarray, segments: int = 4) -> np.ndarray:
@@ -208,7 +214,8 @@ def check_near_duplicates(
 
     trajectories = _entity_trajectories(df, labels, spec, features)
     compared, low_info, digests = [], [], {}
-    for entity, (_, z) in trajectories.items():
+    for entity in sorted(trajectories, key=_entity_sort_key):
+        _, z = trajectories[entity]
         rounded = np.where(np.isnan(z), np.inf, np.round(z, decimals) + 0.0)
         if len(np.unique(rounded, axis=0)) < min_distinct_rows:
             low_info.append(entity)
@@ -236,11 +243,13 @@ def check_near_duplicates(
     summaries = np.array([_summary(trajectories[e][1]) for e in compared])
     for i, row in enumerate(_nearest(summaries, n_neighbors)):
         for j in row:
-            candidates.add(tuple(sorted((compared[i], compared[j]))))
+            candidates.add(
+                tuple(sorted((compared[i], compared[j]), key=_entity_sort_key))
+            )
 
     pairs = []
     cross_split_candidates, aligned_pairs = 0, 0
-    for a, b in sorted(candidates):
+    for a, b in sorted(candidates, key=lambda pair: tuple(map(_entity_sort_key, pair))):
         (split_a, za), (split_b, zb) = trajectories[a], trajectories[b]
         if split_a == split_b:
             continue
@@ -256,7 +265,7 @@ def check_near_duplicates(
         if rms <= tolerance:
             pairs.append(
                 {
-                    "entities": [(a, split_a), (b, split_b)],
+                    "entities": [(str(a), split_a), (str(b), split_b)],
                     "match": "exact" if digests[a] == digests[b] else "near",
                     "rms": round(rms, 4),
                     "unmatched_rows": unmatched,
@@ -288,8 +297,9 @@ def check_near_duplicates(
 
 def check_time_order(df, labels, spec: PanelSpec) -> dict:
     times = df[spec.time_col]
+    window_ends = times + spec.horizon
     bounds = {
-        s: (times[labels == s].min(), times[labels == s].max())
+        s: (times[labels == s].min(), window_ends[labels == s].max())
         for s in SPLITS
         if (labels == s).any()
     }
@@ -300,7 +310,9 @@ def check_time_order(df, labels, spec: PanelSpec) -> dict:
         for later in SPLITS[i + 1 :]:
             if earlier not in bounds or later not in bounds:
                 continue
-            last_outcome = bounds[earlier][1] + spec.horizon
+            # Replacement DateOffsets can end an earlier row's window after
+            # that of the latest prediction row. Inspect every actual end.
+            last_outcome = bounds[earlier][1]
             first_later = bounds[later][0]
             if last_outcome > first_later:
                 violations.append(
@@ -383,7 +395,9 @@ def check_post_outcome_fields(
                 continue
             x = df[col][kept].reset_index(drop=True)
             usual = x[neg].mode(dropna=False).iloc[0]
-            is_set = (x.notna() if pd.isna(usual) else x.ne(usual)).to_numpy()
+            is_set = (
+                x.notna() if pd.isna(usual) else x.ne(usual).fillna(True)
+            ).to_numpy(dtype=bool)
             pos_share, neg_share = is_set[pos].mean(), is_set[neg].mean()
             if pos_share >= min_positive_share and neg_share <= max_negative_share:
                 suspects.append(
@@ -492,11 +506,12 @@ def check_target_leakage(
     rows of either class for a 0/1 target, the check is skipped rather than
     passed. It catches copies and near copies, not subtle leaks.
     """
-    kept = (labels != DROP).to_numpy()
-    data = df.assign(_kept=kept).sort_values([spec.entity_col, spec.time_col])
-    data = data.reset_index(drop=True)
+    order = (
+        df.reset_index(drop=True).sort_values([spec.entity_col, spec.time_col]).index
+    )
+    data = df.iloc[order].reset_index(drop=True)
     y = data[spec.target_col].astype(float)
-    kept = data["_kept"]
+    kept = pd.Series((labels != DROP).to_numpy()[order], index=data.index)
     labelled = int(y[kept].notna().sum())
     if labelled < min_rows:
         return _skipped(f"only {labelled} labelled rows, need {min_rows}")
@@ -511,15 +526,18 @@ def check_target_leakage(
     elif y[kept].nunique() < 2:
         return _skipped("target is constant")
 
-    data["_y"] = y
-    data["_window_end"] = data[spec.time_col] + spec.horizon
-    by_entity = data.groupby(spec.entity_col, sort=False)
+    # Separate Series avoid overwriting input features or schema columns
+    # with temporary _kept, _y or _window_end metadata.
+    by_entity = y.groupby(data[spec.entity_col], sort=False)
+    window_ends = (data[spec.time_col] + spec.horizon).groupby(
+        data[spec.entity_col], sort=False
+    )
     unseen, seen = {}, {}
     for shift in range(max_shift + 1):
-        unseen[shift] = by_entity["_y"].shift(-shift)
+        unseen[shift] = by_entity.shift(-shift)
     for lag in range(1, max_lag + 1):
-        earlier = by_entity["_y"].shift(lag)
-        still_open = by_entity["_window_end"].shift(lag) > data[spec.time_col]
+        earlier = by_entity.shift(lag)
+        still_open = window_ends.shift(lag) > data[spec.time_col]
         unseen[-lag] = earlier.where(still_open)
         seen[-lag] = earlier.where(~still_open)
 

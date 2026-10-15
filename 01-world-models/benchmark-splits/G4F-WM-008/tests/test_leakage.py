@@ -19,6 +19,7 @@ from leakage import (
     run_checks,
     to_json,
 )
+from panel import PanelSpec
 from splits import _entity_groups, make_splits
 
 
@@ -561,3 +562,131 @@ def test_observed_at_timezone_must_match_timestamps(panel):
     df["dpd_observed_at"] = df["dpd_observed_at"].dt.tz_localize("UTC")
     with pytest.raises(ValueError, match="timezone"):
         spec.validate(df)
+
+
+HELPER_NAMES = ["_entity", "_time", "_split", "_kept", "_y", "_window_end"]
+
+
+@pytest.mark.parametrize("name", HELPER_NAMES)
+def test_helper_names_are_valid_clean_feature_names(panel, name):
+    df, spec = panel
+    old = spec.feature_cols[0]
+    df = df.rename(columns={old: name})
+    spec.feature_cols[0] = name
+    res = split(df, spec)
+    report = run_checks(df, res.labels, spec, res.manifest)
+    assert report["all_applicable_checks_passed"], report
+    assert name in report["checks"]["target_leakage"]["features_evaluated"]
+
+
+@pytest.mark.parametrize("name", HELPER_NAMES)
+def test_helper_names_do_not_hide_future_target_scores(panel, name):
+    df, spec = panel
+    future = df.groupby(spec.entity_col)[spec.target_col].shift(-2)
+    # A scaled score avoids the simpler only-set-after-outcome heuristic.
+    df[name] = future * 10 + 0.001
+    spec.feature_cols.append(name)
+    res = split(df, spec)
+    report = run_checks(df, res.labels, spec, res.manifest)
+    assert not report["all_applicable_checks_passed"]
+    assert "target_leakage" in report["failed"]
+    hit = next(
+        s
+        for s in report["checks"]["target_leakage"]["suspects"]
+        if s["feature"] == name
+    )
+    assert hit["shift"] == 2
+    assert hit["reason"] == "near_perfect_predictor"
+
+
+@pytest.mark.parametrize("name", HELPER_NAMES)
+@pytest.mark.parametrize("role", ["entity_col", "time_col", "target_col"])
+def test_helper_names_are_valid_schema_column_names(panel, name, role):
+    df, spec = panel
+    old = getattr(spec, role)
+    df = df.rename(columns={old: name})
+    setattr(spec, role, name)
+    res = split(df, spec)
+    report = run_checks(df, res.labels, spec, res.manifest)
+    assert report["all_applicable_checks_passed"], report
+
+
+def test_near_duplicates_preserve_distinct_native_entity_ids():
+    df = pd.DataFrame(
+        {
+            "entity_id": [1] * 10 + ["1"] * 10,
+            "timestamp": list(pd.date_range("2021-01-01", periods=10)) * 2,
+            "feature": list(range(10)) * 2,
+            "target": [0, 1] * 10,
+        }
+    )
+    spec = PanelSpec(["feature"], "target", pd.Timedelta(days=1))
+    labels = pd.Series(["train"] * 10 + ["test"] * 10)
+    out = check_near_duplicates(df, labels, spec)
+    assert out["status"] == "fail"
+    assert out["n_pairs"] == 1
+    assert out["compared_entities"] == 2
+    shuffled = df.sample(frac=1, random_state=7)
+    assert check_near_duplicates(shuffled, labels.loc[shuffled.index], spec) == out
+
+
+def test_time_order_uses_latest_actual_outcome_window():
+    df = pd.DataFrame(
+        {
+            "entity_id": ["a"] * 3,
+            "timestamp": pd.to_datetime(["2022-12-01", "2023-01-01", "2030-06-01"]),
+            "feature": [1, 2, 3],
+            "target": [0, 1, 0],
+        }
+    )
+    # Absolute year replacement plus a day is a valid positive horizon, but
+    # the December row ends after the January row despite occurring first.
+    spec = PanelSpec(["feature"], "target", pd.DateOffset(year=2030, days=1))
+    spec.validate(df)
+    labels = pd.Series(["train", "train", "test"])
+    out = check_time_order(df, labels, spec)
+    assert out["status"] == "fail"
+    assert (
+        out["violations"][0]["earlier_max_time_plus_horizon"] == "2030-12-02T00:00:00"
+    )
+
+
+def test_time_order_keeps_relative_calendar_horizon_behavior():
+    df = pd.DataFrame(
+        {
+            "entity_id": ["a"] * 3,
+            "timestamp": pd.to_datetime(["2022-12-01", "2023-01-01", "2023-06-01"]),
+            "feature": [1, 2, 3],
+            "target": [0, 1, 0],
+        }
+    )
+    spec = PanelSpec(["feature"], "target", pd.DateOffset(months=1))
+    labels = pd.Series(["train", "train", "test"])
+    assert check_time_order(df, labels, spec)["status"] == "pass"
+
+
+@pytest.mark.parametrize("dtype", ["Float64", "string"])
+@pytest.mark.parametrize("missing_only_on_positive", [False, True])
+def test_post_outcome_nullable_features_count_missing_as_a_value(
+    dtype, missing_only_on_positive
+):
+    feature = pd.Series([0] * 20 + [1] * 20, dtype=dtype)
+    if missing_only_on_positive:
+        feature.iloc[20:] = pd.NA
+    else:
+        feature.iloc[0] = pd.NA
+    df = pd.DataFrame(
+        {
+            "entity_id": ["a"] * 40,
+            "timestamp": pd.date_range("2021-01-01", periods=40),
+            "feature": feature,
+            "target": [0] * 20 + [1] * 20,
+        }
+    )
+    spec = PanelSpec(["feature"], "target", pd.Timedelta(days=1))
+    out = check_post_outcome_fields(df, pd.Series("train", index=df.index), spec)
+    assert out["value_check"] == "ran"
+    assert out["status"] == ("fail" if missing_only_on_positive else "pass")
+    if missing_only_on_positive:
+        assert out["suspects"][0]["share_of_positive_rows"] == 1.0
+        assert out["suspects"][0]["share_of_negative_rows"] == 0.0

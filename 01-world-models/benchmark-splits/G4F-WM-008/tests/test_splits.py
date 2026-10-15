@@ -94,7 +94,7 @@ def test_assignment_hash_is_fixed_for_a_fixed_input(panel):
     # Pin the assignment and its nanosecond-preserving serialization.
     assert m["rows"] == {"train": 688, "valid": 63, "test": 72, "drop": 1337}
     assert m["assignment_sha256"] == (
-        "dc42b5b987b18054a5fa0b452f6b2d5f2632287a18999da54985b459a8b0eef7"
+        "7548ea1f17aa5a706e266125629fa0bf350502eb3269a7ca134cfadb408da4b4"
     )
     assert 0 <= entity_bucket("E000", 0) < 1
 
@@ -246,3 +246,83 @@ def test_assignment_hash_preserves_nanoseconds_and_row_order(panel, timezone):
     assert changed != original
     shuffled = df.sample(frac=1, random_state=15)
     assert assignment_hash(shuffled, labels.loc[shuffled.index], spec) == changed
+
+
+def test_assignment_hash_escapes_entity_delimiters(panel):
+    from splits import assignment_hash
+
+    _, spec = panel
+    timestamp = pd.Timestamp("2023-01-01")
+    separate = pd.DataFrame(
+        {spec.entity_col: ["a", "b"], spec.time_col: [timestamp, timestamp]}
+    )
+    # The old pipe/newline format gave this single row the same payload as
+    # the two genuine entity rows above, without any SHA-256 collision.
+    combined = pd.DataFrame(
+        {
+            spec.entity_col: [
+                "a|" + timestamp.isoformat(timespec="nanoseconds") + "|train\nb"
+            ],
+            spec.time_col: [timestamp],
+        }
+    )
+    assert assignment_hash(
+        separate, pd.Series(["train", "train"]), spec
+    ) != assignment_hash(combined, pd.Series(["train"]), spec)
+
+
+def test_assignment_hash_preserves_native_entity_type(panel):
+    from splits import assignment_hash
+
+    df, spec = panel
+    df = df.iloc[:1].copy()
+    df[spec.entity_col] = 1
+    labels = pd.Series("train", index=df.index)
+    numeric = assignment_hash(df, labels, spec)
+    df[spec.entity_col] = "1"
+    assert assignment_hash(df, labels, spec) != numeric
+
+
+@pytest.mark.parametrize(
+    "horizon",
+    [pd.DateOffset(years=1000000), pd.Timedelta.max, pd.DateOffset(month=13)],
+)
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+def test_unsupported_horizon_arithmetic_is_a_validation_error(panel, horizon, policy):
+    df, spec = panel
+    spec.horizon = horizon
+    with pytest.raises(ValueError, match="horizon"):
+        split(df, spec, policy)
+
+
+@pytest.mark.parametrize("policy", ["time", "time_entity"])
+def test_overflowing_embargo_is_a_validation_error(panel, policy):
+    df, spec = panel
+    with pytest.raises(ValueError, match="horizon plus embargo"):
+        split(df, spec, policy, embargo=pd.Timedelta.max)
+
+
+@pytest.mark.parametrize("horizon", [pd.Timedelta(0), pd.DateOffset(days=0)])
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+def test_zero_horizon_is_rejected(panel, horizon, policy):
+    df, spec = panel
+    spec.horizon = horizon
+    with pytest.raises(ValueError, match="horizon"):
+        split(df, spec, policy)
+
+
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+def test_zero_embargo_remains_supported(panel, policy):
+    df, spec = panel
+    explicit = split(df, spec, policy, embargo=pd.Timedelta(0))
+    default = split(df, spec, policy)
+    assert explicit.labels.equals(default.labels)
+    assert explicit.manifest == default.manifest
+
+
+@pytest.mark.parametrize("value", [pd.NaT, "NaT", "invalid", float("inf")])
+@pytest.mark.parametrize("name", ["valid_start", "test_start"])
+def test_invalid_cutoff_is_a_validation_error(panel, value, name):
+    df, spec = panel
+    with pytest.raises(ValueError, match=f"{name} must be a finite timestamp"):
+        split(df, spec, "time", **{name: value})
