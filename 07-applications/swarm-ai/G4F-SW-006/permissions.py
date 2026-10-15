@@ -34,19 +34,20 @@ SECRET_KEY_RE = re.compile(
     re.IGNORECASE,
 )
 SECRET_VALUE_RES = [
-    re.compile(r"\bbearer\s+\S+", re.IGNORECASE),
-    re.compile(r"\bBasic\s+[A-Za-z0-9+/]{8,}", re.IGNORECASE),
-    re.compile(r"\bsk-[A-Za-z0-9_-]{16,}"),
-    re.compile(r"\b[rs]k_(?:live|test)_[A-Za-z0-9]{10,}"),
-    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
-    re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}"),
-    re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}"),
-    re.compile(r"\bxox[abposr]-[A-Za-z0-9-]{10,}"),
-    re.compile(r"\bAIza[0-9A-Za-z_-]{30,}"),
-    re.compile(r"\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*"),
+    # Labels can embed credentials between ordinary word characters.
+    re.compile(r"bearer\s+\S+", re.IGNORECASE),
+    re.compile(r"Basic\s+[A-Za-z0-9+/]+={0,2}", re.IGNORECASE),
+    re.compile(r"sk-[A-Za-z0-9_-]{16,}"),
+    re.compile(r"[rs]k_(?:live|test)_[A-Za-z0-9]{10,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
+    re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
+    re.compile(r"xox[abposr]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*"),
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     # credentials inside URLs: user:pass@host and ?api_key=...
-    re.compile(r"://[^/\s:@]+:[^/\s@]+@"),
+    re.compile(r"://[^/\s:@]*:[^/\s@]+@"),
     re.compile(
         r"[?&](?:api[_-]?key|access[_-]?token|token|secret|password|sig|signature)=",
         re.IGNORECASE,

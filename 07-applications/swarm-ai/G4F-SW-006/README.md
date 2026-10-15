@@ -151,6 +151,8 @@ What `args` contains:
   at 200 characters. Detection also checks up to four rounds of URL percent
   decoding, Unicode compatibility normalization and removal of non-printable
   characters. Basic auth accepts whitespace between the scheme and token.
+  Short and padded Basic credentials, URL passwords with an empty username,
+  and credential strings embedded within longer labels are also redacted.
   These transformations apply only to detection; the tool receives its original
   checked value. Strings above the scalar limit are redacted without normalization.
 - Names chosen by the caller (unexpected argument names, tool names) are cut
@@ -193,5 +195,5 @@ default.
 - Passing these tests does not mean the setup meets any regulatory or security
   standard. It is a reference for the simulated swarm, not a certified control.
 
-The local Python 3.12 suite contains 190 tests, including resource boundaries,
+The local Python 3.12 suite contains 213 tests, including resource boundaries,
 malformed UTF-8, encoded credential redaction and validation before matching.

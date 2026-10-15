@@ -1,9 +1,11 @@
+import base64
 import copy
 import json
 import logging
 from collections.abc import Mapping
 from pathlib import Path
 from types import SimpleNamespace
+from urllib.parse import quote
 
 import pytest
 
@@ -948,6 +950,29 @@ ENCODED_SECRETS = [
     "sk_\x00live_" + "0" * 20,
     "https://example.test/?ａｐｉ％５Ｆｋｅｙ=" + "synthetic-value",
     "https://example.test/?api%5\x01Fkey=" + "synthetic-value",
+    *(
+        "Basic " + base64.b64encode(pair).decode("ascii")
+        for pair in (b"a:b", b":b", b"a:", b":")
+    ),
+    quote("Basic " + base64.b64encode(b":b").decode("ascii"), safe=""),
+    "https://:" + "synthetic-password" + "@example.test/path",
+    "https://:" + quote("synthetic:p@ss", safe="") + "@example.test/path",
+    *(
+        "id_" + value + "_suffix"
+        for value in (
+            "sk-" + "0" * 20,
+            "sk_live_" + "0" * 20,
+            "AKIA" + "0" * 16,
+            "ghp_" + "0" * 20,
+            "github_pat_" + "0" * 20,
+            "xoxb-" + "0" * 20,
+            "AIza" + "0" * 30,
+            "eyJ" + "0" * 8 + "." + "0" * 8 + "." + "0" * 8,
+        )
+    ),
+    "id_%73" + "k_live_" + "0" * 20 + "_suffix",
+    "id_Basic " + base64.b64encode(b"a:b").decode("ascii") + "_suffix",
+    "id_Bearer " + "synthetic-token" + "_suffix",
 ]
 
 
@@ -964,6 +989,24 @@ ENCODED_SECRETS = [
         "nul",
         "fullwidth-url",
         "control-url",
+        "basic-short",
+        "basic-empty-user",
+        "basic-empty-password",
+        "basic-empty-pair",
+        "encoded-basic-short",
+        "url-empty-user",
+        "url-empty-user-encoded-password",
+        "embedded-openai",
+        "embedded-stripe",
+        "embedded-aws",
+        "embedded-github",
+        "embedded-github-pat",
+        "embedded-slack",
+        "embedded-google",
+        "embedded-jwt",
+        "encoded-embedded-stripe",
+        "embedded-basic",
+        "embedded-bearer",
     ],
 )
 def test_encoded_secrets_across_values_names_types_and_exceptions(calls, audit, secret):
@@ -1292,3 +1335,22 @@ def test_cyclic_programmatic_policy_is_bounded():
     raw["extra"] = raw
     with pytest.raises(PolicyError, match="structure limit"):
         parse_policy(raw)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "SYN-CASE-0007",
+        "https://example.test/public",
+        "id_sk_live_status_suffix",
+        "id_AKIA_summary_suffix",
+        "ordinary synthetic note",
+    ],
+)
+def test_redaction_safe_controls_keep_opted_in_values_and_tool_input(
+    text, calls, audit
+):
+    gate = one_tool_gate(calls, {"text": {"allowed": [text], "log_value": True}})
+    gate.call("a-01", "t", {"text": text})
+    assert calls == [("t", {"text": text})]
+    assert audit_records(audit)[0]["args"]["text"] == text
