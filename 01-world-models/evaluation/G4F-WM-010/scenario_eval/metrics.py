@@ -24,6 +24,10 @@ MetricFn = Callable[[np.ndarray, np.ndarray], float | None]
 
 def check_binary(y: ArrayLike, p: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
     y = np.asarray(y)
+    if np.iscomplexobj(y):
+        raise ValueError("binary outcomes must be real values 0 or 1")
+    if np.iscomplexobj(np.asarray(p)):
+        raise ValueError("probabilities must be real values in [0, 1]")
     p = np.asarray(p, dtype=float)
     if y.shape != p.shape or y.ndim != 1:
         raise ValueError("outcomes and probabilities must be 1-d arrays of equal length")
@@ -230,6 +234,8 @@ def check_multiclass(
     labels: ArrayLike, probs: ArrayLike, classes: list[str]
 ) -> tuple[np.ndarray, np.ndarray]:
     labels = np.asarray(labels)
+    if np.iscomplexobj(np.asarray(probs)):
+        raise ValueError("state probabilities must be real values in [0, 1]")
     probs = np.asarray(probs, dtype=float)
     if probs.ndim != 2 or probs.shape != (len(labels), len(classes)):
         raise ValueError("probability matrix must have shape (n_rows, n_classes)")
@@ -237,7 +243,7 @@ def check_multiclass(
         raise ValueError("state probabilities contain NaN or inf")
     if probs.min() < 0 or probs.max() > 1:
         raise ValueError("state probabilities must be in [0, 1]")
-    if not np.allclose(probs.sum(axis=1), 1.0, atol=1e-6):
+    if not np.allclose(probs.sum(axis=1), 1.0, atol=1e-6, rtol=0):
         raise ValueError("state probabilities must sum to 1 on every row")
     unknown = set(labels.tolist()) - set(classes)
     if unknown:

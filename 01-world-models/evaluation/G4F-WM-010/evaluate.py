@@ -6,6 +6,7 @@
 
 import argparse
 import hashlib
+from io import BytesIO
 from pathlib import Path
 
 from scenario_eval.contract import load
@@ -15,7 +16,11 @@ from scenario_eval.report import evaluate, to_json, to_markdown
 
 def sha256(path: str | Path) -> str:
     """sha256 of the file with CRLF read as LF, so a CRLF copy hashes the same."""
-    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    return _sha256_bytes(Path(path).read_bytes())
+
+
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
 
 
 def _int_arg(lo, hi=None):
@@ -54,14 +59,18 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--pooled", action="store_true", help="also add a labelled pooled view")
     args = ap.parse_args(argv)
 
-    df = load(args.predictions, args.outcomes)
+    # Parse and hash the same snapshots even if a producer replaces an input
+    # after it has been read. Reopening for the hashes can misidentify the run.
+    prediction_bytes = Path(args.predictions).read_bytes()
+    outcome_bytes = Path(args.outcomes).read_bytes()
+    df = load(BytesIO(prediction_bytes), BytesIO(outcome_bytes))
     prediction_name, outcome_name = Path(args.predictions).name, Path(args.outcomes).name
     if prediction_name == outcome_name:
         prediction_name = f"predictions:{prediction_name}"
         outcome_name = f"outcomes:{outcome_name}"
     inputs = {
-        prediction_name: {"sha256": sha256(args.predictions)},
-        outcome_name: {"sha256": sha256(args.outcomes)},
+        prediction_name: {"sha256": _sha256_bytes(prediction_bytes)},
+        outcome_name: {"sha256": _sha256_bytes(outcome_bytes)},
     }
     report = evaluate(
         df,

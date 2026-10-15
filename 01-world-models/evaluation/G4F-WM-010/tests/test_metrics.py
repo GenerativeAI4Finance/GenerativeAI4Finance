@@ -71,6 +71,26 @@ def test_multiclass_rejects_rows_not_summing_to_one():
         m.multiclass_brier(["a"], [[0.5, 0.4]], ["a", "b"])
 
 
+@pytest.mark.parametrize("metric", [m.multiclass_brier, m.multiclass_log_loss])
+def test_multiclass_uses_absolute_probability_sum_tolerance(metric):
+    with pytest.raises(ValueError, match="sum to 1"):
+        metric(["a"], [[0.500005, 0.500005]], ["a", "b"])
+    assert np.isfinite(metric(["a"], [[0.5000002, 0.5000002]], ["a", "b"]))
+
+
+@pytest.mark.parametrize("imaginary", [0.0, 0.2])
+def test_metrics_reject_complex_probabilities(imaginary):
+    with pytest.raises(ValueError, match="real values"):
+        m.brier([0, 1], np.array([0.2 + imaginary * 1j, 0.8]))
+    with pytest.raises(ValueError, match="real values"):
+        m.multiclass_brier(["a"], [[0.5 + imaginary * 1j, 0.5 - imaginary * 1j]], ["a", "b"])
+
+
+def test_binary_metrics_reject_complex_outcomes():
+    with pytest.raises(ValueError, match="real values"):
+        m.brier(np.array([0.0j, 1.0 + 0.0j]), [0.2, 0.8])
+
+
 def test_multiclass_rejects_unknown_state():
     with pytest.raises(ValueError, match="not in the predicted classes"):
         m.multiclass_brier(["c"], [[0.5, 0.5]], ["a", "b"])

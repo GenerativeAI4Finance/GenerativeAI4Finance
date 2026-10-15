@@ -43,7 +43,9 @@ What is checked before anything is scored (each failure stops the run with a
   `from_state`) are not in the outcomes file, outcome columns (`event`,
   `next_state`) are not in the predictions file, and no column other than the
   key is in both
-- no missing values in the key; `scenario` is one of the three labels
+- no missing values in the key; `scenario` is one of the three labels. In CSVs,
+  empty fields are missing, while literal entity/state labels such as `NA`,
+  `NULL` and `nan` stay strings
 - `as_of` is a real calendar date in `YYYY-MM-DD` form (`2025-02-30` and
   `2025-1-31` are rejected); date or timestamp objects are accepted and written
   as dates
@@ -54,7 +56,8 @@ What is checked before anything is scored (each failure stops the run with a
 - no duplicate keys, checked after the key is canonicalised, so `12` and `"12.0"`
   or `1` and `"1"` for an entity count as duplicates
 - every prediction has exactly one outcome and the other way round
-- `p_event` and `p_state_*` are numeric and in [0, 1] (NaN and inf rejected);
+- `p_event` and `p_state_*` are real numeric values in [0, 1] (complex numbers,
+  NaN and inf rejected);
   `p_state_*` sums to 1 on every row; `event` is 0 or 1 (booleans rejected)
 - `next_state` is never missing and every value has a `p_state_` column
 - if there is a `default` state, `p_event` must equal `p_state_default` and
@@ -180,7 +183,8 @@ or `.md` is dropped and any other dot is kept.
   sha256 of each input file (computed with CRLF read as LF, so a Windows copy
   hashes the same), rows per scenario, numpy version. Input hashes use the file
   basenames as keys; matching basenames are prefixed with `predictions:` and
-  `outcomes:` so both hashes are retained.
+  `outcomes:` so both hashes are retained. The CLI reads each input once and
+  hashes the same bytes it parses, even if a producer subsequently replaces it.
 - `disclaimer`
 - `scenarios.<name>.warnings`
 - `scenarios.<name>.binary`: the metrics above, reliability tables for both

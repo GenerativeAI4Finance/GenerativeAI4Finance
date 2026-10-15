@@ -264,3 +264,39 @@ def test_boolean_event_rejected(flags):
     outs["event"] = pd.Series(flags, dtype=object if 0 in flags else bool)
     with pytest.raises(ContractError, match="not boolean"):
         join(preds, outs)
+
+
+@pytest.mark.parametrize("column", ["p_event", "p_state_current"])
+@pytest.mark.parametrize("imaginary", [0.0, 0.2])
+def test_complex_probabilities_rejected_before_conversion(column, imaginary):
+    preds, outs = with_states() if column.startswith("p_state_") else frames()
+    preds[column] = preds[column].astype(complex)
+    preds.loc[0, column] += imaginary * 1j
+    with pytest.raises(ContractError, match="real probabilities"):
+        join(preds, outs)
+
+
+@pytest.mark.parametrize("label", ["NA", "NULL", "nan", "N/A"])
+def test_csv_preserves_literal_entity_and_state_labels(tmp_path, label):
+    preds, outs = with_states(from_state=[label, "current", "late"])
+    preds.loc[0, "entity_id"] = outs.loc[0, "entity_id"] = label
+    preds = preds.rename(columns={"p_state_current": f"p_state_{label}"})
+    outs.loc[0, "next_state"] = label
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    df = load(pred_path, out_path)
+    assert df.loc[0, ["entity_id", "from_state", "next_state"]].tolist() == [label] * 3
+    pd.testing.assert_frame_equal(df, join(preds, outs))
+
+
+@pytest.mark.parametrize("column", ["entity_id", "from_state", "next_state"])
+def test_csv_still_rejects_empty_entity_and_state_labels(tmp_path, column):
+    preds, outs = with_states(from_state=["current"] * 3)
+    frame = outs if column == "next_state" else preds
+    frame.loc[0, column] = ""
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    with pytest.raises(ContractError, match="missing"):
+        load(pred_path, out_path)

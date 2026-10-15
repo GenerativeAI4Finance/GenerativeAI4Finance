@@ -138,6 +138,42 @@ def test_cli_preserves_hashes_for_matching_input_basenames(tmp_path):
         assert f"`{name}` sha256 `{info['sha256']}`" in markdown
 
 
+def test_cli_hashes_the_bytes_it_scores_when_inputs_are_replaced(tmp_path, monkeypatch):
+    key = {"entity_id": ["a", "b"], "as_of": "2025-01-31", "horizon": 6, "scenario": "baseline"}
+    preds = pd.DataFrame({**key, "p_event": [0.2, 0.8]})
+    outs = pd.DataFrame({**key, "event": [0, 1]})
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    original_hashes = {p.name: {"sha256": cli.sha256(p)} for p in (pred_path, out_path)}
+    original_load = cli.load
+
+    def replace_after_loading(*args):
+        df = original_load(*args)
+        preds.assign(p_event=[0.9, 0.1]).to_csv(pred_path, index=False)
+        outs.assign(event=[1, 0]).to_csv(out_path, index=False)
+        return df
+
+    monkeypatch.setattr(cli, "load", replace_after_loading)
+    output = tmp_path / "report"
+    cli.main(
+        [
+            "--predictions",
+            str(pred_path),
+            "--outcomes",
+            str(out_path),
+            "--out",
+            str(output),
+            "--n-boot",
+            "1",
+        ]
+    )
+    report = json.loads(output.with_suffix(".json").read_text())
+    assert report["metadata"]["inputs"] == original_hashes
+    assert report["scenarios"]["baseline"]["binary"]["brier"] == pytest.approx(0.04)
+    assert all(original_hashes[p.name]["sha256"] != cli.sha256(p) for p in (pred_path, out_path))
+
+
 def state_frame(n=240, seed=5, with_from=True):
     rng = np.random.default_rng(seed)
     states = ["current", "late", "default"]

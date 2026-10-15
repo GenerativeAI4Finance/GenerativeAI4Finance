@@ -8,6 +8,7 @@ import datetime as dt
 import re
 from decimal import Decimal, InvalidOperation
 from os import PathLike
+from typing import BinaryIO
 
 import numpy as np
 import pandas as pd
@@ -140,6 +141,8 @@ def validate(predictions: pd.DataFrame, outcomes: pd.DataFrame) -> None:
             raise ContractError(f"{name} has {int(dupes.sum())} duplicate rows on {KEY}")
 
     p = pd.to_numeric(predictions["p_event"], errors="coerce")
+    if np.iscomplexobj(p.to_numpy()):
+        raise ContractError("p_event values must be real probabilities in [0, 1]")
     if p.isna().any():
         raise ContractError("p_event has missing or non-numeric values")
     if ((p < 0) | (p > 1)).any():
@@ -158,6 +161,8 @@ def validate(predictions: pd.DataFrame, outcomes: pd.DataFrame) -> None:
         if "next_state" not in outcomes.columns:
             raise ContractError("p_state_* columns given but outcomes has no next_state")
         sp = predictions[states].apply(pd.to_numeric, errors="coerce")
+        if np.iscomplexobj(sp.to_numpy()):
+            raise ContractError("p_state_* values must be real probabilities in [0, 1]")
         if sp.isna().any().any() or ((sp < 0) | (sp > 1)).any().any():
             raise ContractError("p_state_* values must be numeric and in [0, 1]")
         if ((sp.sum(axis=1) - 1).abs() > TOLERANCE).any():
@@ -189,11 +194,15 @@ def _check_event_matches_state(p_event, p_state, outcomes):
         )
 
 
-def load(predictions_path: str | PathLike, outcomes_path: str | PathLike) -> pd.DataFrame:
+def load(
+    predictions_path: str | PathLike | BinaryIO, outcomes_path: str | PathLike | BinaryIO
+) -> pd.DataFrame:
     # Keep raw horizon text so CSV inference cannot round large integers via float64.
     text = {"entity_id": str, "as_of": str, "horizon": str, "from_state": str, "next_state": str}
-    predictions = pd.read_csv(predictions_path, dtype=text)
-    outcomes = pd.read_csv(outcomes_path, dtype=text)
+    # Only empty fields are missing. Labels such as "NA", "NULL" and "nan"
+    # are legitimate entity/state names, not pandas' default missing tokens.
+    predictions = pd.read_csv(predictions_path, dtype=text, keep_default_na=False, na_values=[""])
+    outcomes = pd.read_csv(outcomes_path, dtype=text, keep_default_na=False, na_values=[""])
     return join(predictions, outcomes)
 
 
