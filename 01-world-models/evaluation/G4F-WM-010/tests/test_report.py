@@ -106,6 +106,29 @@ def test_shipped_example_matches_generator(tmp_path):
         assert (tmp_path / f"{name}.csv").read_bytes() == shipped
 
 
+def test_cli_regenerates_committed_example_reports_byte_for_byte(tmp_path):
+    here = Path(__file__).resolve().parents[1]
+    preds, outs = generate(seed=7)
+    for name, frame in (("predictions", preds), ("outcomes", outs)):
+        frame.to_csv(tmp_path / f"{name}.csv", index=False, lineterminator="\n")
+    output = tmp_path / "example_report"
+    cli.main(
+        [
+            "--predictions",
+            str(tmp_path / "predictions.csv"),
+            "--outcomes",
+            str(tmp_path / "outcomes.csv"),
+            "--out",
+            str(output),
+        ]
+    )
+    for suffix in (".json", ".md"):
+        generated = output.with_suffix(suffix).read_bytes()
+        expected = (here / "reports" / f"example_report{suffix}").read_bytes()
+        assert generated.endswith(b"\n") and b"\r" not in generated
+        assert generated == expected.replace(b"\r\n", b"\n")
+
+
 def test_cli_preserves_hashes_for_matching_input_basenames(tmp_path):
     preds, outs = generate(seed=7)
     pred_path = tmp_path / "predictions" / "data.csv"
