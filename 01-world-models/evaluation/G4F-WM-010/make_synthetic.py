@@ -1,10 +1,12 @@
 """Write a small seeded synthetic example in the input contract format.
 
-Every number here is made up. The stress scenario raises the true default
+Every number here is made up. Outcomes at each horizon are sampled
+independently, not as path-coherent absorbing trajectories. The stress scenario
+raises the true default
 rate but the "predictor" does not see the shift, so it under-predicts there.
 That is the failure the report is meant to surface.
 
-    python make_synthetic.py --seed 7 --out examples
+    python make_synthetic.py --seed 7 --entities-per-scenario 25 --out examples
 """
 
 import argparse
@@ -34,10 +36,21 @@ def state_probs(x: float, horizon: int, shift: float) -> tuple[float, float, flo
     return 1 - p_default - p_delinquent, p_delinquent, p_default
 
 
-def generate(seed: int = 7) -> tuple[pd.DataFrame, pd.DataFrame]:
+def generate(
+    seed: int = 7, *, entities_per_scenario: int | None = None
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Generate the default panel, or an explicitly sized panel for each scenario."""
+    if entities_per_scenario is not None and (
+        isinstance(entities_per_scenario, bool)
+        or not isinstance(entities_per_scenario, int)
+        or entities_per_scenario < 1
+    ):
+        raise ValueError("entities_per_scenario must be a positive integer")
     rng = np.random.default_rng(seed)
     preds, outs = [], []
     for scenario, (n_entities, true_shift, model_shift) in SCENARIOS.items():
+        if entities_per_scenario is not None:
+            n_entities = entities_per_scenario
         for e in range(n_entities):
             entity = f"SYN-{e:04d}"
             for as_of in AS_OF:
@@ -66,11 +79,16 @@ def generate(seed: int = 7) -> tuple[pd.DataFrame, pd.DataFrame]:
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument(
+        "--entities-per-scenario", type=int, help="override the default 300/300/200 entities"
+    )
     ap.add_argument("--out", default="examples")
     args = ap.parse_args(argv)
+    if args.entities_per_scenario is not None and args.entities_per_scenario < 1:
+        ap.error("--entities-per-scenario must be a positive integer")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    preds, outs = generate(args.seed)
+    preds, outs = generate(args.seed, entities_per_scenario=args.entities_per_scenario)
     # LF on every platform, so the files and their sha256 are the same everywhere
     preds.to_csv(out / "predictions.csv", index=False, lineterminator="\n")
     outs.to_csv(out / "outcomes.csv", index=False, lineterminator="\n")

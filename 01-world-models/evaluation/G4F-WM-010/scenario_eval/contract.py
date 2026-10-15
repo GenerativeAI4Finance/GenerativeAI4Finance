@@ -22,9 +22,10 @@ STATE_PREFIX = "p_state_"
 # columns that belong in one file only (p_state_* columns are predictions too)
 PREDICTION_COLUMNS = ("p_event", "from_state")
 OUTCOME_COLUMNS = ("event", "next_state")
-# If the states include this one, the binary event is "in this state at the
-# horizon" (default is absorbing), so p_event must equal p_state_default and
-# event must equal next_state == "default".
+# If the states include this one, the binary event must consistently mean
+# membership in that state at the horizon. Equivalence to default occurrence
+# by the horizon depends on the underlying simulator treating default as
+# absorbing.
 EVENT_STATE = "default"
 TOLERANCE = 1e-6
 MAX_HORIZON = 2**63 - 1

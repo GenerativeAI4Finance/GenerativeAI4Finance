@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 import evaluate as cli
+import make_synthetic as synthetic_cli
 from make_synthetic import generate
 from scenario_eval import metrics as m
 from scenario_eval.contract import ContractError, join
@@ -99,17 +100,29 @@ def test_cli_writes_json_and_markdown(tmp_path):
 
 def test_shipped_example_matches_generator(tmp_path):
     here = Path(__file__).resolve().parents[1]
-    preds, outs = generate(seed=7)
+    preds, outs = generate(seed=7, entities_per_scenario=25)
+    assert len(preds) == len(outs) == 300
+    assert preds.groupby("scenario").size().to_dict() == dict.fromkeys(
+        ["baseline", "normal", "stress"], 100
+    )
+    synthetic_cli.main(["--seed", "7", "--entities-per-scenario", "25", "--out", str(tmp_path)])
     for name, frame in (("predictions", preds), ("outcomes", outs)):
-        frame.to_csv(tmp_path / f"{name}.csv", index=False, lineterminator="\n")
+        expected = frame.to_csv(index=False, lineterminator="\n").encode()
         shipped = (here / "examples" / f"{name}.csv").read_bytes()
         shipped = shipped.replace(b"\r\n", b"\n")
-        assert (tmp_path / f"{name}.csv").read_bytes() == shipped
+        assert (tmp_path / f"{name}.csv").read_bytes() == shipped == expected
+    for invalid in (True, 0, -1, 2.5, "25"):
+        with pytest.raises(ValueError, match="positive integer"):
+            generate(seed=7, entities_per_scenario=invalid)
+    with pytest.raises(SystemExit) as exc:
+        synthetic_cli.main(["--entities-per-scenario", "0", "--out", str(tmp_path / "invalid")])
+    assert exc.value.code == 2
+    assert not (tmp_path / "invalid").exists()
 
 
 def test_cli_regenerates_committed_example_reports_byte_for_byte(tmp_path):
     here = Path(__file__).resolve().parents[1]
-    preds, outs = generate(seed=7)
+    preds, outs = generate(seed=7, entities_per_scenario=25)
     for name, frame in (("predictions", preds), ("outcomes", outs)):
         frame.to_csv(tmp_path / f"{name}.csv", index=False, lineterminator="\n")
     output = tmp_path / "example_report"
@@ -401,7 +414,7 @@ def test_small_sample_warnings_in_json_and_markdown(example):
     assert "below the minimum of 100 rows" in md
 
 
-def test_no_warnings_for_the_shipped_example(report):
+def test_no_warnings_for_the_default_generated_panel(report):
     assert all(res["warnings"] == [] for res in report["scenarios"].values())
 
 

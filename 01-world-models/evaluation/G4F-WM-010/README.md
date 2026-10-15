@@ -1,271 +1,180 @@
 # G4F-WM-010: Scenario prediction and calibration evaluation
 
-Scores probability forecasts from a world model against held-out simulated
-outcomes, with baseline, normal and stress scenarios reported separately.
+Evaluates binary risk probabilities and next-state distributions against held-out
+simulated outcomes. Baseline, normal and stress are reported separately, with
+calibration, error analysis, metric definitions and reproducible JSON/Markdown.
 
-There is no predictor (G4F-WM-009) or simulator output in the repo yet, so this
-folder defines a small input contract and ships a seeded synthetic example. Once
-WM-009 writes predictions in this format, the same command evaluates them.
+WM-009 predictor and simulator outputs are not available in this repository, so
+the example is synthetic. Its scores describe agreement with the simulator;
+real-world validity requires validation on real outcomes. All bundled data and
+simulator outputs are wholly synthetic/fictional; no root or applicable dataset
+licence is declared. Maintainer guidance on an appropriate contribution and
+dataset licence is requested.
 
-All results come from simulated data. They say how well a predictor matches the
-simulator, not how it would perform on real borrowers. Real-world validity
-needs validation on real outcome data.
+## Run and reproduce
+
+Use Python 3.12 and the pinned dependencies. From this directory:
+
+```bash
+python -m venv .venv
+# Linux/macOS: source .venv/bin/activate
+# PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python make_synthetic.py --seed 7 --entities-per-scenario 25 --out examples
+python evaluate.py --predictions examples/predictions.csv \
+    --outcomes examples/outcomes.csv --out reports/example_report \
+    --seed 0 --n-boot 500 --n-bins 10
+```
+
+The continuation backslashes above are shell syntax for Linux/macOS; in PowerShell,
+put the evaluation command on one line. The committed example uses 25 fictional
+entities per scenario, two dates (`2025-01-31`, `2025-07-31`) and horizons of 6 and
+12 months: 100 matched rows per scenario, 300 overall. Balanced scenario counts
+keep each scenario visible in a compact review fixture. Omitting
+`--entities-per-scenario` preserves the generator's default 300/300/200 entities
+(3,200 rows); the full default panel remains covered by metric regression tests.
+
+Evaluation defaults are seed 0, 500 bootstrap resamples and 10 bins. `--n-boot`
+must be at least 1; `--n-bins` is an integer from 1 to 100. `--pooled` adds a view
+labelled “not a headline number”: pooling can hide stress miscalibration. `--out`
+is a path without extension; a trailing `.json` or `.md` is removed, other dots stay.
+
+For DataFrames or existing files, the library uses the same contract and metrics:
+
+```python
+from scenario_eval.contract import join, load
+from scenario_eval.report import evaluate, to_json, to_markdown
+
+df = load("examples/predictions.csv", "examples/outcomes.csv")
+# Or: df = join(predictions_dataframe, outcomes_dataframe)
+report = evaluate(df, seed=0, n_boot=500, n_bins=10)
+json_text, markdown_text = to_json(report), to_markdown(report)
+```
 
 ## Input contract
 
-Two CSV files joined on `entity_id, as_of, horizon, scenario`. Every prediction
-must have exactly one outcome and the other way round, otherwise the run stops.
+Predictions and outcomes join one-to-one on `entity_id, as_of, horizon, scenario`.
+`event` is the caller-supplied binary target measured at the specified horizon;
+`next_state`, when supplied, is the state at that horizon. When the target is
+default membership at the horizon, it equals default occurrence by that horizon
+only if default is absorbing. Forecasts should use only information available at `as_of`.
 
-`predictions.csv`
-
-| column | type | notes |
+| File | Columns | Meaning |
 |---|---|---|
-| `entity_id` | string | |
-| `as_of` | date `YYYY-MM-DD` | prediction time `t`; only information up to `t` should be used (see WM-001) |
-| `horizon` | whole number in [1, 9223372036854775807] | months after `as_of`, stored as int64 |
-| `scenario` | string | one of `baseline`, `normal`, `stress` |
-| `p_event` | float in [0, 1] | probability of the binary event (e.g. default) within the horizon |
-| `p_state_<name>` | float in [0, 1] | optional, probability of each next state; must sum to 1 per row |
-| `from_state` | string | optional, state at `as_of`; adds a breakdown by starting state |
+| Both | `entity_id`, `as_of`, `horizon`, `scenario` | Entity label; real `YYYY-MM-DD` date; positive int64 months; `baseline`, `normal` or `stress`. |
+| Predictions | `p_event` | Finite real probability in [0, 1]. |
+| Predictions, optional | `p_state_<name>` | Finite real probabilities in [0, 1], summing to 1 per row. |
+| Predictions, optional | `from_state` | State at prediction time; enables a starting-state breakdown. |
+| Outcomes | `event` | Binary 0 or 1, with booleans rejected. |
+| Outcomes, conditional | `next_state` | Required with `p_state_*`; must name one of those states. |
 
-`outcomes.csv`
+Validation raises `ContractError` before scoring for missing keys/columns,
+duplicate CSV headers, duplicate canonical keys, unmatched rows, invalid values,
+or columns placed in the wrong file. Only key columns may occur in both files.
+CSV empty fields are missing; literal labels `NA`, `NULL` and `nan` remain strings.
+Dates must be real and exactly formatted; library date/timestamp objects become dates.
+Horizons `12`, `12.0` and `"12"` canonicalise to the same value; fractions, booleans,
+nonpositive values and values above 9223372036854775807 are rejected. Entity labels
+also canonicalise before duplicate checks (`1` and `"1"` collide).
 
-| column | type | notes |
-|---|---|---|
-| `entity_id`, `as_of`, `horizon`, `scenario` | | same key as above |
-| `event` | 0 or 1 | did the event happen within the horizon |
-| `next_state` | string | required if `p_state_*` columns are given; must match one of the names |
+If a `default` state exists, `p_event == p_state_default` and
+`event == (next_state == "default")` are required. CSV probabilities use round-trip
+float parsing: values such as `1/6` retain their in-memory float and bin assignment.
+The loader supports pandas' inferred compressed CSV formats as well as plain CSV.
 
-What is checked before anything is scored (each failure stops the run with a
-`ContractError` that names the problem):
+## Metric definitions
 
-- required columns are present; prediction columns (`p_event`, `p_state_*`,
-  `from_state`) are not in the outcomes file, outcome columns (`event`,
-  `next_state`) are not in the predictions file, and no column other than the
-  key is in both; duplicate CSV column names are rejected before parsing data
-- no missing values in the key; `scenario` is one of the three labels. In CSVs,
-  empty fields are missing, while literal entity/state labels such as `NA`,
-  `NULL` and `nan` stay strings
-- `as_of` is a real calendar date in `YYYY-MM-DD` form (`2025-02-30` and
-  `2025-1-31` are rejected); date or timestamp objects are accepted and written
-  as dates
-- `horizon` is a whole number of months in [1, 9223372036854775807]; `12`, `12.0`
-  and `"12"` are the same horizon in both files, while `6.5`, `0`, negative
-  numbers, text, booleans (including NumPy booleans) and values above the int64
-  limit are rejected
-- no duplicate keys, checked after the key is canonicalised, so `12` and `"12.0"`
-  or `1` and `"1"` for an entity count as duplicates
-- every prediction has exactly one outcome and the other way round
-- `p_event` and `p_state_*` are real numeric values in [0, 1] (complex numbers,
-  NaN and inf rejected);
-  `p_state_*` sums to 1 on every row; `event` is 0 or 1 (booleans rejected)
-- `next_state` is never missing and every value has a `p_state_` column
-- if there is a `default` state, `p_event` must equal `p_state_default` and
-  `event` must equal `next_state == default`, so the binary and multi-state
-  views cannot disagree
+Each scenario is scored independently. Let `y` be the event, `p` its forecast,
+`N` the row count, and `w_k = n_k/N` for bin `k`.
 
-## Metrics
+| Metric | Definition and interpretation |
+|---|---|
+| Brier | `mean((p-y)^2)`; lower is better. |
+| Log loss | `-mean(y log p + (1-y) log(1-p))`, clipped to `[1e-15, 1-1e-15]`. scikit-learn uses machine epsilon, so extreme forecasts differ. |
+| ROC AUC | Probability an event ranks above a non-event, with half credit for ties; measures ranking. |
+| PR AUC | Average precision, the step-wise precision-recall area used by scikit-learn. |
+| Calibration in the large | `mean(p)-mean(y)`; negative means under-prediction. |
+| ECE | `sum_k w_k * abs(mean_predicted_k-observed_k)`; equal-width and equal-mass bins are both reported. |
+| MCE | Largest nonempty-bin absolute gap; the equal-width result includes the responsible bin's count. |
+| Reliability table | Bin count, mean forecast and observed rate; empty bins retain count 0 and null rates, and counts sum to `N`. |
+| Murphy decomposition | `Brier = reliability - resolution + uncertainty + within_bin`; see terms below. |
+| Next state | Multi-class Brier `mean(sum_c (p_c-1[state=c])^2)` in [0, 2], log loss, top-1 accuracy, observed/predicted shares and one-vs-rest calibration. |
+| Subgroups | Per-horizon event scores; state scores by `from_state` when supplied. |
+| Intervals | Seeded 95% percentile row-bootstrap intervals for Brier, log loss, ROC AUC, PR AUC and equal-width ECE. |
 
-All metrics are computed per scenario. `y` is the outcome, `p` the forecast, `N`
-the number of rows.
+Murphy reliability is `sum_k w_k (mean_predicted_k-observed_k)^2`, resolution is
+`sum_k w_k (observed_k-base_rate)^2`, and uncertainty is `base_rate*(1-base_rate)`.
+The `within_bin` residual makes the identity exact when forecasts vary inside a
+bin (Stephenson et al. 2008). Debiased reliability subtracts
+`observed_k*(1-observed_k)/(n_k-1)` from each squared gap (Kumar, Liang and Ma 2019);
+singleton bins retain their plug-in term. It is separate from the Brier sum and
+may be negative when the calibration gap is within sampling noise.
 
-- **Brier score**: `mean((p - y)^2)`. Lower is better.
-- **Log loss**: `-mean(y log p + (1 - y) log(1 - p))`, with `p` clipped to
-  `[1e-15, 1 - 1e-15]` so a confident miss costs about 34.5 instead of infinity.
-  scikit-learn clips at machine epsilon (about 2.2e-16), so the two differ only
-  for forecasts within 1e-15 of 0 or 1.
-- **ROC AUC**: probability that a random event row gets a higher forecast than a
-  random non-event row (ties count half). Measures ranking only, not calibration.
-- **PR AUC**: average precision, the step-wise area under the precision-recall
-  curve (same definition as scikit-learn). More informative than ROC AUC when
-  events are rare.
-- **Calibration in the large**: `mean(p) - mean(y)`. Negative means the model
-  under-predicts.
-- **ECE**: `sum_k n_k / N * |observed_k - mean_predicted_k|` over bins. Reported
-  with two binnings:
-  - equal-width (default 10 bins over [0, 1]): easy to read and compare across
-    runs, but with rare events most rows land in the first bin;
-  - equal-mass (10 quantile bins): every bin has about the same number of rows,
-    so the estimate is less noisy where the forecasts actually are.
-  If the two disagree a lot, look at the reliability table before trusting either.
-- **MCE**: the largest `|observed_k - mean_predicted_k|` over non-empty bins
-  (equal-width and equal-mass). It is usually set by one of the smallest bins,
-  so the report prints that bin's row count next to the equal-width value.
-- **Reliability table**: per bin, the row count, mean forecast and observed rate.
-  Empty bins stay in the table with `n = 0` and null rates. The counts always
-  add up to the number of rows; the code raises if they do not.
-- **Murphy decomposition** of the Brier score over the equal-width bins:
-  `Brier = reliability - resolution + uncertainty + within_bin`.
-  `reliability = sum_k n_k/N (mean_predicted_k - observed_k)^2` (lower is better),
-  `resolution = sum_k n_k/N (observed_k - base_rate)^2` (higher is better),
-  `uncertainty = base_rate (1 - base_rate)`. The textbook identity is exact only
-  when forecasts are constant inside each bin, so the leftover is reported as
-  `within_bin` (Stephenson et al. 2008) and the parts always add up.
-- **Debiased reliability**: the plug-in reliability above is pushed up by
-  binomial noise in each bin's observed rate, even for a perfectly calibrated
-  forecaster. Subtracting `observed_k (1 - observed_k) / (n_k - 1)` from each
-  bin's squared gap removes that noise (Kumar, Liang and Ma 2019). It is not
-  part of the Brier sum, and it can be slightly below 0 when the gap is within
-  noise. A bin with one row keeps its plug-in term.
-- **Next state** (if `p_state_*` given): multi-class Brier
-  `mean(sum_c (p_c - 1[state = c])^2)` with range [0, 2], multi-class log loss,
-  top-1 accuracy, and observed against mean predicted share per state. Each
-  state also gets a one-vs-rest calibration block (Brier, ECE, MCE and
-  reliability table of `p_state_<name>` against `1[next_state = name]`). If
-  `from_state` is given, the same scores are repeated for each starting state.
-- **By horizon**: inside each scenario, per horizon: n, events, observed rate,
-  mean forecast, Brier and equal-width ECE.
-- **Bootstrap intervals**: 95% percentile intervals from row resampling with a
-  fixed seed (`--n-boot`, at least 1), for Brier, log loss, ROC AUC, PR AUC and
-  equal-width ECE. Resamples where a metric is undefined are dropped and counted
-  in `undefined_draws`. An interval that is undefined everywhere or has zero
-  width is `null` with a `ci_null_reason`, never `[x, x]`.
+Equal-width edges are decimal-equivalent floats `k/n_bins`; bins are `[lo, hi)`,
+with 1 included in the last. Exactly 0.3 enters `[0.3, 0.4)` with 10 bins.
+scikit-learn's `calibration_curve` uses `(lo, hi]` and `np.linspace` edges, so
+boundary forecasts can differ; continuous-forecast reliability is cross-checked
+for both strategies. Equal-mass bins adapt to where forecasts occur. Read both
+alongside counts, since ECE and MCE depend on binning and event scarcity.
 
-If a scenario has only one outcome class, ROC AUC and PR AUC are `null` with a
-reason, never 0 or 0.5. A scenario with no rows is reported as `null`.
+A missing scenario is `null`. A single outcome class makes ROC/PR AUC `null`
+with a reason. Bootstrap undefined draws are counted and dropped; wholly
+undefined or zero-width intervals are `null` with `ci_null_reason`, never `[x, x]`.
+Warnings appear in both outputs for fewer than 100 rows, 10 events, 10 non-events,
+10 observations of any next state, or a zero-width interval. These thresholds
+are rules of thumb, recorded in `metadata.small_sample_minimums`.
 
-### Binning rule
+## Compact example results and provenance
 
-Equal-width edges are `k / n_bins`, computed so that each edge is the same
-float as the decimal it stands for (0.3, not 0.30000000000000004). Bins are
-`[lo, hi)`, except the last, which also takes 1.0. A forecast of exactly 0.3
-therefore lands in `[0.3, 0.4)`. CSV probabilities use round-trip float parsing,
-so values such as `1/6` keep the same float and bin assignment as in-memory
-forecasts. scikit-learn's `calibration_curve` uses
-`(lo, hi]` bins with `np.linspace` edges, so a forecast that sits exactly on
-an edge can land in a different bin. Everywhere else the two agree: the tests
-compare the reliability tables on continuous forecasts for both the equal-width
-and the quantile strategy. This is a deliberate choice, made so that a
-forecaster that outputs values on a 0.1 grid is scored the same way whichever
-way floating point rounds the edges. `--n-bins` and the library accept whole
-numbers from 1 to 100; booleans, floats such as 2.5 or 10.0, text, zero and
-negative numbers are rejected, on the command line (exit code 2, nothing
-written) and in the library.
+The generator predicts from a noisy risk score with a mild assumed shift. Stress
+raises the true default rate without informing the predictor. In this example,
+the binary event is terminal default membership (`next_state == "default"`),
+which is equivalent to default occurrence by the horizon only under an
+absorbing-default simulator. Each horizon is sampled independently: these are
+not path-coherent absorbing trajectories. The states are `current`,
+`delinquent`, and `default`.
+The commands above produce these results (brackets: 95% bootstrap interval):
 
-### Small-sample warnings
+| Scenario | n | Events | Mean pred - observed | Brier | ECE width |
+|---|---|---|---|---|---|
+| baseline | 100 | 3 | 0.0309 | 0.0305 [0.0055, 0.0617] | 0.0309 [0.0111, 0.0618] |
+| normal | 100 | 8 | 0.0081 | 0.0576 [0.0290, 0.1000] | 0.0591 [0.0360, 0.1079] |
+| stress | 100 | 17 | -0.0667 | 0.1374 [0.0918, 0.1887] | 0.0810 [0.0354, 0.1569] |
 
-A scenario gets a warning, in the JSON (`scenarios.<name>.warnings`) and in the
-Markdown, when it has fewer than 100 rows, fewer than 10 events, fewer than 10
-non-events, or a next state with fewer than 10 observations, or when a bootstrap
-interval has zero width. The thresholds are in `metadata.small_sample_minimums`.
-They are rules of thumb, not a statistical test: below them the point values
-are too noisy to read on their own. The Markdown marks such scenarios with
-"(see warnings)".
+Baseline and normal trigger event/state-count warnings. Intervals overlap and
+some MCE bins have only one row: this compact fixture demonstrates outputs and
+warnings, and cannot establish statistically reliable scenario differences.
+ECE's absolute gaps are biased upward by sampling noise; bootstrap resampling
+adds noise again, so an ECE point estimate can lie below its percentile interval.
 
-## Why stress is reported on its own
+The JSON retains metadata, all scenario binary/state/horizon blocks and warnings.
+Metadata records seeds, bins, bootstrap count, log-loss clip, row counts, NumPy
+version and input SHA-256 hashes. CRLF is normalised to LF for hashing; matching
+input basenames are prefixed with `predictions:`/`outcomes:`. The CLI captures each
+file once and hashes exactly the bytes it parses, including compressed inputs.
+There are no timestamps; JSON floats use 10 significant digits and outputs use
+LF. Pinned dependencies, the same inputs and seeds reproduce both reports byte
+for byte; artifact tests cover the public CLI, CSV golden bytes and CRLF copies.
 
-A predictor fitted on calm periods tends to under-predict when conditions shift,
-and stress rows are usually a minority. Pooled with baseline and normal rows the
-miscalibration gets diluted and the headline number looks fine. So each scenario
-gets its own row. `--pooled` adds a pooled view, but it is labelled as not a
-headline number in both the JSON and the Markdown.
-
-## How to run
-
-```bash
-cd 01-world-models/evaluation/G4F-WM-010
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-python make_synthetic.py --seed 7 --out examples
-python evaluate.py --predictions examples/predictions.csv \
-    --outcomes examples/outcomes.csv --out reports/example_report
-python -m pytest
-```
-
-Options: `--seed` (default 0), `--n-boot` (default 500), `--n-bins` (default 10,
-1 to 100), `--pooled`. `--out` is a path without extension; a trailing `.json`
-or `.md` is dropped and any other dot is kept.
-
-### Development checks
-
-From this directory, install the pinned development tools in the same virtual
-environment as the runtime dependencies, then run:
+## Development and limitations
 
 ```bash
 python -m pip install -r requirements-dev.txt
-python -m mypy
 python -m pytest
 python -m ruff check .
 python -m ruff format --check .
 python -m ruff check --select S evaluate.py make_synthetic.py scenario_eval
+python -m mypy
 python -m pip check
 ```
 
-The local mypy configuration checks all six runtime sources, including bodies
-of functions without annotations, using the pinned pandas stubs. The CSV
-loader's private pandas handle adapter has a narrow protocol for its tested
-text-reading interface because pandas-stubs covers the public API.
+Mypy checks all six runtime sources, including unannotated function bodies, with
+pinned pandas stubs. The private pandas handle adapter uses a narrow protocol for
+its tested text-reading interface. Tests also cross-check metrics with scikit-learn.
 
-The task's GitHub Actions workflow runs pytest, Ruff and mypy on Python 3.12
-for Linux and Windows when this folder or its workflow changes.
-
-## Report format
-
-`evaluate.py` writes `<out>.json` and `<out>.md`. The JSON has:
-
-- `metadata`: seed, bootstrap count, bins, log loss clip, small-sample minimums,
-  sha256 of each input file (computed with CRLF read as LF, so a Windows copy
-  hashes the same), rows per scenario, numpy version. Input hashes use the file
-  basenames as keys; matching basenames are prefixed with `predictions:` and
-  `outcomes:` so both hashes are retained. The CLI reads each input once and
-  hashes the same bytes it parses, even if a producer subsequently replaces it.
-- `disclaimer`
-- `scenarios.<name>.warnings`
-- `scenarios.<name>.binary`: the metrics above, reliability tables for both
-  binnings, Murphy terms, debiased reliability and bootstrap intervals
-- `scenarios.<name>.by_horizon` and `scenarios.<name>.state_transition`
-  (`per_class` and `by_from_state` live inside the latter)
-- `pooled_all_scenarios` only with `--pooled`
-
-There is no timestamp in the output, floats are rounded to 10 significant
-digits, and files are written with LF line endings, so the same inputs and seed
-give a byte-identical report. The committed `reports/example_report.*` come
-from the commands above; `.gitattributes` keeps the CSVs and reports at LF.
-
-## Synthetic example
-
-`make_synthetic.py` makes fictional entities (`SYN-0000` and up; 300 in
-baseline, 300 in normal, 200 in stress), two `as_of` dates and horizons of 6
-and 12 months, with next states `current`, `delinquent` and `default`. The
-event is `next_state == default`. The predictor sees a noisy risk score and
-assumes a mild shift for every scenario. In the stress scenario the true
-default rate is shifted much higher and the predictor does not know, so it
-under-predicts there on purpose.
-
-Results from `reports/example_report.md` (seed 0, 500 resamples, 10 bins;
-brackets are 95% bootstrap intervals):
-
-| scenario | n | events | mean pred - observed | Brier | ROC AUC | ECE width | MCE width | reliability debiased |
-|---|---|---|---|---|---|---|---|---|
-| baseline | 1200 | 90 | 0.0059 | 0.0647 [0.0543, 0.0769] | 0.7404 [0.6871, 0.7979] | 0.0099 [0.0057, 0.0262] | 0.1998 (n=3) | -0.0008 |
-| normal | 1200 | 112 | -0.0002 | 0.0772 [0.0655, 0.0892] | 0.7382 [0.6868, 0.7797] | 0.0062 [0.0067, 0.0270] | 0.3770 (n=6) | -0.0002 |
-| stress | 800 | 198 | -0.1525 | 0.1945 [0.1731, 0.2180] | 0.7073 [0.6670, 0.7485] | 0.1531 [0.1259, 0.1835] | 0.4491 (n=2) | 0.0259 |
-
-Stress has an ECE around 0.15 against about 0.01 for baseline and normal, while
-ROC AUC barely moves: the ranking still works, the probability level does not.
-The MCE values are set by bins of 2 to 6 rows and should not be read on their
-own. No scenario triggers a small-sample warning.
-
-The normal scenario's ECE point value (0.0062) sits just below its own interval.
-That is expected: ECE adds up absolute gaps, so noise pushes it up, and each
-bootstrap resample adds noise again. The debiased reliability for baseline and
-normal is below 0, which says their remaining gap is within noise. The report
-states this next to the table.
-
-## Limitations
-
-- Everything here is synthetic. The numbers say how well a predictor matches a
-  simulator, not how it would do on real borrowers. Real-world validity needs
-  validation on real outcome data, and passing these checks says nothing about
-  regulatory compliance.
-- The bootstrap resamples rows, not entities. Real panel data has several rows
-  per entity (here two dates and two horizons) and they are correlated, so the
-  intervals are too narrow; an entity-level or block bootstrap would be the next
-  step. The debiased reliability also assumes independent rows.
-- ECE and MCE depend on the binning and are noisy with few events per bin. Read
-  them together with the reliability table and the Brier decomposition.
-- The small-sample thresholds are fixed rules of thumb, not a power calculation.
-- Only a binary event and a single next-state distribution are covered. Full
-  trajectory or multi-step evaluation would need the WM-006 transition format.
-- The scenario labels are fixed to `baseline`, `normal`, `stress`.
+The bootstrap resamples rows, although dates/horizons repeat entities: dependence
+can make intervals too narrow. Entity/block bootstrap would address panel data;
+debiased reliability also assumes independent rows. Small samples and noisy bins
+require caution. The fixed scenarios and one event/next-state distribution do not
+evaluate full trajectories or establish regulatory compliance. Synthetic results
+cannot establish performance on real borrowers without real outcome validation.
