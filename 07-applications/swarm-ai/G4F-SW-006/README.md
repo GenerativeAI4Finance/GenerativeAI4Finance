@@ -64,6 +64,16 @@ python example.py
   below). Leave it off for anything free text.
 - Argument values must be plain strings, integers, floats, booleans or null.
   Lists, dicts, other objects and subclasses of the plain types are denied.
+- Policy files are limited to 1 MiB before UTF-8 decoding. Both file and
+  programmatic policies are limited to 32 levels, 20,000 nodes (including
+  object keys), 65,536 characters per string, 1,048,576 total string characters,
+  and 14,000 bits per integer. These budgets include unused fields. Programmatic
+  policies must contain plain JSON data with string object keys and finite
+  numbers. The integer budget still supports bounds such as `10**400`.
+- Regex patterns are limited to 2,048 characters and 64 unescaped opening
+  parentheses, conservatively including parentheses in classes and comments.
+  Runtime strings and integers use the same individual scalar limits as policies.
+  String limits and `max_length` are checked before regex matching.
 
 The shipped policy has four roles taken from G4F-SW-003: `source_collector`,
 `entity_matcher`, `evidence_analyst` and `reviewer`. Only the reviewer can set a
@@ -97,12 +107,14 @@ with the orchestrator and give each agent only its handle.
   Only exact plain types are accepted, so a mapping or string subclass can't
   show one value to the check and another to the tool.
 - **Strict loading.** Malformed policies are rejected at load time with
-  `PolicyError`: invalid JSON, duplicate keys, `NaN` or `Infinity`, unknown
+  `PolicyError`: invalid UTF-8 or JSON, duplicate keys, `NaN` or `Infinity`, unknown
   constraint keys, arguments with no constraint, bad regexes, `min` above
   `max`, negative or fractional `max_length`, `null` tool specs, unknown keys
   in a role, agents pointing at undefined roles, and any version other than
   the integer `1`. A typo like `"regex"` instead of `"pattern"` would
   otherwise be silently ignored and make the policy looser than intended.
+  Diagnostics omit file paths, parser exception text and raw credential-like
+  policy names. Excessive JSON nesting is rejected before the decoder runs.
 - **Immutable at runtime.** The loaded policy and the tool registry are
   read-only mappings, copied from their inputs, and the gate's attributes
   can't be reassigned. Changing the source dict or the tool dict after the
@@ -136,12 +148,17 @@ What `args` contains:
   `sk-` and Stripe keys, AWS,
   GitHub, Slack and Google keys, JWTs, PEM private keys, URLs with a password
   or a key in the query string) become `[REDACTED]`, and long strings are cut
-  at 200 characters.
+  at 200 characters. Detection also checks up to four rounds of URL percent
+  decoding, Unicode compatibility normalization and removal of non-printable
+  characters. Basic auth accepts whitespace between the scheme and token.
+  These transformations apply only to detection; the tool receives its original
+  checked value. Strings above the scalar limit are redacted without normalization.
 - Names chosen by the caller (unexpected argument names, tool names) are cut
   to 64 characters, non-printable characters are replaced with `?`, and names
   that look like credentials are redacted. The same applies to caller-controlled
   type names, deny reasons and `PermissionDenied` messages. At most 20 arguments
-  are listed per line.
+  are listed per line. Policy role names and argument names use the same cleaning
+  in audit fields and deny reasons.
 
 Deny reasons name the failing argument but never include its value.
 
@@ -167,7 +184,14 @@ default.
 - Constraints check one argument at a time. Rules that depend on several
   arguments together, or on state (rate limits, "only cases assigned to this
   agent"), are not covered.
+- Regex syntax and input budgets limit resource consumption but do not guarantee
+  matching time for arbitrary Python regular expressions. Policy authors are
+  trusted to choose simple patterns without catastrophic backtracking; review
+  custom expressions before using them with agent-controlled input.
 - Only the call is checked, not what the tool returns. If a tool returns data
   the role should not see, that is the tool's problem.
 - Passing these tests does not mean the setup meets any regulatory or security
   standard. It is a reference for the simulated swarm, not a certified control.
+
+The local Python 3.12 suite contains 190 tests, including resource boundaries,
+malformed UTF-8, encoded credential redaction and validation before matching.

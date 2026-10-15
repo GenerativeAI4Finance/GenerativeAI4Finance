@@ -3,9 +3,11 @@ import json
 import logging
 from collections.abc import Mapping
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import permissions
 from permissions import (
     PermissionDenied,
     PolicyError,
@@ -932,3 +934,361 @@ def test_redact_handles_cycles_and_non_finite_floats():
     loop = []
     loop.append(loop)
     json.dumps(redact({"loop": loop, "x": float("inf")}), allow_nan=False)
+
+
+# The log-only detector must cover equivalent credential representations at
+# every sink while preserving the original, policy-approved tool argument.
+ENCODED_SECRETS = [
+    "Basic  " + "dXNlcjpodW50ZXIy",
+    "bAsIc\t" + "dXNlcjpodW50ZXIy",
+    "https://example.test/?api%5Fkey=" + "synthetic-value",
+    "https://example.test/?%2574oken=" + "synthetic-value",
+    "sk_\u200blive_" + "0" * 20,
+    "ｓｋ＿ｌｉｖｅ＿" + "0" * 20,
+    "sk_\x00live_" + "0" * 20,
+    "https://example.test/?ａｐｉ％５Ｆｋｅｙ=" + "synthetic-value",
+    "https://example.test/?api%5\x01Fkey=" + "synthetic-value",
+]
+
+
+@pytest.mark.parametrize(
+    "secret",
+    ENCODED_SECRETS,
+    ids=[
+        "basic-spaces",
+        "basic-tab",
+        "url-key",
+        "nested-url-key",
+        "zero-width",
+        "fullwidth",
+        "nul",
+        "fullwidth-url",
+        "control-url",
+    ],
+)
+def test_encoded_secrets_across_values_names_types_and_exceptions(calls, audit, secret):
+    gate = one_tool_gate(calls, {"text": {"pattern": "(?s).*", "log_value": True}})
+    gate.call("a-01", "t", {"text": secret})
+    assert calls == [("t", {"text": secret})]
+    assert audit_records(audit)[0]["args"]["text"] == "[REDACTED]"
+    for agent, tool, args in (
+        (secret, "t", {}),
+        ("a-01", secret, {}),
+        ("a-01", "t", {secret: 1}),
+        (type(secret.replace("\x00", "\x01"), (), {})(), "t", {}),
+    ):
+        with pytest.raises(PermissionDenied) as exc:
+            gate.call(agent, tool, args)
+        assert "[REDACTED]" in str(exc.value) or "unknown agent" in str(exc.value)
+        assert secret not in str(exc.value)
+    error = type(secret.replace("\x00", "\x01"), (Exception,), {})
+
+    class Broken(Mapping):
+        def __getitem__(self, key):
+            raise KeyError(key)
+
+        def __iter__(self):
+            raise error()
+
+        def __len__(self):
+            return 0
+
+    assert gate.check("a-01", "t", Broken()).reason == "policy check error: [REDACTED]"
+    assert secret not in audit.text
+    assert len(audit_records(audit)) == 6
+
+
+@pytest.mark.parametrize("key", ["api%5Fkey", "pass\u200bword", "ｔｏｋｅｎ"])
+def test_encoded_sensitive_key_redacts_opted_in_values(calls, audit, key):
+    gate = one_tool_gate(
+        calls, {key: {"allowed": ["synthetic-value"], "log_value": True}}
+    )
+    gate.call("a-01", "t", {key: "synthetic-value"})
+    assert list(audit_records(audit)[0]["args"].values()) == ["[REDACTED]"]
+
+
+@pytest.mark.parametrize(
+    "location", ["agent", "role", "tool", "argument", "constraint", "pattern"]
+)
+def test_policy_errors_do_not_echo_credential_metadata(location):
+    secret = "sk_live_" + "0" * 20
+    raw = {
+        "version": 1,
+        "agents": {"a": "r"},
+        "roles": {"r": {"tools": {"t": {"args": {"x": {"max": 1}}}}}},
+    }
+    if location == "agent":
+        raw["agents"] = {secret: secret}
+    elif location == "role":
+        raw["roles"] = {secret: None}
+    elif location == "tool":
+        raw["roles"]["r"]["tools"] = {secret: None}
+    elif location == "argument":
+        raw["roles"]["r"]["tools"]["t"]["args"] = {secret: {}}
+    elif location == "constraint":
+        raw["roles"]["r"]["tools"]["t"]["args"]["x"] = {secret: 1}
+    else:
+        raw["roles"]["r"]["tools"]["t"]["args"]["x"] = {"pattern": f"(?P={secret})"}
+    with pytest.raises(PolicyError) as exc:
+        parse_policy(raw)
+    assert secret not in str(exc.value)
+
+
+def test_policy_role_and_argument_names_are_safe_in_decisions_and_audit(calls, audit):
+    secret = "Bearer " + "synthetic-token"
+    policy = parse_policy(
+        {
+            "version": 1,
+            "agents": {"a": secret},
+            "roles": {secret: {"tools": {"t": {"args": {secret: {"allowed": [1]}}}}}},
+        }
+    )
+    gate = ToolGate(policy, {"t": lambda **kwargs: calls.append(kwargs)})
+    for args in ({}, {secret: 2}):
+        with pytest.raises(PermissionDenied) as exc:
+            gate.call("a", "t", args)
+        assert secret not in str(exc.value)
+    gate.call("a", "t", {secret: 1})
+    assert calls == [{secret: 1}]
+    assert secret not in audit.text
+    assert all(record["role"] == "[REDACTED]" for record in audit_records(audit))
+
+
+def test_duplicate_key_and_file_errors_have_safe_diagnostics(tmp_path):
+    secret = "sk_live_" + "0" * 20
+    path = tmp_path / f"{secret}.json"
+    path.write_text(
+        json.dumps({secret: 1})[:-1] + f', "{secret}": 2}}', encoding="utf-8"
+    )
+    with pytest.raises(PolicyError) as exc:
+        load_policy(path)
+    assert secret not in str(exc.value)
+    with pytest.raises(PolicyError) as exc:
+        load_policy(tmp_path / secret / "missing.json")
+    assert str(exc.value) == "cannot read policy file"
+
+
+@pytest.mark.parametrize("content", [b"\xff", b'{"version":1,"note":"\xc3("}'])
+def test_malformed_utf8_is_a_safe_policy_error(tmp_path, content):
+    path = tmp_path / "policy.json"
+    path.write_bytes(content)
+    with pytest.raises(PolicyError, match="^policy is not valid UTF-8$"):
+        load_policy(path)
+
+
+def test_policy_byte_limit_runs_before_decode_and_json(tmp_path, monkeypatch):
+    path = tmp_path / "policy.json"
+    path.write_bytes(b"\xff" * (permissions.MAX_POLICY_BYTES + 1))
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("oversized policy reached JSON decoder")
+
+    monkeypatch.setattr(permissions.json, "loads", forbidden)
+    with pytest.raises(PolicyError, match="byte limit"):
+        load_policy(path)
+
+
+def test_policy_at_byte_limit_and_json_brackets_in_strings_load(tmp_path):
+    text = _policy_text(constraint=json.dumps({"allowed": ["[" * 100 + '\\"}']}))
+    path = tmp_path / "policy.json"
+    path.write_bytes(
+        text.encode() + b" " * (permissions.MAX_POLICY_BYTES - len(text.encode()))
+    )
+    assert load_policy(path).agents["a"] == "r"
+
+
+def test_json_nesting_limit_precedes_decoder(tmp_path, monkeypatch):
+    path = tmp_path / "policy.json"
+    path.write_text("[" * (permissions.MAX_POLICY_DEPTH + 1), encoding="utf-8")
+    monkeypatch.setattr(
+        permissions.json, "loads", lambda *a, **k: pytest.fail("decoder ran")
+    )
+    with pytest.raises(PolicyError, match="policy is not valid JSON: nesting limit"):
+        load_policy(path)
+
+
+@pytest.mark.parametrize(
+    "kind", ["depth", "nodes", "text", "integer", "float", "key", "subclass"]
+)
+def test_programmatic_policy_resources_are_checked_before_regex(kind, monkeypatch):
+    raw = json.loads(_policy_text(constraint='{"pattern":".*"}'))
+    if kind == "depth":
+        extra = 0
+        for _ in range(permissions.MAX_POLICY_DEPTH + 1):
+            extra = [extra]
+        raw["extra"] = extra
+    elif kind == "nodes":
+        raw["extra"] = [0] * (permissions.MAX_POLICY_NODES + 1)
+    elif kind == "text":
+        raw["extra"] = "x" * (permissions.MAX_TEXT_LENGTH + 1)
+    elif kind == "integer":
+        raw["extra"] = 1 << permissions.MAX_INTEGER_BITS
+    elif kind == "float":
+        raw["extra"] = float("inf")
+    elif kind == "key":
+        raw[1] = "unexpected"
+    else:
+
+        class Odd(dict):
+            def items(self):
+                pytest.fail("subclass was inspected")
+
+        raw["extra"] = Odd()
+    monkeypatch.setattr(
+        permissions,
+        "re",
+        SimpleNamespace(compile=lambda *a, **k: pytest.fail("compiler ran")),
+    )
+    with pytest.raises(PolicyError):
+        parse_policy(raw)
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        "x" * (permissions.MAX_PATTERN_LENGTH + 1),
+        "(" * (permissions.MAX_PATTERN_DEPTH + 1),
+    ],
+)
+def test_regex_limits_precede_compilation(pattern, monkeypatch):
+    raw = json.loads(_policy_text(constraint=json.dumps({"pattern": pattern})))
+    monkeypatch.setattr(
+        permissions,
+        "re",
+        SimpleNamespace(compile=lambda *a, **k: pytest.fail("compiler ran")),
+    )
+    with pytest.raises(PolicyError, match="bad pattern"):
+        parse_policy(raw)
+
+
+def test_length_rejection_precedes_pattern_matching_and_execution(
+    calls, audit, monkeypatch
+):
+    gate = one_tool_gate(
+        calls, {"text": {"pattern": ".*", "max_length": 2, "log_value": True}}
+    )
+    original = permissions._violation
+
+    class ForbiddenPattern:
+        def fullmatch(self, value):
+            pytest.fail("overlong input reached regex matcher")
+
+    def violation(value, spec):
+        return original(value, dict(spec, pattern=ForbiddenPattern()))
+
+    monkeypatch.setattr(permissions, "_violation", violation)
+    with pytest.raises(PermissionDenied, match="exceeds max_length"):
+        gate.call("a-01", "t", {"text": "xxx"})
+    assert calls == []
+    assert len(audit_records(audit)) == 1
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["x" * (permissions.MAX_TEXT_LENGTH + 1), 1 << permissions.MAX_INTEGER_BITS],
+    ids=["string", "integer"],
+)
+def test_runtime_resource_limits_deny_before_execution(value, calls, audit):
+    spec = (
+        {"max_length": permissions.MAX_TEXT_LENGTH + 1}
+        if type(value) is str
+        else {"min": 0}
+    )
+    gate = one_tool_gate(calls, {"x": spec})
+    with pytest.raises(PermissionDenied, match="exceeds .* limit"):
+        gate.call("a-01", "t", {"x": value})
+    assert calls == []
+    assert len(audit_records(audit)) == 1
+
+
+def test_invalid_identity_is_rejected_before_mapping_processing(gate, audit):
+    class Untouched(Mapping):
+        def __getitem__(self, key):
+            pytest.fail("mapping was inspected")
+
+        def __iter__(self):
+            pytest.fail("mapping was inspected")
+
+        def __len__(self):
+            pytest.fail("mapping was inspected")
+            return 0
+
+    assert (
+        gate.check([], "list_sources", Untouched()).reason
+        == "agent id and tool name must be strings"
+    )
+    assert len(audit_records(audit)) == 1
+
+
+def test_huge_caller_names_are_bounded_before_secret_normalization(
+    gate, audit, monkeypatch
+):
+    original = permissions.unquote
+
+    def bounded(text, **kwargs):
+        assert len(text) <= permissions.MAX_TEXT_LENGTH
+        return original(text, **kwargs)
+
+    monkeypatch.setattr(permissions, "unquote", bounded)
+    assert not gate.check(
+        "x" * (permissions.MAX_TEXT_LENGTH + 1), "list_sources"
+    ).allowed
+    assert len(audit.text) < 500
+
+
+def test_scalar_and_regex_resource_boundaries_keep_valid_calls(calls, audit):
+    text = "x" * permissions.MAX_TEXT_LENGTH
+    integer = 1 << (permissions.MAX_INTEGER_BITS - 1)
+    gate = one_tool_gate(
+        calls,
+        {
+            "text": {"max_length": len(text)},
+            "n": {"min": 0, "max": integer, "log_value": True},
+        },
+    )
+    gate.call("a-01", "t", {"text": text, "n": integer})
+    assert calls == [("t", {"text": text, "n": integer})]
+    assert audit_records(audit)[0]["args"]["n"] == integer
+    for pattern in (
+        "x" * permissions.MAX_PATTERN_LENGTH,
+        "(x)" * permissions.MAX_PATTERN_DEPTH,
+    ):
+        assert one_tool_gate([], {"text": {"pattern": pattern}})
+
+
+def test_policy_node_and_depth_boundaries(tmp_path):
+    # Root, four keys and four values consume nine nodes before list entries.
+    raw = {
+        "version": 1,
+        "agents": {},
+        "roles": {},
+        "extra": [0] * (permissions.MAX_POLICY_NODES - 9),
+    }
+    assert parse_policy(raw).agents == {}
+    raw["extra"].append(0)
+    with pytest.raises(PolicyError, match="structure limit"):
+        parse_policy(raw)
+    nested = 0
+    for _ in range(permissions.MAX_POLICY_DEPTH - 1):
+        nested = [nested]
+    raw["extra"] = nested
+    assert parse_policy(raw).roles == {}
+    path = tmp_path / "policy.json"
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    assert load_policy(path).roles == {}
+
+
+def test_non_finite_exponent_in_unused_policy_field_is_rejected(tmp_path):
+    path = tmp_path / "policy.json"
+    path.write_text(
+        '{"version":1,"agents":{},"roles":{},"extra":1e400}', encoding="utf-8"
+    )
+    with pytest.raises(PolicyError, match="numbers must be finite"):
+        load_policy(path)
+
+
+def test_cyclic_programmatic_policy_is_bounded():
+    raw = {"version": 1, "agents": {}, "roles": {}}
+    raw["extra"] = raw
+    with pytest.raises(PolicyError, match="structure limit"):
+        parse_policy(raw)

@@ -11,11 +11,13 @@ import json
 import logging
 import math
 import re
+import unicodedata
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import unquote
 
 audit_log = logging.getLogger("g4f.permissions.audit")
 
@@ -33,7 +35,7 @@ SECRET_KEY_RE = re.compile(
 )
 SECRET_VALUE_RES = [
     re.compile(r"\bbearer\s+\S+", re.IGNORECASE),
-    re.compile(r"\bBasic [A-Za-z0-9+/]{8,}", re.IGNORECASE),
+    re.compile(r"\bBasic\s+[A-Za-z0-9+/]{8,}", re.IGNORECASE),
     re.compile(r"\bsk-[A-Za-z0-9_-]{16,}"),
     re.compile(r"\b[rs]k_(?:live|test)_[A-Za-z0-9]{10,}"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
@@ -55,6 +57,13 @@ MAX_LOGGED_STR = 200
 MAX_LABEL = 64
 MAX_NAMES_IN_REASON = 5
 MAX_LOGGED_ARGS = 20
+MAX_POLICY_BYTES = 1024 * 1024
+MAX_POLICY_DEPTH = 32
+MAX_POLICY_NODES = 20_000
+MAX_TEXT_LENGTH = 65_536
+MAX_INTEGER_BITS = 14_000
+MAX_PATTERN_LENGTH = 2048
+MAX_PATTERN_DEPTH = 64
 
 
 class PolicyError(ValueError):
@@ -98,27 +107,31 @@ class Policy:
             )
         missing = sorted(set(spec) - set(args))
         if missing:
-            return Decision(False, f"missing arguments: {', '.join(missing)}", role)
+            return Decision(False, f"missing arguments: {_name_list(missing)}", role)
 
         for name, arg_spec in spec.items():
             problem = _violation(args[name], arg_spec)
             if problem:
                 # Only the arg name goes in the reason, never the value.
-                return Decision(False, f"argument '{name}' {problem}", role)
+                return Decision(False, f"argument '{_label(name)}' {problem}", role)
         return Decision(True, "allowed", role)
 
 
 def _violation(value: Any, c: Mapping[str, Any]) -> str | None:
     # Exact type comparisons throughout: bool is an int subclass, and True
     # should not pass as 1.
+    if type(value) is str and len(value) > MAX_TEXT_LENGTH:
+        return "exceeds string limit"
+    if type(value) is int and value.bit_length() > MAX_INTEGER_BITS:
+        return "exceeds integer limit"
+    if "max_length" in c and (type(value) is not str or len(value) > c["max_length"]):
+        return "exceeds max_length"
     if "allowed" in c and not any(
         type(value) is type(a) and value == a for a in c["allowed"]
     ):
         return "not in allowed values"
     if "pattern" in c and (type(value) is not str or not c["pattern"].fullmatch(value)):
         return "does not match pattern"
-    if "max_length" in c and (type(value) is not str or len(value) > c["max_length"]):
-        return "exceeds max_length"
     if "min" in c or "max" in c:
         if type(value) not in (int, float):
             return "is not a number"
@@ -133,18 +146,83 @@ def _violation(value: Any, c: Mapping[str, Any]) -> str | None:
 
 def load_policy(path: str | Path) -> Policy:
     try:
-        text = Path(path).read_text(encoding="utf-8")
-    except OSError as e:
-        raise PolicyError(f"cannot read policy file: {e}") from None
+        with Path(path).open("rb") as stream:
+            data = stream.read(MAX_POLICY_BYTES + 1)
+    except OSError:
+        # Paths and OS error text may contain credentials.
+        raise PolicyError("cannot read policy file") from None
+    if len(data) > MAX_POLICY_BYTES:
+        raise PolicyError("policy exceeds byte limit")
+    try:
+        text = data.decode("utf-8")
+    except UnicodeError:
+        raise PolicyError("policy is not valid UTF-8") from None
+    _check_json_depth(text)
     try:
         raw = json.loads(
             text, object_pairs_hook=_reject_duplicate_keys, parse_constant=_reject_nan
         )
     except PolicyError:
         raise
-    except (ValueError, RecursionError) as e:
-        raise PolicyError(f"policy is not valid JSON: {e}") from None
+    except (ValueError, RecursionError, OverflowError):
+        raise PolicyError("policy is not valid JSON") from None
     return parse_policy(raw)
+
+
+def _check_json_depth(text: str) -> None:
+    """Bound nesting before the JSON decoder enters recursive parsing."""
+    depth = 0
+    quoted = escaped = False
+    for char in text:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                quoted = False
+        elif char == '"':
+            quoted = True
+        elif char in "[{":
+            depth += 1
+            if depth > MAX_POLICY_DEPTH:
+                raise PolicyError("policy is not valid JSON: nesting limit exceeded")
+        elif char in "]}":
+            depth -= 1
+
+
+def _check_policy_tree(raw: Any) -> None:
+    """Validate plain, bounded data before formatting names or compiling regexes."""
+    pending = [(raw, 0)]
+    nodes = chars = 0
+    while pending:
+        value, depth = pending.pop()
+        nodes += 1
+        if depth > MAX_POLICY_DEPTH or nodes > MAX_POLICY_NODES:
+            raise PolicyError("policy exceeds structure limit")
+        if type(value) in (dict, list):
+            if len(value) > MAX_POLICY_NODES:
+                raise PolicyError("policy exceeds structure limit")
+            children = value.items() if type(value) is dict else enumerate(value)
+            for key, child in children:
+                if type(value) is dict:
+                    if type(key) is not str:
+                        raise PolicyError("policy object keys must be plain strings")
+                    pending.append((key, depth + 1))
+                pending.append((child, depth + 1))
+            if len(pending) + nodes > MAX_POLICY_NODES:
+                raise PolicyError("policy exceeds structure limit")
+        elif type(value) is str:
+            chars += len(value)
+            if len(value) > MAX_TEXT_LENGTH or chars > MAX_POLICY_BYTES:
+                raise PolicyError("policy exceeds string limit")
+        elif type(value) is int:
+            if value.bit_length() > MAX_INTEGER_BITS:
+                raise PolicyError("policy exceeds integer limit")
+        elif type(value) is float and not math.isfinite(value):
+            raise PolicyError("policy numbers must be finite")
+        elif type(value) not in SCALAR_TYPES:
+            raise PolicyError("policy must contain only plain JSON data")
 
 
 def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -152,7 +230,7 @@ def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     for key, value in pairs:
         if key in out:
             # json would otherwise keep the last value without saying anything.
-            raise PolicyError(f"duplicate key '{key}' in policy")
+            raise PolicyError(f"duplicate key '{_label(key)}' in policy")
         out[key] = value
     return out
 
@@ -162,6 +240,7 @@ def _reject_nan(name: str) -> Any:
 
 
 def parse_policy(raw: Any) -> Policy:
+    _check_policy_tree(raw)
     if (
         not isinstance(raw, dict)
         or type(raw.get("version")) is not int
@@ -174,23 +253,27 @@ def parse_policy(raw: Any) -> Policy:
 
     frozen_roles = {}
     for role, body in roles.items():
+        role_label = _label(role)
         if not isinstance(body, dict) or set(body) != {"tools"}:
-            raise PolicyError(f"role '{role}' must be an object with only 'tools'")
+            raise PolicyError(
+                f"role '{role_label}' must be an object with only 'tools'"
+            )
         if not isinstance(body["tools"], dict):
-            raise PolicyError(f"role '{role}' needs a 'tools' object")
+            raise PolicyError(f"role '{role_label}' needs a 'tools' object")
         tools = {}
         for tool, tool_spec in body["tools"].items():
+            where = f"{role_label}.{_label(tool)}"
             if not isinstance(tool_spec, dict) or set(tool_spec) - {"args"}:
                 raise PolicyError(
-                    f"{role}.{tool}: tool spec must be an object with only 'args'"
+                    f"{where}: tool spec must be an object with only 'args'"
                     " (use {} for a tool that takes no arguments)"
                 )
             arg_specs = tool_spec.get("args", {})
             if not isinstance(arg_specs, dict):
-                raise PolicyError(f"{role}.{tool}: 'args' must be an object")
+                raise PolicyError(f"{where}: 'args' must be an object")
             tools[tool] = MappingProxyType(
                 {
-                    name: _parse_arg_spec(f"{role}.{tool}.{name}", c)
+                    name: _parse_arg_spec(f"{where}.{_label(name)}", c)
                     for name, c in arg_specs.items()
                 }
             )
@@ -198,7 +281,9 @@ def parse_policy(raw: Any) -> Policy:
 
     for agent, role in agents.items():
         if not isinstance(role, str) or role not in frozen_roles:
-            raise PolicyError(f"agent '{agent}' refers to undefined role {role!r}")
+            raise PolicyError(
+                f"agent '{_label(agent)}' refers to undefined role {_label(role)}"
+            )
 
     return Policy(
         agents=MappingProxyType(dict(agents)), roles=MappingProxyType(frozen_roles)
@@ -212,7 +297,9 @@ def _parse_arg_spec(where: str, c: Any) -> Mapping[str, Any]:
     if unknown:
         # An unrecognised constraint would otherwise be silently ignored,
         # which would make the policy looser than its author intended.
-        raise PolicyError(f"{where}: unknown constraint keys {sorted(unknown)}")
+        raise PolicyError(
+            f"{where}: unknown constraint keys {_name_list(sorted(unknown))}"
+        )
     if not set(c) & CONSTRAINT_KEYS:
         raise PolicyError(
             f"{where}: needs at least one of {', '.join(sorted(CONSTRAINT_KEYS))}"
@@ -223,10 +310,11 @@ def _parse_arg_spec(where: str, c: Any) -> Mapping[str, Any]:
     if "pattern" in out:
         if type(out["pattern"]) is not str:
             raise PolicyError(f"{where}: 'pattern' must be a string")
+        _check_pattern_limits(out["pattern"], where)
         try:
             out["pattern"] = re.compile(out["pattern"])
-        except (re.error, OverflowError, RecursionError) as e:
-            raise PolicyError(f"{where}: bad pattern ({e})") from None
+        except (re.error, OverflowError, RecursionError):
+            raise PolicyError(f"{where}: bad pattern") from None
     if "allowed" in out:
         values = out["allowed"]
         if not isinstance(values, list) or not values:
@@ -257,8 +345,47 @@ def _parse_arg_spec(where: str, c: Any) -> Mapping[str, Any]:
     return MappingProxyType(out)
 
 
+def _check_pattern_limits(pattern: str, where: str) -> None:
+    if len(pattern) > MAX_PATTERN_LENGTH:
+        raise PolicyError(f"{where}: bad pattern (length limit exceeded)")
+    groups = 0
+    escaped = False
+    for char in pattern:
+        if escaped:
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == "(":
+            # A conservative syntax budget also counts parentheses in classes
+            # and comments, avoiding parser-specific ways to hide nesting.
+            groups += 1
+            if groups > MAX_PATTERN_DEPTH:
+                raise PolicyError(f"{where}: bad pattern (parenthesis limit exceeded)")
+
+
+def _secret_forms(text: str) -> list[str]:
+    # Normalize only for detection. Never change the checked or executed input.
+    if len(text) > MAX_TEXT_LENGTH:
+        return []
+    forms = [text]
+    for _ in range(4):
+        canonical = unicodedata.normalize("NFKC", forms[-1])
+        canonical = "".join(c for c in canonical if c.isprintable())
+        decoded = unquote(canonical, errors="replace")
+        if decoded == forms[-1]:
+            break
+        forms.append(decoded)
+    for form in tuple(forms):
+        normalized = unicodedata.normalize("NFKC", form)
+        forms.append("".join(c for c in normalized if c.isprintable() or c.isspace()))
+        forms.append("".join(c for c in normalized if c.isprintable()))
+    return forms
+
+
 def _looks_secret(text: str) -> bool:
-    return any(r.search(text) for r in SECRET_VALUE_RES)
+    return len(text) > MAX_TEXT_LENGTH or any(
+        r.search(form) for form in _secret_forms(text) for r in SECRET_VALUE_RES
+    )
 
 
 def _label(text: Any, limit: int = MAX_LABEL) -> str:
@@ -284,7 +411,10 @@ def redact(value: Any, key: str = "", _depth: int = 0) -> Any:
     non-finite floats become strings so the log stays valid JSON, and anything
     that isn't plain data is logged as its type name only.
     """
-    if key and SECRET_KEY_RE.search(key):
+    if key and (
+        len(key) > MAX_TEXT_LENGTH
+        or any(SECRET_KEY_RE.search(form) for form in _secret_forms(key))
+    ):
         return REDACTED
     if type(value) is str:
         if _looks_secret(value):
@@ -363,6 +493,8 @@ class ToolGate:
     def _evaluate(
         self, agent_id: Any, tool: Any, args: Any
     ) -> tuple[Decision, dict[str, Any] | None]:
+        if type(agent_id) is not str or type(tool) is not str:
+            return Decision(False, "agent id and tool name must be strings"), None
         if args is None:
             args = {}
         if not isinstance(args, Mapping):
@@ -371,8 +503,6 @@ class ToolGate:
         # copy, so a mapping that answers differently on a second read can't
         # get a different value past the check.
         snapshot = dict(args)
-        if type(agent_id) is not str or type(tool) is not str:
-            return Decision(False, "agent id and tool name must be strings"), snapshot
         if any(type(k) is not str for k in snapshot):
             return Decision(False, "argument names must be strings"), snapshot
         odd = sorted(k for k, v in snapshot.items() if type(v) not in SCALAR_TYPES)
@@ -402,7 +532,7 @@ class ToolGate:
             record = dict(
                 base,
                 agent=_label(agent_id),
-                role=decision.role,
+                role=_label(decision.role) if decision.role is not None else None,
                 tool=_label(tool),
                 args=(
                     self._loggable_args(decision.role, tool, snapshot)
