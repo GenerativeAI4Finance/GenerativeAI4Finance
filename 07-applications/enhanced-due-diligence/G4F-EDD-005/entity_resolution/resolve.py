@@ -215,7 +215,7 @@ class Record:
             self._check_text(label, "alias", alias, required=True)
         object.__setattr__(self, "aliases", tuple(aliases))
         for variant in self._variants:
-            if not variant.norm.core:
+            if not any(char.isalnum() for char in variant.norm.core):
                 raise InputError(
                     f"{label}: name {variant.text!r} has no letters or digits"
                 )

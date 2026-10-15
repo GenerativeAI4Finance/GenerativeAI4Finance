@@ -948,6 +948,27 @@ def test_invalid_records_raise_clear_errors(kwargs, message):
         Record(**kwargs)
 
 
+@pytest.mark.parametrize("marks", ["\u0301\u0301", "\u093e", "\u05b0"])
+@pytest.mark.parametrize("as_alias", [False, True])
+def test_combining_marks_alone_are_not_a_name_or_alias(marks, as_alias):
+    kwargs = {"name": "Kestrel", "aliases": [marks]} if as_alias else {"name": marks}
+
+    with pytest.raises(ValueError, match="no letters or digits"):
+        Record("A", **kwargs)
+
+
+@pytest.mark.parametrize(
+    "text", ["Caf\u0065\u0301", "\u0915\u093e", "\u0439", "\u00b2"]
+)
+@pytest.mark.parametrize("as_alias", [False, True])
+def test_letters_and_numbers_with_combining_marks_remain_valid(text, as_alias):
+    kwargs = {"name": "Kestrel", "aliases": [text]} if as_alias else {"name": text}
+
+    record = Record("A", **kwargs)
+
+    assert (record.aliases[0] if as_alias else record.name) == text
+
+
 def test_aliases_none_means_no_aliases_and_lists_are_kept():
     assert Record("A", "Kestrel", aliases=None).aliases == ()
     assert Record("A", "Kestrel", aliases=["Kx"]).aliases == ("Kx",)
