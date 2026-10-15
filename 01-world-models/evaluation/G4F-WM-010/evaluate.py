@@ -6,10 +6,9 @@
 
 import argparse
 import hashlib
-from io import BytesIO
 from pathlib import Path
 
-from scenario_eval.contract import load
+from scenario_eval.contract import CSVSnapshot, load
 from scenario_eval.metrics import MAX_BINS
 from scenario_eval.report import evaluate, to_json, to_markdown
 
@@ -63,7 +62,10 @@ def main(argv: list[str] | None = None) -> None:
     # after it has been read. Reopening for the hashes can misidentify the run.
     prediction_bytes = Path(args.predictions).read_bytes()
     outcome_bytes = Path(args.outcomes).read_bytes()
-    df = load(BytesIO(prediction_bytes), BytesIO(outcome_bytes))
+    df = load(
+        CSVSnapshot(prediction_bytes, args.predictions),
+        CSVSnapshot(outcome_bytes, args.outcomes),
+    )
     prediction_name, outcome_name = Path(args.predictions).name, Path(args.outcomes).name
     if prediction_name == outcome_name:
         prediction_name = f"predictions:{prediction_name}"

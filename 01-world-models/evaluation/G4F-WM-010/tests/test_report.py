@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -195,6 +196,55 @@ def test_cli_hashes_the_bytes_it_scores_when_inputs_are_replaced(tmp_path, monke
     assert report["metadata"]["inputs"] == original_hashes
     assert report["scenarios"]["baseline"]["binary"]["brier"] == pytest.approx(0.04)
     assert all(original_hashes[p.name]["sha256"] != cli.sha256(p) for p in (pred_path, out_path))
+
+
+@pytest.mark.parametrize(
+    "suffix", [".gz", ".bz2", ".xz", ".zip", ".tar", ".tar.gz", ".tar.bz2", ".tar.xz"]
+)
+def test_cli_compressed_inputs_preserve_inference_and_one_raw_snapshot(
+    tmp_path, monkeypatch, suffix
+):
+    key = {"entity_id": ["a", "b"], "as_of": "2025-01-31", "horizon": 6, "scenario": "baseline"}
+    preds = pd.DataFrame({**key, "p_event": [0.2, 0.8]})
+    outs = pd.DataFrame({**key, "event": [0, 1]})
+    paths = [tmp_path / f"{name}.csv{suffix}" for name in ("predictions", "outcomes")]
+    for path, frame in zip(paths, (preds, outs)):
+        frame.to_csv(path, index=False, lineterminator="\n", compression="infer")
+    snapshots = {path: path.read_bytes() for path in paths}
+    expected_inputs = {
+        path.name: {"sha256": hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()}
+        for path, raw in snapshots.items()
+    }
+    reads = dict.fromkeys(paths, 0)
+    original_read_bytes = Path.read_bytes
+
+    def replace_after_read(path):
+        if path in reads:
+            reads[path] += 1
+            raw = original_read_bytes(path)
+            path.write_bytes(b"producer replaced this input after its snapshot")
+            return raw
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", replace_after_read)
+    output = tmp_path / "report"
+    cli.main(
+        [
+            "--predictions",
+            str(paths[0]),
+            "--outcomes",
+            str(paths[1]),
+            "--out",
+            str(output),
+            "--n-boot",
+            "1",
+        ]
+    )
+    report = json.loads(output.with_suffix(".json").read_text())
+    assert report["metadata"]["inputs"] == expected_inputs
+    assert report["scenarios"]["baseline"]["binary"]["brier"] == pytest.approx(0.04)
+    assert (output.with_suffix(".md")).read_text().startswith("# Scenario")
+    assert reads == dict.fromkeys(paths, 1)
 
 
 def test_cli_preserves_six_bin_boundary_calibration(tmp_path):

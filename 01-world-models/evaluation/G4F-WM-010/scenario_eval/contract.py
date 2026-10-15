@@ -7,8 +7,9 @@ row should stop the run, not quietly drop out of the metrics.
 import datetime as dt
 import re
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from io import StringIO
+from io import BytesIO, StringIO
 from os import PathLike
 from typing import BinaryIO, Literal, Protocol, TextIO, cast
 
@@ -31,18 +32,28 @@ MAX_HORIZON = 2**63 - 1
 CSVSource = str | PathLike[str] | PathLike[bytes] | BinaryIO | TextIO
 
 
+@dataclass(frozen=True)
+class CSVSnapshot:
+    """Captured file bytes and the original path used only for compression inference."""
+
+    data: bytes
+    path: str
+
+
 class _TextHandles(Protocol):
     handle: TextIO
 
 
 class _HandleAdapter(Protocol):
+    def infer_compression(self, source: str, compression: Literal["infer"]) -> str | None: ...
+
     def get_handle(
         self,
         source: CSVSource,
         mode: Literal["r"],
         *,
         encoding: str,
-        compression: Literal["infer"],
+        compression: str | None,
         is_text: Literal[True],
     ) -> AbstractContextManager[_TextHandles]: ...
 
@@ -219,8 +230,8 @@ def _check_event_matches_state(p_event, p_state, outcomes):
 
 
 def load(
-    predictions_path: CSVSource,
-    outcomes_path: CSVSource,
+    predictions_path: CSVSource | CSVSnapshot,
+    outcomes_path: CSVSource | CSVSnapshot,
 ) -> pd.DataFrame:
     # Keep raw horizon text so CSV inference cannot round large integers via float64.
     text = {"entity_id": str, "as_of": str, "horizon": str, "from_state": str, "next_state": str}
@@ -229,14 +240,21 @@ def load(
     return join(predictions, outcomes)
 
 
-def _read_csv(source: CSVSource, name: str, text: dict[str, type[str]]) -> pd.DataFrame:
+def _read_csv(
+    source: CSVSource | CSVSnapshot, name: str, text: dict[str, type[str]]
+) -> pd.DataFrame:
     # read_csv's handle adapter (under the pinned pandas version) preserves
     # existing path/stream decoding and inferred compression. Freeze its text
     # so header validation and data parsing cannot observe different inputs.
     # pandas-stubs covers the public API; this private adapter is described by
     # the narrow text-reading protocol exercised by our CSV compatibility tests.
-    with cast(_PandasIO, pd.io).common.get_handle(
-        source, "r", encoding="utf-8", compression="infer", is_text=True
+    adapter = cast(_PandasIO, pd.io).common
+    compression: str | None = "infer"
+    if isinstance(source, CSVSnapshot):
+        compression = adapter.infer_compression(source.path, "infer")
+        source = BytesIO(source.data)
+    with adapter.get_handle(
+        source, "r", encoding="utf-8", compression=compression, is_text=True
     ) as h:
         snapshot = StringIO(h.handle.read())
     # header=None exposes original names before pandas silently renames
