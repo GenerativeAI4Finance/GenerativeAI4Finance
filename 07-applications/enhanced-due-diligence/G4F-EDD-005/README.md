@@ -1,212 +1,134 @@
 # G4F-EDD-005: Entity resolution for company records
 
-Compares company records from different sources (registry extract, vendor list, news mention and so on) and suggests which ones might refer to the same company. Every suggestion comes with a score and the evidence behind it. An analyst makes the final call.
+This task compares company records from different sources and ranks candidate pairs for
+analyst review. A score is evidence for prioritization, not proof that records describe
+the same legal entity. Every result starts `unconfirmed`; a person makes the decision.
 
-A score here is a ranking aid. It is not proof that two records are the same legal entity.
+## Run it
 
-## Layout
+From this directory:
 
-```
-entity_resolution/
-  normalize.py   name, identifier, jurisdiction and city cleanup
-  resolve.py     validation, candidate generation, scoring, review decisions
-  __main__.py    CLI
-data/synthetic_companies.json   fictional sample records
-tests/
-```
-
-## Running it
-
-```
-pip install -r requirements.txt
-python -m entity_resolution data/synthetic_companies.json
+```sh
+python -m pip install -r requirements.txt
 python -m pytest
+python -m entity_resolution data/synthetic_companies.json --hide-no-match
 ```
 
-The task's GitHub Actions workflow runs the tests and Ruff checks on Python 3.12
-on Linux and Windows when this folder or its workflow changes. To run the same
-checks locally from this folder:
+Use `--json` for structured output, `--config config.json` to override thresholds or
+weights, and omit `--hide-no-match` to see every candidate label. Invalid input prints
+an `error:` message and exits with code 2. Input JSON is read as UTF-8; record strings
+with unpaired surrogates are rejected safely. Text output escapes terminal controls;
+JSON retains the structured values. Use a UTF-8 terminal for non-Latin text output.
 
-```
-python -m pip install -r requirements.txt ruff==0.17.0
-python -m pytest
-python -m ruff check .
-python -m ruff format --check .
-```
+A minimal Python API call:
 
-Useful flags: `--hide-no-match` to drop low scores, `--json` for machine-readable output, `--config my_config.json` to override thresholds or weights. Bad input (a missing name, an unknown field, a misspelt config key) stops the run with an `error:` line and exit code 2 instead of a traceback. Files are read as UTF-8, and the CLI writes UTF-8 whatever the console code page is.
+```python
+from entity_resolution import load_records, resolve
 
-Sample output of `python -m entity_resolution data/synthetic_companies.json --hide-no-match`:
-
-```
-thresholds: likely match >= 80.0, needs review >= 55.0
-scores rank candidates for review; they do not establish that two records are the same company.
-
-REG-002 <> VEN-002  score=100.0  likely match  [unconfirmed]
-    - name similarity 100.0 ('sri vaibhav lakshmi textiles' vs 'sri vaibhav lakshmi textiles')
-    - same jurisdiction (IN)
-    - registration ID matches (SYN-IN-100877)
-    - same city (Surat)
-REG-003 <> VEN-003  score=100.0  likely match  [unconfirmed]
-    - name similarity 100.0 ('zbl research' vs 'zbl research')
-    - best name match uses an alias: 'ZBL Research' / 'ZBL Research'
-    - same jurisdiction (US)
-    - registration ID matches (SYN-US-55120)
-    - same city (Austin)
-REG-006 <> VEN-006  score=100.0  likely match  [unconfirmed]
-    - name similarity 100.0 ('orvane manufacturing international' vs 'orvane manufacturing international')
-    - same jurisdiction (GB)
-    - registration ID matches (SYN-GB-04410)
-REG-001 <> VEN-001  score=79.9  needs review  [unconfirmed]
-    - name similarity 100.0 ('quillon agro exports' vs 'quillon agro exports')
-    - same jurisdiction (IN)
-    - registration ID missing on at least one record
-    - same city (Pune)
-    - no matching registration ID, so the score is capped at 79.9 and cannot be a likely match
-VEN-005 <> NEWS-002  score=75.0  needs review  [unconfirmed]
-    - name similarity 100.0 ('marlowe finch logistics' vs 'marlowe finch logistics')
-    - same jurisdiction (US)
-    - registration ID missing on at least one record
-REG-001 <> NEWS-001  score=58.8  needs review  [unconfirmed]
-    - name similarity 75.0 ('quillon agro exports' vs 'quillon agro')
-    - same jurisdiction (IN)
-    - registration ID missing on at least one record
-VEN-001 <> NEWS-001  score=58.8  needs review  [unconfirmed]
-    - name similarity 75.0 ('quillon agro exports' vs 'quillon agro')
-    - same jurisdiction (IN)
-    - registration ID missing on at least one record
-REG-007 <> VEN-008  score=55.0  needs review  [unconfirmed]
-    - names are in different scripts (Cyrillic vs Latin): 'Северный Ветер Трейдинг ООО' vs 'Severnyi Veter Trading OOO' cannot be scored by spelling, so the pair goes to human review
-    - same jurisdiction (RU)
-    - registration ID matches (SYN-RU-30112)
-    - same city (Moscow)
-REG-008 <> VEN-009  score=55.0  needs review  [unconfirmed]
-    - name similarity 21.4 ('ashgrove dairy' vs 'pelham widgets')
-    - same jurisdiction (GB)
-    - registration ID matches (SYN-GB-21500)
-    - same city (York)
-    - registration ID matches but the names differ (similarity 21.4); this may be a renamed company, or a wrong ID, so it needs review
+result = resolve(load_records("data/synthetic_companies.json"))
+for pair in result.matches:
+    print(pair.left_id, pair.right_id, pair.score, pair.label, pair.status)
 ```
 
-The vetoed common-name case only shows up without `--hide-no-match`. The names are identical after cleanup, but the two records carry different numbers from the same registry (they are labelled with the same `id_scheme`), so it is not treated as a match:
+`resolve` returns a `Resolution` with `matches` and `skipped_blocks`; each `MatchResult`
+includes immutable evidence and status `unconfirmed`. `record_decision(result, reviewer,
+accepted, note="")` creates a separate confirmed or rejected review record. It does not
+mutate the match result.
 
-```
-REG-004 <> REG-005  score=30.0  no match  [unconfirmed]
-    - name similarity 100.0 ('northgate trading' vs 'northgate trading')
-    - same jurisdiction (GB)
-    - registration IDs conflict (SYN-GB-07731 vs SYN-GB-09914, same scheme), score capped at 30.0
-```
+## Input records
 
-Things to notice in the sample run:
+The JSON file has a top-level `records` array. Each object requires a unique `record_id`
+and a `name` containing at least one letter or digit. Optional fields are `source`,
+`aliases` (a list of strings), `registration_id`, `id_scheme`, `jurisdiction`, and
+`city`. Unknown fields and invalid values are rejected.
 
-- `REG-001 <> VEN-001` has the same name, jurisdiction and city but no shared registration ID, so it stops at 79.9 and goes to review. Without an identifier, names and places alone are not enough for a likely match.
-- `REG-007 <> VEN-008` is a Cyrillic name against its Latin spelling. They cannot be compared by spelling, so the pair is flagged and sent to review, not scored 0 and not scored high.
-- `REG-008 <> VEN-009` has the same registration ID but completely different names. A matching ID never drops below review, and the note says it may be a rename.
+`id_scheme` identifies the numbering system, for example `CIN` or `GB company number`.
+IDs are compared only when both records have the same known jurisdiction. With matching
+jurisdictions, different IDs are a conflict only when both records name the same scheme.
+If either scheme is missing, differing IDs are unverified; if named schemes differ, or the
+jurisdiction is unknown or different, the IDs are not comparable. Different named schemes
+are not combined into one ID block.
 
-## Records
+Jurisdictions are uppercased; the aliases `UK` and `GBR` map to `GB` (along with a small
+code table in `normalize.py`). Numeric-only IDs lose leading zeroes (`00445790` equals
+`445790`); alphanumeric IDs retain them. Separators are removed, and placeholders such
+as `N/A`, `NONE`, and `000` are treated as missing.
 
-Records are JSON objects. Unknown fields are rejected so a typo like `"country"` is not silently ignored.
+## Matching behavior
 
-| Field | Notes |
-|---|---|
-| `record_id` | required, unique string |
-| `name` | required string with at least one letter or digit |
-| `source` | optional string |
-| `aliases` | optional list of strings (a single string is rejected, not split into letters) |
-| `registration_id` | optional string |
-| `id_scheme` | optional label for which registry or numbering scheme `registration_id` comes from, for example `"CIN"` or `"GB company number"` |
-| `jurisdiction` | optional code such as `GB` (`UK` and `GBR` are read as `GB`; case and padding are ignored) |
-| `city` | optional string |
+Names are casefolded, Latin accents are removed, `&` becomes `and`, punctuation
+separates words, and a small table expands abbreviations and spelling variants. Trailing
+legal forms are retained separately from the name core. Letters in other scripts remain
+intact. A small placeholder table maps selected variants such as `Shree` and `Shri` to
+`sri`; it is not a transliteration engine.
 
-## How it works
+Candidates share either a registration ID with compatible jurisdiction/scheme or a
+distinctive name token. Common tokens such as `trading` and `international` are excluded
+from name blocking. Defaults limit name blocks to 50 records and registration ID blocks
+to 1000. Oversized blocks are skipped and reported in `skipped_blocks` and CLI warnings;
+pairs can still be generated through another shared block. Pairs with no shared blocking
+key are not considered.
 
-**1. Normalisation.** Names are casefolded and accents are removed from Latin letters. `&` becomes `and`, apostrophes are dropped (`Int'l` becomes `intl`, then `international`) and dots inside an initialism are dropped (`P.V.T.` becomes `pvt`) while a dot between words splits them (`Pvt.Ltd.` is `pvt ltd`). Letters with no accent form are folded too (`ß`, `ø`, `ł`, `æ`). A few abbreviations are expanded (`Mfg` to `manufacturing`, `Intl` to `international`). Trailing legal suffixes are stripped and kept separately, so `Pvt. Ltd.`, `Private Limited`, `Pte Ltd` and `Pty Ltd` all become the legal form `private limited` and don't affect the name comparison. The list also covers `AG`, `SA`, `BV`, `NV`, `SpA`, `Srl`, `Sarl` and `A/S`.
+Default score signals are:
 
-Letters in other scripts (Cyrillic, Greek, Arabic, Han and so on) are kept and casefolded, not dropped. The script of each name is recorded, along with how much of the name survived cleanup.
-
-Registration IDs are uppercased with separators removed. IDs made only of digits also lose leading zeros, so `00445790` equals `445790`. Placeholders such as `N/A` or `000` count as missing. Jurisdictions are canonical upper-case codes with a short alias table, and cities are compared ignoring case, accents and punctuation.
-
-Transliteration of Latin spellings is handled by a small placeholder table (`Shree`/`Shri` to `sri`, `Laxmi` to `lakshmi`, and so on) in `normalize.py`. It is meant to be extended per jurisdiction, not treated as a real transliteration step. Nothing converts between scripts.
-
-**2. Candidate generation (blocking).** Records are only compared if they share a registration ID or a distinctive name token. These are two kinds of block with separate limits:
-
-- ID blocks group records with the same ID, jurisdiction and named scheme. Unlabelled IDs form their own block and can also pair with each compatible named scheme, subject to a separate size check. Different named schemes never share an ID block, so unrelated schemes cannot push a valid same-scheme block over its limit. IDs are strong evidence, so `max_id_block_size` is high (1000).
-- Name-token blocks group records sharing a distinctive word. Words that show up in lots of company names (`trading`, `exports`, `international`...) are not used as keys. Blocks bigger than `max_block_size` (50) are not compared, so one very common token doesn't blow up into every possible pair.
-
-A skipped block is never silent. `generate_candidates` and `resolve` return the skipped blocks (kind, key, size, limit, pairs not compared), the CLI prints a warning listing them, and `--json` includes a `skipped_blocks` list. Pairs in a skipped block are still found if they share some other block, for example an ID.
-
-**3. Scoring.** For each candidate pair:
-
-| Signal | Effect (defaults) |
-|---|---|
-| Name similarity (rapidfuzz `token_sort_ratio` on cleaned names, best of name and aliases) | 0 to 100, times `name_weight` 0.65 |
-| Same registration ID, same jurisdiction, compatible scheme | +25 |
+| Evidence | Score effect |
+|---|---:|
+| Name similarity (`rapidfuzz` token-sort ratio, best comparable name/alias) | 0–100 × 0.65 |
+| Same registration ID, jurisdiction, and compatible scheme | +25 |
 | Same jurisdiction | +10 |
-| Different jurisdiction | -15 |
+| Different jurisdiction | −15 |
 | Same city | +5 |
-| Legal forms from different families (e.g. limited vs LLP) | -5 |
+| Different legal-form families | −5 |
 
-Then these rules apply:
+Scores are clipped to 0–100. A same-scheme ID conflict caps the score at 30. Without a
+matching ID, the default cap is 79.9, so names and places alone cannot produce a likely
+match. A matching ID keeps the score at least at the review threshold. Names from
+different scripts are not compared by spelling: when no comparable alias exists, the
+pair is placed between the review threshold and just below the likely-match threshold,
+unless a same-scheme ID conflict vetoes it. Low normalization coverage also prevents a
+likely-match score.
 
-| Rule | Effect (defaults) |
-|---|---|
-| Different registration IDs from the same scheme and jurisdiction | score capped at 30 (`id_conflict_cap`) |
-| No matching registration ID | score capped at 79.9, just under `likely_match` (`no_id_cap`) |
-| Names in different scripts | score kept between `needs_review` and just under `likely_match`, unless a same-scheme ID conflict vetoes the pair |
-| Much of a name lost in cleanup | score kept below `likely_match` |
-| Matching registration ID | score at least `needs_review`, with a note when the names differ (possible rename) |
+Default labels use full-precision scores: `likely match` at 80 or above, `needs review`
+at 55 or above, and `no match` below 55. Name similarity and coverage retain full
+precision for scoring; readable similarity notes round to one decimal. Displayed total
+scores normally round to one decimal, with extra precision retained when rounding would
+cross a label threshold or configured cap/floor.
 
-The result is clipped to 0..100. IDs are only compared when both records have the same jurisdiction, and a conflict needs both records to name the same `id_scheme`. If either scheme is missing, two different IDs might be different kinds of number (a company number and a tax number), so the evidence says `unverified` and the ID difference is not treated as a conflict. The pair's label still depends on its name and other evidence; it can be `no match` or `needs review`. IDs with different named schemes are not compared or combined into one ID block. Each result lists which of these fired in `evidence.notes`, plus the name pair that gave the best similarity and whether an alias was involved.
-
-Names in different scripts are compared only against variants in the same script, which an alias can supply. If no variant pair shares a script, `evidence.cross_script` is true and `evidence.name.score` is null.
-
-**4. Labels.**
-
-| Label | Default |
-|---|---|
-| likely match | score >= 80 |
-| needs review | score >= 55 |
-| no match | below 55 |
-
-Cross-script pairs are kept in `needs review` unless a same-scheme ID conflict vetoes them. Matching-ID pairs score at least `needs_review`, with a possible-rename note when name similarity is low. An unverified ID difference does not force a review label; the remaining evidence determines whether the pair is `no match` or `needs review`.
-
-Name similarity and normalization coverage keep full precision for scoring and threshold checks, including in the structured evidence. Readable name-similarity notes round to one decimal place. Labels use the total score before display rounding. Total scores normally display one decimal place; extra precision is retained when rounding would cross a label threshold or violate a configured cap or floor.
-
-**5. Review decisions.** A `MatchResult` is immutable and always reports its status as `unconfirmed`. The matcher never confirms anything. `record_decision(result, reviewer, accepted, note)` returns a separate record with `confirmed` or `rejected`, the reviewer's name (blank names are rejected) and the score and label the reviewer was shown. It does not change the result; storing the decision is up to the caller.
+For example, `REG-001` and `VEN-001` share a cleaned name, jurisdiction, and city but no
+ID. Their score is capped at 79.9 and labeled `needs review`, not likely match.
+`REG-004` and `REG-005` have the same cleaned name but different IDs in the same
+jurisdiction and scheme, so their score is capped at 30. These records are candidates,
+not confirmed entity links.
 
 ## Configuration
 
-All thresholds and weights live in `MatchConfig` in `resolve.py`. To change them, pass a JSON file with any subset of the fields:
+Pass a JSON object with any subset of `MatchConfig` fields:
 
 ```json
 {"likely_match": 85, "needs_review": 60, "id_conflict_cap": 20}
 ```
 
-The config is checked when it is loaded: unknown keys are rejected (with a "did you mean" hint), values must be numbers in range, and the relationships have to make sense:
+The configuration rejects unknown keys, out-of-range values, and inconsistent
+thresholds. `needs_review` must be below `likely_match`; by default `id_conflict_cap`
+must be below `needs_review`. `allow_id_conflict_review` opts out of that restriction.
+`no_id_cap`, if provided, must be at least `needs_review` and below `likely_match`.
+`min_name_coverage` defaults to 0.5. The defaults were selected by hand against
+synthetic examples, not tuned on labeled data.
 
-- `needs_review` must be below `likely_match`.
-- `id_conflict_cap` must be below `needs_review`, so an ID conflict always ends as "no match". Set `allow_id_conflict_review` to true to opt out and let conflicting pairs reach review.
-- `no_id_cap` is optional. Left out, it is just under `likely_match`, so a likely match always needs a matching ID. If set it must be at least `needs_review` and below `likely_match`.
-- `min_name_coverage` (default 0.5) is the share of a name's characters that has to survive cleanup before the name is trusted for a likely match.
+## Data and limits
 
-The defaults were picked by hand against the sample data, not tuned on a labelled set, so treat them as a starting point.
+`data/synthetic_companies.json` contains fictional companies, IDs, and aliases;
+jurisdiction codes and city names are real places used for realistic examples. It
+contains no personal or customer data. The bundled records are wholly synthetic;
+no root or applicable dataset licence is declared. Maintainer guidance on an
+appropriate contribution and dataset licence is requested.
 
-## Data
-
-`data/synthetic_companies.json` is made up for this task. The companies, registration numbers (`SYN-...`) and aliases are fictional. Jurisdiction codes and city names are real places, used only to make the records look realistic. No personal or customer data is included. Version 1.0, same licence as this repository.
-
-## Why not pandas
-
-The task lists pandas as a tool. It is not used here. The input is a short JSON list, pairs are scored one at a time with rapidfuzz, and the output is a list of small result objects, so the standard library covers it and adding pandas would only be an extra dependency.
-
-## Limitations
-
-- Blocking misses pairs that share no ID and no distinctive token, for example a company that was fully renamed, or one known only by an acronym that isn't listed as an alias. A Cyrillic name and its Latin spelling are only paired if they share an ID, an alias, or a token.
-- Blocks over the size limit are reported but not compared. A pair whose only shared keys sit in skipped blocks is missed, and the warning is how you find out.
-- `token_sort_ratio` ignores word order, which helps with reordered names but can also score unrelated names with the same words highly ("Bank of Ohio" and "Ohio Bank" both clean to the same words).
-- The abbreviation, legal form and transliteration tables are short and English/Indian/European centric. Non-Latin scripts are compared as text only: there is no transliteration between scripts, and Chinese or Japanese names are not split into words, so a whole run of characters is one token.
-- Without a matching ID a pair can never be a likely match, so true matches that lack IDs always need a person to look at them.
-- Removing separators from IDs means `12-3456` and `123-456` look the same.
-- City comparison ignores case, accents and punctuation. There is no address parsing.
-- Group companies (parent and subsidiary with similar names) can score as "needs review". That is expected; they are related but not the same entity.
-- Passing tests means the scoring behaves as described on synthetic data. It says nothing about accuracy on real registry data.
+Blocking can miss a full rename or names that share no distinctive token, ID, or alias.
+Oversized blocks are reported but not fully compared. Token-sort similarity ignores word
+order and can rate unrelated names with the same words highly. The abbreviation,
+legal-form, and variant tables are limited; there is no transliteration between scripts,
+and Chinese or Japanese names are not split into words. Removing ID separators can make
+differently formatted numbers equivalent. City comparison ignores case, accents, and
+punctuation and does not parse addresses. Parent companies and subsidiaries can still
+reach review. Passing tests on synthetic data does not establish accuracy on real
+registry data.

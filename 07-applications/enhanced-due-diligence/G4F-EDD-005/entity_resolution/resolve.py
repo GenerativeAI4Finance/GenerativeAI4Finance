@@ -36,6 +36,17 @@ class InputError(ValueError):
     """Invalid records, config or arguments, with a message saying what to fix."""
 
 
+def _check_unicode(key: str, value: str) -> None:
+    try:
+        value.encode("utf-8", errors="strict")
+    except UnicodeEncodeError as exc:
+        # JSON escapes and direct callers can supply unpaired surrogates.
+        # Do not repeat the malformed value in an error meant for a terminal.
+        raise InputError(
+            f"{key} must contain valid Unicode (no unpaired surrogates)"
+        ) from exc
+
+
 # Tokens too common in company names to be useful as blocking keys.
 GENERIC_TOKENS = {
     "agro",
@@ -197,6 +208,7 @@ class Record:
             raise InputError(
                 f"record_id must be a non-empty string, got {self.record_id!r}"
             )
+        _check_unicode("record_id", self.record_id)
         label = f"record {self.record_id!r}"
         self._check_text(label, "name", self.name, required=True)
         for key in ("source", "registration_id", "jurisdiction", "city", "id_scheme"):
@@ -230,6 +242,7 @@ class Record:
             raise InputError(
                 f"{label}: {key} must be a string, got {type(value).__name__}"
             )
+        _check_unicode(f"{label}: {key}", value)
         if required and not value.strip():
             raise InputError(f"{label}: {key} must not be blank")
 
@@ -718,6 +731,9 @@ def record_decision(
         raise TypeError("result must be a MatchResult")
     if not isinstance(reviewer, str) or not reviewer.strip():
         raise InputError("a reviewer is required to confirm or reject a match")
+    _check_unicode("reviewer", reviewer)
+    if isinstance(note, str):
+        _check_unicode("note", note)
     if not isinstance(accepted, bool):
         raise TypeError("accepted must be True (confirm) or False (reject)")
     return {
