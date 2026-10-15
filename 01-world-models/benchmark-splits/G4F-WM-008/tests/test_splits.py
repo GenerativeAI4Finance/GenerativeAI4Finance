@@ -91,10 +91,11 @@ def test_bad_inputs_are_rejected(panel):
 def test_assignment_hash_is_fixed_for_a_fixed_input(panel):
     df, spec = panel
     m = split(df, spec, "time_entity", seed=0).manifest
-    # If this changes, the split policy changed and old splits cannot be
-    # reproduced. Update it only on purpose.
+    # Pin the assignment and its nanosecond-preserving serialization.
     assert m["rows"] == {"train": 688, "valid": 63, "test": 72, "drop": 1337}
-    assert m["assignment_sha256"].startswith("3ed93b79")
+    assert m["assignment_sha256"] == (
+        "dc42b5b987b18054a5fa0b452f6b2d5f2632287a18999da54985b459a8b0eef7"
+    )
     assert 0 <= entity_bucket("E000", 0) < 1
 
 
@@ -207,3 +208,41 @@ def test_missing_entity_ids_and_timestamps_are_rejected(panel):
     no_time.loc[no_time.index[0], spec.time_col] = pd.NaT
     with pytest.raises(ValueError, match="NaT"):
         split(no_time, spec, "time")
+
+
+@pytest.mark.parametrize(
+    "horizon",
+    [pd.Timedelta(days=-1), pd.DateOffset(months=-3), pd.NaT, "3 months", -1],
+)
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+def test_invalid_horizon_is_rejected(panel, horizon, policy):
+    df, spec = panel
+    spec.horizon = horizon
+    with pytest.raises(ValueError, match="horizon"):
+        split(df, spec, policy)
+
+
+@pytest.mark.parametrize("embargo", [pd.Timedelta(days=-1), pd.NaT, "-1 day", -1])
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+def test_invalid_embargo_is_rejected(panel, embargo, policy):
+    df, spec = panel
+    with pytest.raises(ValueError, match="embargo"):
+        split(df, spec, policy, embargo=embargo)
+
+
+@pytest.mark.parametrize("timezone", [None, "UTC", "Asia/Kolkata"])
+def test_assignment_hash_preserves_nanoseconds_and_row_order(panel, timezone):
+    from splits import assignment_hash
+
+    df, spec = panel
+    df = df.copy()
+    df[spec.time_col] = df[spec.time_col].dt.as_unit("ns")
+    if timezone:
+        df[spec.time_col] = df[spec.time_col].dt.tz_localize(timezone)
+    labels = pd.Series("train", index=df.index)
+    original = assignment_hash(df, labels, spec)
+    df.loc[df.index[0], spec.time_col] += pd.Timedelta(nanoseconds=1)
+    changed = assignment_hash(df, labels, spec)
+    assert changed != original
+    shuffled = df.sample(frac=1, random_state=15)
+    assert assignment_hash(shuffled, labels.loc[shuffled.index], spec) == changed

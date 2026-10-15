@@ -36,7 +36,7 @@ def main() -> int:
         args.out.write_text(text + "\n")
     else:
         print(text)
-    return 0 if report["ok"] else 1
+    return 0 if report["all_applicable_checks_passed"] else 1
 
 
 if __name__ == "__main__":

@@ -84,12 +84,12 @@ def _entity_groups(entities: pd.Series, fractions, seed: int) -> dict:
 
 
 def assignment_hash(df: pd.DataFrame, labels: pd.Series, spec: PanelSpec) -> str:
-    # %z keeps the UTC offset, so the same wall clock in two time zones
-    # (different instants) gives a different hash. Naive data has no offset.
+    # Keep all nine fractional digits and the UTC offset. strftime's %f
+    # truncates nanoseconds, making different assignments share a hash.
     keyed = pd.DataFrame(
         {
             "e": df[spec.entity_col].astype(str),
-            "t": df[spec.time_col].dt.strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
+            "t": df[spec.time_col].map(lambda ts: ts.isoformat(timespec="nanoseconds")),
             "s": labels.astype(str),
         }
     ).sort_values(["e", "t"])
@@ -123,6 +123,12 @@ def make_splits(
     spec.validate(df)
     if embargo is None:
         embargo = pd.Timedelta(0)
+    if (
+        not isinstance(embargo, pd.Timedelta)
+        or pd.isna(embargo)
+        or embargo < pd.Timedelta(0)
+    ):
+        raise ValueError("embargo must be a nonnegative finite Timedelta")
 
     uses_time = policy in ("time", "time_entity")
     uses_entity = policy in ("entity", "time_entity")

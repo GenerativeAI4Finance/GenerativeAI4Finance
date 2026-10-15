@@ -134,31 +134,33 @@ def align_trajectories(a, b, max_skip: int, gap: float = 1.0):
             for i, c in enumerate(_row_costs(a[lo:hi], b[lo + d : hi + d]), start=lo):
                 cost[i][k] = float(c)
 
-    # best[k] = (total cost, unmatched rows) for prefixes a[:i], b[:i + k - max_skip]
+    # best[k][s]: cost for prefixes a[:i], b[:i + k - max_skip] with
+    # exactly s unmatched rows. The band bounds displacement; a separate
+    # budget bounds total gaps (opposite gaps can cancel displacement).
     prev = None
     for i in range(n + 1):
-        best = [(math.inf, 0)] * width
+        best = [[math.inf] * (max_skip + 1) for _ in range(width)]
         for k in range(width):
             j = i + k - max_skip
             if j < 0 or j > m:
                 continue
             if i == 0 and j == 0:
-                best[k] = (0.0, 0)
+                best[k][0] = 0.0
                 continue
-            options = []
-            if i > 0 and j > 0:
-                total, skipped = prev[k]
-                options.append((total + cost[i - 1][k], skipped))
-            if i > 0 and k + 1 < width:
-                total, skipped = prev[k + 1]
-                options.append((total + gap, skipped + 1))
-            if j > 0 and k > 0:
-                total, skipped = best[k - 1]
-                options.append((total + gap, skipped + 1))
-            best[k] = min(options)
+            for skipped in range(max_skip + 1):
+                options = [math.inf]
+                if i > 0 and j > 0:
+                    options.append(prev[k][skipped] + cost[i - 1][k])
+                if skipped and i > 0 and k + 1 < width:
+                    options.append(prev[k + 1][skipped - 1] + gap)
+                if skipped and j > 0 and k > 0:
+                    options.append(best[k - 1][skipped - 1] + gap)
+                best[k][skipped] = min(options)
         prev = best
 
-    total, skipped = prev[m - n + max_skip]
+    total, skipped = min(
+        (total, skipped) for skipped, total in enumerate(prev[m - n + max_skip])
+    )
     matched = (n + m - skipped) / 2
     if matched == 0 or math.isinf(total):
         return None
@@ -198,7 +200,10 @@ def check_near_duplicates(
     features = [c for c in features if c not in ignored]
     if not features:
         return _skipped(
-            "no numeric feature varies across the panel", ignored_features=ignored
+            "no numeric feature varies across the panel",
+            ignored_features=ignored,
+            cross_split_candidates=0,
+            aligned_pairs=0,
         )
 
     trajectories = _entity_trajectories(df, labels, spec, features)
@@ -218,6 +223,8 @@ def check_near_duplicates(
             compared_entities=len(compared),
             low_information=low_information,
             ignored_features=ignored,
+            cross_split_candidates=0,
+            aligned_pairs=0,
         )
 
     candidates = set()
@@ -232,16 +239,21 @@ def check_near_duplicates(
             candidates.add(tuple(sorted((compared[i], compared[j]))))
 
     pairs = []
+    cross_split_candidates, aligned_pairs = 0, 0
     for a, b in sorted(candidates):
         (split_a, za), (split_b, zb) = trajectories[a], trajectories[b]
         if split_a == split_b:
             continue
+        cross_split_candidates += 1
         max_skip = max(1, int(max_missing_frac * max(len(za), len(zb))))
         aligned = align_trajectories(za, zb, max_skip)
         if aligned is None:
             continue
         rms, unmatched = aligned
-        if rms <= tolerance and unmatched <= max_skip:
+        if unmatched > max_skip:
+            continue
+        aligned_pairs += 1
+        if rms <= tolerance:
             pairs.append(
                 {
                     "entities": [(a, split_a), (b, split_b)],
@@ -250,6 +262,18 @@ def check_near_duplicates(
                     "unmatched_rows": unmatched,
                 }
             )
+    coverage = {
+        "cross_split_candidates": cross_split_candidates,
+        "aligned_pairs": aligned_pairs,
+    }
+    if not aligned_pairs:
+        return _skipped(
+            "no eligible cross-split trajectory alignment",
+            **coverage,
+            compared_entities=len(compared),
+            low_information=low_information,
+            ignored_features=ignored,
+        )
     return _result(
         bool(pairs),
         pairs=pairs[:20],
@@ -258,6 +282,7 @@ def check_near_duplicates(
         low_information=low_information,
         ignored_features=ignored,
         tolerance=tolerance,
+        **coverage,
     )
 
 
@@ -394,19 +419,45 @@ def _kappa(x: np.ndarray, y: np.ndarray) -> float:
     return float((observed - chance) / (1 - chance))
 
 
-def _best_kappa(x, targets: dict, binary, min_rows, min_positives):
-    best = None
-    for shift, target in targets.items():
-        both = (x.notna() & target.notna()).to_numpy()
-        if both.sum() < min_rows:
+def _target_score(x, target, binary, min_rows, min_positives, metric):
+    both = x.notna() & target.notna()
+    if both.sum() < min_rows:
+        return None
+    xb, yb = x[both], target[both]
+    if binary and min((yb == 1).sum(), (yb == 0).sum()) < min_positives:
+        return None
+    if metric == "kappa":
+        score = _kappa(xb.to_numpy(), yb.to_numpy())
+    elif binary:
+        auc = _auc(xb, yb)
+        score = max(auc, 1 - auc)
+    else:
+        score = abs(xb.rank().corr(yb.rank()))
+    return None if pd.isna(score) else float(score)
+
+
+def _explained_by_observed_lag(
+    x, target, seen, binary, min_rows, min_positives, metric, cutoff
+):
+    # Compare on identical rows. A smaller, easier subset of a known lag
+    # must not excuse a leak on rows where that lag is unavailable.
+    support = x.notna() & target.notna()
+    for earlier in seen.values():
+        if earlier[support].isna().any():
             continue
-        t = target.to_numpy()[both]
-        if binary and min((t == 1).sum(), (t == 0).sum()) < min_positives:
-            continue
-        kappa = _kappa(x.to_numpy()[both], t)
-        if not math.isnan(kappa) and (best is None or kappa > best[0]):
-            best = (kappa, shift)
-    return best
+        known_score = _target_score(
+            x.where(support), earlier, binary, min_rows, min_positives, metric
+        )
+        suspect_score = _target_score(
+            x, target, binary, min_rows, min_positives, metric
+        )
+        if (
+            known_score is not None
+            and known_score >= cutoff
+            and known_score + 1e-12 >= suspect_score
+        ):
+            return True
+    return False
 
 
 def check_target_leakage(
@@ -430,30 +481,34 @@ def check_target_leakage(
         outcome window is still open at this row's time (shift < 0). A
         feature that agrees at least as well with an earlier target whose
         window has already closed is a legitimate lagged label and is not
-        flagged.
-      * near_perfect_predictor: the feature alone separates the target
+        flagged, including ties. Both scores use identical feature rows.
+      * near_perfect_predictor: the feature alone separates an unseen target
         almost perfectly (AUC for a 0/1 target, rank correlation otherwise)
         at >= threshold.
+    Targets are shifted over the full panel, including dropped rows. Only
+    kept feature rows contribute evidence. Both sniffs compare every unseen
+    shift and allow an equally strong, fully observed lag on the same rows.
     With fewer than min_rows labelled rows, or fewer than min_positives
     rows of either class for a 0/1 target, the check is skipped rather than
     passed. It catches copies and near copies, not subtle leaks.
     """
     kept = (labels != DROP).to_numpy()
-    data = df.loc[kept].sort_values([spec.entity_col, spec.time_col])
+    data = df.assign(_kept=kept).sort_values([spec.entity_col, spec.time_col])
     data = data.reset_index(drop=True)
     y = data[spec.target_col].astype(float)
-    labelled = int(y.notna().sum())
+    kept = data["_kept"]
+    labelled = int(y[kept].notna().sum())
     if labelled < min_rows:
         return _skipped(f"only {labelled} labelled rows, need {min_rows}")
     binary = bool(y.dropna().isin([0, 1]).all())
     if binary:
-        n_pos, n_neg = int((y == 1).sum()), int((y == 0).sum())
+        n_pos, n_neg = int((y[kept] == 1).sum()), int((y[kept] == 0).sum())
         if min(n_pos, n_neg) < min_positives:
             return _skipped(
                 f"{n_pos} positive and {n_neg} negative rows, "
                 f"need {min_positives} of each"
             )
-    elif y.nunique() < 2:
+    elif y[kept].nunique() < 2:
         return _skipped("target is constant")
 
     data["_y"] = y
@@ -473,54 +528,42 @@ def check_target_leakage(
         if not pd.api.types.is_numeric_dtype(data[col]):
             skipped_features[col] = "not numeric"
             continue
-        x = data[col].astype(float)
+        # Dropped rows provide target lookup history, never feature evidence.
+        x = data[col].astype(float).where(kept)
         if x.nunique(dropna=True) < 2:
             skipped_features[col] = "constant"
             continue
 
-        leak = _best_kappa(x, unseen, binary, min_rows, min_positives)
-        legit = _best_kappa(x, seen, binary, min_rows, min_positives)
-        if leak or legit:
-            evaluated.append(col)
-        if (
-            leak
-            and leak[0] >= copy_threshold
-            and (legit is None or leak[0] >= legit[0])
+        for metric, cutoff, reason in (
+            ("kappa", copy_threshold, "copies_target"),
+            ("auc" if binary else "abs_rank_corr", threshold, "near_perfect_predictor"),
         ):
-            suspects.append(
-                {
-                    "feature": col,
-                    "reason": "copies_target",
-                    "shift": leak[1],
-                    "kappa": round(leak[0], 4),
-                }
-            )
-
-        both = x.notna() & y.notna()
-        if both.sum() < min_rows:
-            skipped_features[col] = f"fewer than {min_rows} rows with a value"
-            continue
-        if binary:
-            yb = y[both].astype(int)
-            if min(yb.sum(), len(yb) - yb.sum()) < min_positives:
-                skipped_features[col] = f"fewer than {min_positives} rows of a class"
-                continue
-            auc = _auc(x[both], yb)
-            score = max(auc, 1 - auc)
-            metric = "auc"
-        else:
-            score = abs(x[both].rank().corr(y[both].rank()))
-            metric = "abs_rank_corr"
+            hits = []
+            for shift, target in unseen.items():
+                score = _target_score(
+                    x, target, binary, min_rows, min_positives, metric
+                )
+                if score is None:
+                    continue
+                if col not in evaluated:
+                    evaluated.append(col)
+                if score >= cutoff and not _explained_by_observed_lag(
+                    x, target, seen, binary, min_rows, min_positives, metric, cutoff
+                ):
+                    hits.append((score, shift))
+            if hits:
+                score, shift = max(hits, key=lambda hit: hit[0])
+                suspects.append(
+                    {
+                        "feature": col,
+                        "reason": reason,
+                        "shift": shift,
+                        metric: round(score, 4),
+                    }
+                )
+                break
         if col not in evaluated:
-            evaluated.append(col)
-        if score >= threshold:
-            suspects.append(
-                {
-                    "feature": col,
-                    "reason": "near_perfect_predictor",
-                    metric: round(float(score), 4),
-                }
-            )
+            skipped_features[col] = "insufficient paired rows or target variation"
 
     if not evaluated:
         return _skipped(
@@ -565,8 +608,18 @@ def run_checks(df, labels, spec: PanelSpec, manifest: dict) -> dict:
 
     failed = [name for name, c in checks.items() if c["status"] == "fail"]
     skipped = [name for name, c in checks.items() if c["status"] == "skipped"]
+    applicable = {"split_sizes", "post_outcome_fields", "target_leakage"}
+    if manifest.get("entity_disjoint"):
+        applicable.update(("entity_overlap", "near_duplicate_trajectories"))
+    if manifest.get("time_ordered"):
+        applicable.add("time_order")
+    if spec.observed_at:
+        applicable.add("feature_timestamps")
     return {
         "ok": not failed,
+        "all_applicable_checks_passed": all(
+            checks[name]["status"] == "pass" for name in applicable
+        ),
         "failed": failed,
         "skipped": skipped,
         "checks": checks,

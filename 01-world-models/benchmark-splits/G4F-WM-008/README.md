@@ -38,6 +38,9 @@ PanelSpec(
 
 `(entity_id, timestamp)` must be unique, and `entity_id` and `timestamp`
 must have no missing values.
+`horizon` must be a pandas `DateOffset` or `Timedelta` whose window end is
+finite and no earlier than its prediction timestamp on every row. An
+explicit `embargo` must be a finite, nonnegative pandas `Timedelta`.
 
 ## Split policy
 
@@ -83,6 +86,7 @@ summing to 1, when a cutoff and the timestamps disagree on
 timezone-awareness, when `valid_start >= test_start`, when `entity_id` or
 `timestamp` has missing values, when `(entity, timestamp)` is duplicated,
 or when train, valid or test would end up with no rows.
+Invalid or negative horizons and embargoes also raise, under every policy.
 
 The result is fully determined by the data, the policy, the cutoffs, the
 embargo, the fractions and the seed. Row order does not matter.
@@ -90,8 +94,12 @@ embargo, the fractions and the seed. Row order does not matter.
 ## Checks
 
 `run_checks` runs all of these. Each returns `pass`, `fail` or `skipped`.
-`ok` in the report is true when nothing failed; the `skipped` list names
-the checks that did not evaluate anything, so read it alongside `ok`.
+`ok` in the report means only that nothing failed. It can be true when an
+applicable check could not run, so it is not an overall pass.
+`all_applicable_checks_passed` is true only when every check required by
+the policy and declared feature timestamps passed. The `skipped` list
+names all checks that did not evaluate anything, including checks that
+do not apply to the selected policy.
 
 | check | fails when | runs for |
 | --- | --- | --- |
@@ -118,9 +126,14 @@ entities look the same there; they are counted under `low_information`.
 Non-numeric and constant features are ignored and listed under
 `ignored_features`. The report lists up to 20 pairs and the total in
 `n_pairs`.
+`cross_split_candidates` counts candidate pairs assigned to different
+splits; `aligned_pairs` counts those whose lengths permit an alignment.
+When no cross-split pair can be aligned, the check is `skipped` with these
+counts and a reason.
 
-**Target leakage.** Per numeric feature, on kept rows sorted by entity and
-time:
+**Target leakage.** Targets are shifted within each entity over its full
+history, including dropped rows, so purge gaps do not alter which target
+belongs to a row. Only kept feature rows contribute evidence:
 
 - `copies_target`: Cohen's kappa between the feature and a target it should
   not see is at least 0.85. Kappa is used rather than raw agreement so that
@@ -129,10 +142,17 @@ time:
   the same entity (shift 1 to 3), and up to 12 earlier rows whose outcome
   window is still open at this row's time (negative shift). An earlier
   target whose window has already closed is legitimately known, so a
-  feature that agrees at least as well with one of those is not flagged.
-- `near_perfect_predictor`: the feature alone has AUC of at least 0.99 in
-  either direction (0/1 target), or absolute rank correlation of at least
-  0.99 (other targets).
+  feature that agrees at least as well with one of those on the same rows
+  is not flagged, including ties.
+- `near_perfect_predictor`: against each of the same unseen targets, the
+  feature alone has AUC of at least 0.99 in either direction (0/1 target),
+  or absolute rank correlation of at least 0.99 (other targets). This
+  catches noisy, scaled copies of upcoming targets. A fully observed lag
+  that scores at least as well on exactly those rows exempts the feature
+  here too. A lag missing on any compared row cannot provide an exemption.
+
+Each suspect records the matched `shift`; a copy match takes precedence
+over a predictor match for the same feature.
 
 **Post-outcome values.** Besides the declared columns, for a 0/1 target
 with at least 10 positive and 10 negative kept rows, a feature is suspect
@@ -152,7 +172,9 @@ evaluate anything is `skipped` with a reason and coverage counts, never
   too sparse are listed under `skipped_features`; evaluated ones under
   `features_evaluated`.
 - `near_duplicate_trajectories`: no varying numeric feature, or fewer than
-  2 entities with enough distinct rows.
+  2 entities with enough distinct rows, or no eligible cross-split
+  candidate alignment (for example, informative entities exist only in
+  train, or their history lengths differ too much).
 - `feature_timestamps`: no `observed_at` declared, or no kept row has a
   value in a declared feature. A kept row with a feature value but a missing
   `observed_at` cannot be shown to be on time and counts as a failure, not a
@@ -178,12 +200,14 @@ cd 01-world-models/benchmark-splits/G4F-WM-008
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-pytest tests
+python -m pytest
 python example.py --policy time_entity --seed 7
 python example.py --policy entity --out report.json
 ```
 
-`example.py` exits with 1 if any check fails, so it can be used as a CI gate.
+`example.py` exits with 1 if an applicable check fails or is skipped, so it
+can be used as a CI gate. Skips for checks that do not apply to the selected
+policy, or for undeclared feature timestamps, do not block the example.
 
 scikit-learn is not needed: the nearest-neighbour search for near
 duplicates is a short chunked numpy routine, and AUC and kappa are computed
@@ -209,6 +233,7 @@ print(to_json(report))
 ```json
 {
   "ok": true,
+  "all_applicable_checks_passed": true,
   "failed": [],
   "skipped": [],
   "checks": {
@@ -225,7 +250,7 @@ print(to_json(report))
     "embargo": "0 days 00:00:00",
     "rows": {"train": 608, "valid": 84, "test": 90, "drop": 1378},
     "entities": {"train": 38, "valid": 12, "test": 10},
-    "assignment_sha256": "cd69523d...",
+    "assignment_sha256": "077eec2c...",
     "spec": {"...": "..."}
   }
 }
@@ -237,12 +262,15 @@ the split is 1368 / 432 / 360 rows with nothing dropped and `time_order` is
 skipped; with `--policy time` the two entity checks are skipped.)
 
 `assignment_sha256` is a hash of the sorted `(entity, timestamp, split)`
-triples, with the UTC offset included in the timestamp. If two runs give the
-same hash, they produced the same split.
+triples, preserving all nine fractional second digits and the UTC offset.
+Timestamp serialization now preserves nanoseconds; hashes produced by the
+earlier microsecond format will differ even when row assignments agree.
+The fixed hash regression pins the new representation.
 
-## Measured behaviour
+## Historical measurements
 
-Measured on the synthetic panel (60 entities, 36 monthly periods, 3 month
+Historical measurements from the earlier implementation, before the
+regression fixes below, on the synthetic panel (60 entities, 36 monthly periods, 3 month
 horizon, about 22% positive target) under `time_entity`, with a clone of a
 random entity added under a new id that the hash puts in a different split
 group, 30 panels with different seeds. Noise is independent per value, with
@@ -267,12 +295,20 @@ False positives on the clean panels: `near_duplicate_trajectories` flagged
 0 / 30 (0 / 8 with 200 entities), and the whole report failed 0 / 30 under
 each of `time`, `entity` and `time_entity`.
 
-Target leakage, 30 panels: a copy of the target, the target two rows ahead,
-and the previous row's target (whose window is still open) were each flagged
-30 / 30. The target from three rows back, which is already observed at
-prediction time, was flagged 0 / 30, and so were the clean features.
+Those measurements did not cover noisy shifted target copies or persistent
+entity outcomes. They do not establish detection or false-positive rates
+for those cases. Current regression tests cover noisy future-target scores
+at shifts 1, 2 and 3, and fully observed three-month lags of persistent
+binary and continuous outcomes, with and without score transformations,
+under all three policies.
 
 ## Tests
+
+131 tests run with `python -m pytest` on Python 3.12. Regression cases also
+cover invalid horizons and embargoes, nanosecond hash differences for
+naive and timezone-aware data, and zero cross-split comparison coverage.
+An alignment regression ensures the total unmatched-row budget is enforced,
+even when gaps on opposite sides cancel their displacement.
 
 `tests/test_splits.py` covers reproducibility (same seed, shuffled row
 order, different seed), a fixed assignment hash, stable entity assignment
@@ -298,6 +334,11 @@ features), empty splits, bad labels and mismatched timezones.
   near-perfect single features. Leaks spread across several features, or
   ones that only lift performance a bit, will pass. It is a smoke test, not
   proof of a clean dataset.
+- Lag exemptions rely on value similarity and observation-window timing,
+  not feature provenance. When an unseen target is indistinguishable from
+  an already observed lag, values alone cannot establish which supplied
+  the feature. Shifts are row offsets, up to 3 forward and 12 backward;
+  targets absent from the supplied panel and longer shifts are not checked.
 - Near-duplicate detection assumes a copy keeps the same row order and at
   most about 5% of rows missing. The allowance is 5% of the longer history,
   rounded down, and never less than one row, so a 36-row history tolerates

@@ -8,6 +8,7 @@ import pytest
 from conftest import TEST_START, VALID_START, cached_panel
 
 from leakage import (
+    align_trajectories,
     check_entity_overlap,
     check_feature_timestamps,
     check_near_duplicates,
@@ -33,6 +34,7 @@ def test_clean_panel_passes_everything(panel, policy):
     res = split(df, spec, policy)
     report = run_checks(df, res.labels, spec, res.manifest)
     assert report["ok"], report["failed"]
+    assert report["all_applicable_checks_passed"], report["skipped"]
     json.loads(to_json(report))
 
 
@@ -148,6 +150,59 @@ def test_shifted_target_fixture(panel):
     assert hit[0]["reason"] == "copies_target"
     assert hit[0]["shift"] == 2
     assert hit[0]["kappa"] >= 0.99
+
+
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+@pytest.mark.parametrize("shift", [1, 2, 3])
+@pytest.mark.parametrize("continuous", [False, True])
+def test_noisy_shifted_target_uses_full_history(panel, policy, shift, continuous):
+    df, spec = panel
+    df = df.sort_values([spec.entity_col, spec.time_col]).copy()
+    rng = np.random.default_rng(40)
+    if continuous:
+        df[spec.target_col] = rng.normal(size=len(df))
+    future = df.groupby(spec.entity_col)[spec.target_col].shift(-shift)
+    df["noisy_future"] = future * 10 + rng.uniform(0, 0.01, len(df))
+    spec.feature_cols = ["noisy_future"]
+    res = split(df, spec, policy)
+    out = check_target_leakage(df, res.labels, spec)
+    assert out["status"] == "fail", out
+    hit = next(s for s in out["suspects"] if s["feature"] == "noisy_future")
+    assert hit["reason"] == "near_perfect_predictor"
+    assert hit["shift"] == shift
+
+
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+@pytest.mark.parametrize("continuous", [False, True])
+@pytest.mark.parametrize("noisy_score", [False, True])
+def test_observed_lag_of_persistent_outcome_is_allowed(
+    panel, policy, continuous, noisy_score
+):
+    df, spec = panel
+    df = df.sort_values([spec.entity_col, spec.time_col]).copy()
+    entity_number = df[spec.entity_col].str[1:].astype(int)
+    df[spec.target_col] = entity_number if continuous else entity_number % 2
+    known = df.groupby(spec.entity_col)[spec.target_col].shift(3)
+    df["known_lag"] = known
+    if noisy_score:
+        df["known_lag"] = known * 10 + np.random.default_rng(41).uniform(
+            0, 0.001, len(df)
+        )
+    spec.feature_cols = ["known_lag"]
+    res = split(df, spec, policy)
+    out = check_target_leakage(df, res.labels, spec)
+    assert out["status"] == "pass", out
+    assert out["suspects"] == []
+
+
+def test_target_leakage_does_not_evaluate_dropped_feature_rows(panel):
+    df, spec = panel
+    res = split(df, spec)
+    df["dropped_copy"] = df[spec.target_col].where(res.labels == "drop")
+    spec.feature_cols = ["dropped_copy"]
+    out = check_target_leakage(df, res.labels, spec)
+    assert out["status"] == "skipped"
+    assert out["skipped_features"] == {"dropped_copy": "constant"}
 
 
 def test_near_perfect_predictor_fixture(panel):
@@ -268,6 +323,59 @@ def test_near_duplicates_skipped_when_nothing_to_compare(panel):
     out = check_near_duplicates(df, res.labels, spec)
     assert out["status"] == "skipped"
     assert out["ignored_features"] == {"note": "not numeric"}
+
+
+def test_near_duplicates_without_informative_cross_split_pairs_is_unverified(panel):
+    df, spec = panel
+    res = split(df, spec, "entity")
+    df.loc[res.labels != "train", spec.feature_cols] = 0.0
+    out = check_near_duplicates(df, res.labels, spec)
+    assert out["status"] == "skipped"
+    assert out["cross_split_candidates"] == out["aligned_pairs"] == 0
+    assert out["compared_entities"] > 2
+    report = run_checks(df, res.labels, spec, res.manifest)
+    assert report["ok"]  # This means no failure, not that all checks ran.
+    assert not report["all_applicable_checks_passed"]
+    assert "near_duplicate_trajectories" in report["skipped"]
+
+
+def test_near_duplicates_without_eligible_alignments_is_skipped(panel):
+    df, spec = panel
+    # Both histories have enough information, but their lengths cannot align.
+    df = pd.concat(
+        [df[df.entity_id == "E000"].head(8), df[df.entity_id == "E001"]],
+        ignore_index=True,
+    )
+    labels = pd.Series(np.where(df.entity_id == "E000", "train", "test"))
+    out = check_near_duplicates(df, labels, spec)
+    assert out["status"] == "skipped"
+    assert out["cross_split_candidates"] == 1
+    assert out["aligned_pairs"] == 0
+
+
+def test_alignment_limits_total_gaps_even_when_displacement_cancels():
+    a = np.array([1.9, -5.2, -4.1, -24.4, 18.0])[:, None]
+    b = np.array([11.4, -3.3, 7.7, 2.8, -5.5])[:, None]
+    rms, unmatched = align_trajectories(a, b, max_skip=1)
+    # Equal-length paths need two gaps to skip a row on both sides.
+    assert unmatched == 0
+    assert rms == pytest.approx(np.sqrt(np.mean((a - b) ** 2)))
+
+
+def test_example_gate_requires_all_applicable_checks_to_pass(
+    panel, monkeypatch, capsys
+):
+    import example
+
+    df, spec = panel
+    res = split(df, spec, "entity")
+    df.loc[res.labels != "train", spec.feature_cols] = 0.0
+    monkeypatch.setattr(example, "make_panel", lambda **kwargs: (df, spec))
+    monkeypatch.setattr("sys.argv", ["example.py", "--policy", "entity"])
+    assert example.main() == 1
+    report = json.loads(capsys.readouterr().out)
+    assert report["ok"]
+    assert not report["all_applicable_checks_passed"]
 
 
 def rare_target_panel(rate=0.03):

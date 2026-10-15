@@ -38,6 +38,15 @@ class PanelSpec:
             raise ValueError(
                 f"{self.time_col} has {int(times.isna().sum())} missing values (NaT)"
             )
+        valid_horizon = isinstance(self.horizon, (pd.DateOffset, pd.Timedelta))
+        if valid_horizon:
+            ends = times + self.horizon
+            valid_horizon = bool(ends.notna().all() and (ends >= times).all())
+        if not valid_horizon:
+            raise ValueError(
+                "horizon must be a DateOffset or Timedelta that is nonnegative "
+                "and finite on every row"
+            )
         n_missing = int(df[self.entity_col].isna().sum())
         if n_missing:
             raise ValueError(f"{self.entity_col} has {n_missing} missing values")
