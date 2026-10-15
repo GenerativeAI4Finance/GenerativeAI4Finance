@@ -90,7 +90,8 @@ with the orchestrator and give each agent only its handle.
   exists, the tool is both registered with the gate and granted to the role,
   and the arguments pass every constraint. Anything else is a deny.
 - **Fail closed.** Any exception raised while checking a call becomes a deny
-  with reason `policy check error`. It never falls through to running the tool.
+  with a reason starting with `policy check error`, followed by a cleaned and
+  redacted exception type name. It never falls through to running the tool.
 - **The checked value is the value the tool gets.** The gate copies the
   arguments once, checks that copy, and runs the tool with the same copy.
   Only exact plain types are accepted, so a mapping or string subclass can't
@@ -128,15 +129,19 @@ What `args` contains:
   but only if the value passed that argument's own constraints. A `case_id`
   that matches `SYN-CASE-[0-9]{4}` is logged as is. Something else sent in
   that slot is logged as type and length only.
-- Logged values still go through redaction as a second layer: strings that
-  look like credentials (bearer and basic auth, `sk-` and Stripe keys, AWS,
+- Logged values still go through redaction as a second layer: secret-looking
+  argument names such as `password`, `api_key` and `Authorization` cause the
+  value to become `[REDACTED]` even with `log_value: true`. Strings that
+  look like credentials (bearer and basic auth regardless of scheme case,
+  `sk-` and Stripe keys, AWS,
   GitHub, Slack and Google keys, JWTs, PEM private keys, URLs with a password
   or a key in the query string) become `[REDACTED]`, and long strings are cut
   at 200 characters.
 - Names chosen by the caller (unexpected argument names, tool names) are cut
   to 64 characters, non-printable characters are replaced with `?`, and names
-  that look like credentials are redacted. The same applies in deny reasons
-  and `PermissionDenied` messages. At most 20 arguments are listed per line.
+  that look like credentials are redacted. The same applies to caller-controlled
+  type names, deny reasons and `PermissionDenied` messages. At most 20 arguments
+  are listed per line.
 
 Deny reasons name the failing argument but never include its value.
 

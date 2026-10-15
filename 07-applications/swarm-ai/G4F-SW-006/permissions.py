@@ -33,7 +33,7 @@ SECRET_KEY_RE = re.compile(
 )
 SECRET_VALUE_RES = [
     re.compile(r"\bbearer\s+\S+", re.IGNORECASE),
-    re.compile(r"\bBasic [A-Za-z0-9+/]{8,}"),
+    re.compile(r"\bBasic [A-Za-z0-9+/]{8,}", re.IGNORECASE),
     re.compile(r"\bsk-[A-Za-z0-9_-]{16,}"),
     re.compile(r"\b[rs]k_(?:live|test)_[A-Za-z0-9]{10,}"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
@@ -122,7 +122,7 @@ def _violation(value: Any, c: Mapping[str, Any]) -> str | None:
     if "min" in c or "max" in c:
         if type(value) not in (int, float):
             return "is not a number"
-        if not math.isfinite(value):
+        if type(value) is float and not math.isfinite(value):
             return "is not a finite number"
         if "min" in c and value < c["min"]:
             return "below min"
@@ -140,7 +140,9 @@ def load_policy(path: str | Path) -> Policy:
         raw = json.loads(
             text, object_pairs_hook=_reject_duplicate_keys, parse_constant=_reject_nan
         )
-    except json.JSONDecodeError as e:
+    except PolicyError:
+        raise
+    except (ValueError, RecursionError) as e:
         raise PolicyError(f"policy is not valid JSON: {e}") from None
     return parse_policy(raw)
 
@@ -223,7 +225,7 @@ def _parse_arg_spec(where: str, c: Any) -> Mapping[str, Any]:
             raise PolicyError(f"{where}: 'pattern' must be a string")
         try:
             out["pattern"] = re.compile(out["pattern"])
-        except re.error as e:
+        except (re.error, OverflowError, RecursionError) as e:
             raise PolicyError(f"{where}: bad pattern ({e})") from None
     if "allowed" in out:
         values = out["allowed"]
@@ -239,8 +241,11 @@ def _parse_arg_spec(where: str, c: Any) -> Mapping[str, Any]:
                 )
         out["allowed"] = tuple(values)
     for key in ("min", "max"):
-        if key in out and (
-            type(out[key]) not in (int, float) or not math.isfinite(out[key])
+        if key not in out:
+            continue
+        value = out[key]
+        if type(value) not in (int, float) or (
+            type(value) is float and not math.isfinite(value)
         ):
             raise PolicyError(f"{where}: '{key}' must be a finite number")
     if "min" in out and "max" in out and out["min"] > out["max"]:
@@ -259,7 +264,7 @@ def _looks_secret(text: str) -> bool:
 def _label(text: Any, limit: int = MAX_LABEL) -> str:
     """Make a caller-supplied name safe to put in a reason or a log line."""
     if type(text) is not str:
-        return f"<{type(text).__name__}>"
+        return f"<{_label(type(text).__name__, limit)}>"
     if _looks_secret(text):
         return REDACTED
     shown = "".join(c if c.isprintable() else "?" for c in text[:limit])
@@ -298,7 +303,7 @@ def redact(value: Any, key: str = "", _depth: int = 0) -> Any:
         }
     if _depth < 4 and type(value) in (list, tuple):
         return [redact(v, "", _depth + 1) for v in value]
-    return f"<{type(value).__name__}>"
+    return f"<{_label(type(value).__name__)}>"
 
 
 def _describe(value: Any) -> dict[str, Any]:
@@ -349,7 +354,9 @@ class ToolGate:
             decision, snapshot = self._evaluate(agent_id, tool, args)
         except Exception as e:  # noqa: BLE001
             # Fail closed: a bug or odd input in the checker must never turn into an allow.
-            decision = Decision(False, f"policy check error: {type(e).__name__}")
+            decision = Decision(
+                False, f"policy check error: {_label(type(e).__name__)}"
+            )
         self._audit(agent_id, tool, args, snapshot, decision)
         return decision, snapshot if decision.allowed else {}
 
@@ -400,7 +407,7 @@ class ToolGate:
                 args=(
                     self._loggable_args(decision.role, tool, snapshot)
                     if snapshot is not None
-                    else f"<{type(args).__name__}>"
+                    else f"<{_label(type(args).__name__)}>"
                 ),
             )
             line = json.dumps(record, sort_keys=True, allow_nan=False)
@@ -430,7 +437,7 @@ class ToolGate:
                 and type(value) in SCALAR_TYPES
                 and _violation(value, spec) is None
             ):
-                out[_label(name)] = redact(value)
+                out[_label(name)] = redact(value, name)
             else:
                 out[_label(name)] = _describe(value)
         if len(names) > MAX_LOGGED_ARGS:

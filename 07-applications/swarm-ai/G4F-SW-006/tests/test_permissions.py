@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -687,6 +688,8 @@ def test_unexpected_argument_values_are_never_logged(gate, audit):
 SECRETS = [
     "Bearer abc.def.ghi",
     "Basic dXNlcjpodW50ZXIy",
+    "basic dXNlcjpodW50ZXIy",
+    "bAsIc dXNlcjpodW50ZXIy",
     "sk-test0000000000000000000000",
     "sk_live_00000000000000000000",
     "rk_test_00000000000000000000",
@@ -714,6 +717,150 @@ def test_secret_values_redacted_even_when_value_logging_is_on(calls, audit, secr
 @pytest.mark.parametrize("key", ["api_key", "pwd", "access_key", "jwt", "dsn", "auth"])
 def test_secret_keys_redacted(key):
     assert redact({key: "plain-looking-value"}) == {key: "[REDACTED]"}
+
+
+@pytest.mark.parametrize(
+    "key", ["password", "api_key", "token", "Authorization", "dsn"]
+)
+def test_secret_argument_name_redacts_opted_in_value(calls, audit, key):
+    gate = one_tool_gate(calls, {key: {"pattern": ".*", "log_value": True}})
+    gate.call("a-01", "t", {key: "synthetic-credential-123"})
+    (rec,) = audit_records(audit)
+    assert rec["args"][key] == "[REDACTED]"
+    assert "synthetic-credential-123" not in audit.text
+    assert calls == [("t", {key: "synthetic-credential-123"})]
+
+
+def test_lowercase_basic_auth_is_redacted_in_names(calls, audit):
+    secret = "basic dXNlcjpodW50ZXIy"
+    gate = one_tool_gate(calls, {"text": {"pattern": ".*", "log_value": True}})
+
+    argument_decision = gate.check("a-01", "t", {secret: 1})
+    tool_decision = gate.check("a-01", secret, {})
+
+    assert secret not in audit.text
+    assert secret not in argument_decision.reason
+    assert secret not in tool_decision.reason
+
+
+def test_exception_class_name_is_redacted_before_audit(audit, calls):
+    secret = "sk_live_00000000000000000000"
+    secret_error = type(secret, (Exception,), {})
+
+    class ExplodingMapping(Mapping):
+        def __getitem__(self, key):
+            raise KeyError(key)
+
+        def __iter__(self):
+            raise secret_error()
+
+        def __len__(self):
+            return 0
+
+    gate = one_tool_gate(calls, {})
+    ExplodingMapping.__name__ = secret
+    decision = gate.check("a-01", "t", ExplodingMapping())
+
+    assert not decision.allowed
+    assert decision.reason == "policy check error: [REDACTED]"
+    with pytest.raises(PermissionDenied) as exc:
+        gate.call("a-01", "t", ExplodingMapping())
+    assert secret not in str(exc.value)
+    assert secret not in audit.text
+    assert len(audit_records(audit)) == 2
+    assert calls == []
+
+
+def test_caller_supplied_type_names_are_redacted(calls, audit):
+    secret = "sk_live_00000000000000000000"
+    odd = type(secret, (), {})()
+    gate = one_tool_gate(calls, {})
+    for agent, tool, args in ((odd, "t", {}), ("a-01", odd, {}), ("a-01", "t", odd)):
+        assert not gate.check(agent, tool, args).allowed
+    assert redact(odd) == "<[REDACTED]>"
+    assert secret not in audit.text
+    assert len(audit_records(audit)) == 3
+    assert calls == []
+
+
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_arbitrary_size_integer_bounds_are_handled_without_float_overflow(
+    calls, audit, tmp_path, sign
+):
+    bound = sign * 10**400
+    lower_bound, upper_bound = bound - 1, bound + 1
+    policy = parse_policy(
+        {
+            "version": 1,
+            "agents": {"a-01": "r"},
+            "roles": {
+                "r": {
+                    "tools": {
+                        "t": {"args": {"n": {"min": lower_bound, "max": upper_bound}}}
+                    }
+                }
+            },
+        }
+    )
+
+    assert policy.check("a-01", "t", {"n": lower_bound}).allowed
+    assert policy.check("a-01", "t", {"n": upper_bound}).allowed
+    gate = ToolGate(policy, fake_tools(calls, extra=["t"]))
+    gate.call("a-01", "t", {"n": bound})
+    assert calls == [("t", {"n": bound})]
+    assert (
+        gate.check("a-01", "t", {"n": lower_bound - 1}).reason
+        == "argument 'n' below min"
+    )
+    assert (
+        gate.check("a-01", "t", {"n": upper_bound + 1}).reason
+        == "argument 'n' above max"
+    )
+    assert len(audit_records(audit)) == 3
+    path = tmp_path / "policy.json"
+    path.write_text(
+        _policy_text(constraint=json.dumps({"max": upper_bound})), encoding="utf-8"
+    )
+    assert load_policy(path).roles["r"]["t"]["x"]["max"] == upper_bound
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    ["a{4294967296}", "(" * 1000 + "a" + ")" * 1000],
+    ids=["repeat-overflow", "nesting-overflow"],
+)
+def test_oversized_regex_is_a_policy_error(pattern, tmp_path):
+    with pytest.raises(PolicyError, match="bad pattern"):
+        parse_policy(
+            {
+                "version": 1,
+                "agents": {"a-01": "r"},
+                "roles": {
+                    "r": {"tools": {"t": {"args": {"text": {"pattern": pattern}}}}}
+                },
+            }
+        )
+    path = tmp_path / "policy.json"
+    path.write_text(
+        _policy_text(constraint=json.dumps({"pattern": pattern})), encoding="utf-8"
+    )
+    with pytest.raises(PolicyError, match="bad pattern"):
+        load_policy(path)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        _policy_text(constraint='{"max": ' + "9" * 5000 + "}"),
+        "[" * 10000 + "0" + "]" * 10000,
+    ],
+    ids=["integer-digit-limit", "nesting-limit"],
+)
+def test_json_parser_limits_are_policy_errors(tmp_path, text):
+    path = tmp_path / "policy.json"
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(PolicyError, match="policy is not valid JSON"):
+        load_policy(path)
 
 
 def test_denial_reason_never_echoes_value(gate):
