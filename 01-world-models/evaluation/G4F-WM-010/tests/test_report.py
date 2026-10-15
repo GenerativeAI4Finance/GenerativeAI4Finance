@@ -106,6 +106,38 @@ def test_shipped_example_matches_generator(tmp_path):
         assert (tmp_path / f"{name}.csv").read_bytes() == shipped
 
 
+def test_cli_preserves_hashes_for_matching_input_basenames(tmp_path):
+    preds, outs = generate(seed=7)
+    pred_path = tmp_path / "predictions" / "data.csv"
+    out_path = tmp_path / "outcomes" / "data.csv"
+    pred_path.parent.mkdir()
+    out_path.parent.mkdir()
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    report_path = tmp_path / "report"
+    cli.main(
+        [
+            "--predictions",
+            str(pred_path),
+            "--outcomes",
+            str(out_path),
+            "--out",
+            str(report_path),
+            "--n-boot",
+            "1",
+        ]
+    )
+    inputs = json.loads(report_path.with_suffix(".json").read_text())["metadata"]["inputs"]
+    assert inputs == {
+        "predictions:data.csv": {"sha256": cli.sha256(pred_path)},
+        "outcomes:data.csv": {"sha256": cli.sha256(out_path)},
+    }
+    assert inputs["predictions:data.csv"]["sha256"] != inputs["outcomes:data.csv"]["sha256"]
+    markdown = report_path.with_suffix(".md").read_text()
+    for name, info in inputs.items():
+        assert f"`{name}` sha256 `{info['sha256']}`" in markdown
+
+
 def state_frame(n=240, seed=5, with_from=True):
     rng = np.random.default_rng(seed)
     states = ["current", "late", "default"]

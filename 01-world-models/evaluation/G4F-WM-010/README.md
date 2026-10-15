@@ -22,7 +22,7 @@ must have exactly one outcome and the other way round, otherwise the run stops.
 |---|---|---|
 | `entity_id` | string | |
 | `as_of` | date `YYYY-MM-DD` | prediction time `t`; only information up to `t` should be used (see WM-001) |
-| `horizon` | whole number >= 1 | months after `as_of` |
+| `horizon` | whole number in [1, 9223372036854775807] | months after `as_of`, stored as int64 |
 | `scenario` | string | one of `baseline`, `normal`, `stress` |
 | `p_event` | float in [0, 1] | probability of the binary event (e.g. default) within the horizon |
 | `p_state_<name>` | float in [0, 1] | optional, probability of each next state; must sum to 1 per row |
@@ -47,9 +47,10 @@ What is checked before anything is scored (each failure stops the run with a
 - `as_of` is a real calendar date in `YYYY-MM-DD` form (`2025-02-30` and
   `2025-1-31` are rejected); date or timestamp objects are accepted and written
   as dates
-- `horizon` is a whole number of months >= 1; `12`, `12.0` and `"12"` are the
-  same horizon in both files, while `6.5`, `0`, negative numbers, text and
-  booleans are rejected
+- `horizon` is a whole number of months in [1, 9223372036854775807]; `12`, `12.0`
+  and `"12"` are the same horizon in both files, while `6.5`, `0`, negative
+  numbers, text, booleans (including NumPy booleans) and values above the int64
+  limit are rejected
 - no duplicate keys, checked after the key is canonicalised, so `12` and `"12.0"`
   or `1` and `"1"` for an entity count as duplicates
 - every prediction has exactly one outcome and the other way round
@@ -177,7 +178,9 @@ or `.md` is dropped and any other dot is kept.
 
 - `metadata`: seed, bootstrap count, bins, log loss clip, small-sample minimums,
   sha256 of each input file (computed with CRLF read as LF, so a Windows copy
-  hashes the same), rows per scenario, numpy version
+  hashes the same), rows per scenario, numpy version. Input hashes use the file
+  basenames as keys; matching basenames are prefixed with `predictions:` and
+  `outcomes:` so both hashes are retained.
 - `disclaimer`
 - `scenarios.<name>.warnings`
 - `scenarios.<name>.binary`: the metrics above, reliability tables for both

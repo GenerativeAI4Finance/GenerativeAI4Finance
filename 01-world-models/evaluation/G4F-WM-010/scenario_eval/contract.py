@@ -6,6 +6,7 @@ row should stop the run, not quietly drop out of the metrics.
 
 import datetime as dt
 import re
+from decimal import Decimal, InvalidOperation
 from os import PathLike
 
 import numpy as np
@@ -22,6 +23,7 @@ OUTCOME_COLUMNS = ("event", "next_state")
 # event must equal next_state == "default".
 EVENT_STATE = "default"
 TOLERANCE = 1e-6
+MAX_HORIZON = 2**63 - 1
 
 
 class ContractError(ValueError):
@@ -75,14 +77,38 @@ def _check_as_of(df, name):
         )
 
 
+def _horizon(value):
+    """Exact positive int64 months, or None for an invalid horizon."""
+    if isinstance(value, (bool, np.bool_, dt.date)):
+        return None
+    if isinstance(value, (float, np.floating)):
+        if not np.isfinite(value):
+            return None
+        numerator, denominator = value.as_integer_ratio()
+        return numerator if denominator == 1 and 1 <= numerator <= MAX_HORIZON else None
+    text = str(value).strip()
+    if "_" in text:
+        return None
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None
+    if (
+        not number.is_finite()
+        or not 1 <= number <= MAX_HORIZON
+        or number != number.to_integral_value()
+    ):
+        return None
+    return int(number)
+
+
 def _check_horizon(df, name):
-    if df["horizon"].map(lambda v: isinstance(v, (bool, dt.date))).any():
-        raise ContractError(f"{name} has horizons that are not whole months >= 1: boolean values")
-    h = pd.to_numeric(df["horizon"], errors="coerce")
-    bad = df.loc[h.isna() | (h <= 0) | (h % 1 != 0), "horizon"]
+    bad = df.loc[df["horizon"].map(_horizon).isna(), "horizon"]
     if len(bad):
         examples = sorted({str(v) for v in bad})[:5]
-        raise ContractError(f"{name} has horizons that are not whole months >= 1: {examples}")
+        raise ContractError(
+            f"{name} has horizons that are not whole months in [1, {MAX_HORIZON}]: {examples}"
+        )
 
 
 def _normalise_key(df):
@@ -91,7 +117,7 @@ def _normalise_key(df):
     return df.assign(
         entity_id=df["entity_id"].astype(str),
         as_of=df["as_of"].map(_iso_date),
-        horizon=pd.to_numeric(df["horizon"]).astype("int64"),
+        horizon=df["horizon"].map(_horizon).astype("int64"),
     )
 
 
@@ -164,7 +190,8 @@ def _check_event_matches_state(p_event, p_state, outcomes):
 
 
 def load(predictions_path: str | PathLike, outcomes_path: str | PathLike) -> pd.DataFrame:
-    text = {"entity_id": str, "as_of": str, "from_state": str, "next_state": str}
+    # Keep raw horizon text so CSV inference cannot round large integers via float64.
+    text = {"entity_id": str, "as_of": str, "horizon": str, "from_state": str, "next_state": str}
     predictions = pd.read_csv(predictions_path, dtype=text)
     outcomes = pd.read_csv(outcomes_path, dtype=text)
     return join(predictions, outcomes)

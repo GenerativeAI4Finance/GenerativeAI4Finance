@@ -55,9 +55,13 @@ def main(argv: list[str] | None = None) -> None:
     args = ap.parse_args(argv)
 
     df = load(args.predictions, args.outcomes)
+    prediction_name, outcome_name = Path(args.predictions).name, Path(args.outcomes).name
+    if prediction_name == outcome_name:
+        prediction_name = f"predictions:{prediction_name}"
+        outcome_name = f"outcomes:{outcome_name}"
     inputs = {
-        Path(args.predictions).name: {"sha256": sha256(args.predictions)},
-        Path(args.outcomes).name: {"sha256": sha256(args.outcomes)},
+        prediction_name: {"sha256": sha256(args.predictions)},
+        outcome_name: {"sha256": sha256(args.outcomes)},
     }
     report = evaluate(
         df,

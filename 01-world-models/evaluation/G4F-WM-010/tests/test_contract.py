@@ -1,7 +1,8 @@
+import numpy as np
 import pandas as pd
 import pytest
 
-from scenario_eval.contract import ContractError, join
+from scenario_eval.contract import ContractError, join, load
 
 
 def frames():
@@ -127,6 +128,57 @@ def test_horizon_spellings_match_across_files():
     preds["horizon"] = ["12", "12.0", 12.0]
     df = join(preds, outs)
     assert df["horizon"].tolist() == [12, 12, 12]
+
+
+@pytest.mark.parametrize("which", ["predictions", "outcomes"])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        2**63,
+        str(2**63),
+        float(2**63),
+        10**100,
+        "9223372036854775806.5",
+        np.bool_(True),
+        np.bool_(False),
+    ],
+)
+def test_horizon_overflow_and_numpy_booleans_rejected(which, bad):
+    preds, outs = frames()
+    frame = preds if which == "predictions" else outs
+    frame["horizon"] = frame["horizon"].astype(object)
+    frame.loc[0, "horizon"] = bad
+    with pytest.raises(ContractError, match=f"{which}.*horizons"):
+        join(preds, outs)
+
+
+def test_largest_int64_horizon_is_preserved_with_decimal_spellings():
+    preds, outs = frames()
+    largest = 2**63 - 1
+    preds["horizon"] = [str(largest), "12.0", 12.0]
+    outs["horizon"] = [largest, 12, 12]
+    df = join(preds, outs)
+    assert df["horizon"].dtype == np.dtype("int64")
+    assert df["horizon"].tolist() == [largest, 12, 12]
+
+
+def test_csv_preserves_largest_int64_horizon(tmp_path):
+    preds, outs = frames()
+    largest = 2**63 - 1
+    preds["horizon"] = [str(largest), "12.0", "12"]
+    outs["horizon"] = [largest, 12, 12]
+    pred_path, out_path = tmp_path / "predictions.csv", tmp_path / "outcomes.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    assert load(pred_path, out_path)["horizon"].tolist() == [largest, 12, 12]
+
+
+def test_numpy_float_horizon_retains_its_integer_value():
+    preds, outs = frames()
+    horizon = np.float32(123456789)
+    preds["horizon"] = pd.Series([horizon, 12, 12], dtype=object)
+    outs["horizon"] = [int(horizon), 12, 12]
+    assert join(preds, outs)["horizon"].tolist() == [123456792, 12, 12]
 
 
 @pytest.mark.parametrize(
