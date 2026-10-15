@@ -28,6 +28,22 @@ pytest
 python example.py
 ```
 
+## Continuous integration
+
+The task workflow runs the tests, Ruff lint checks and formatting checks on
+Python 3.12 with Linux and Windows runners. It runs for pull requests that change
+this task or its workflow, and for matching changes pushed to `main` or
+`g4f-sw-006-agent-permissions`. It can also be started manually from GitHub Actions.
+
+To run the same checks from this task directory:
+
+```
+python -m pip install -r requirements.txt ruff==0.17.0
+python -m pytest
+python -m ruff check .
+python -m ruff format --check .
+```
+
 ## Policy format
 
 ```json
