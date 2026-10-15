@@ -1275,3 +1275,141 @@ def test_unserializable_reason_is_refused_without_writing(log, reason):
 def test_unhashable_actor_role_is_refused():
     with pytest.raises(AuditError, match="unknown role"):
         Actor("analyst-1", [])
+
+
+@pytest.mark.parametrize("mutation", [{"hash": "0" * 64}, {"seq": 0}, {"seq": 999}])
+def test_sequence_replay_checks_only_the_included_prefix(log, mutation):
+    _approved(log)
+    events = log.events
+    expected = replay(events[:2], KEY)
+    events[2].update(mutation)
+    assert replay(events, KEY, upto_seq=2) == expected
+    with pytest.raises(IntegrityError, match="line 3"):
+        replay(events, KEY, upto_seq=3)
+    with pytest.raises(IntegrityError, match="line 3"):
+        verify_events(events, KEY)
+
+
+@pytest.mark.parametrize("mutation", [{"hash": "0" * 64}, {"seq": 999}])
+def test_sequence_replay_cannot_skip_invalid_included_event(log, mutation):
+    new_finding(log)
+    events = log.events
+    events[0].update(mutation)
+    # An untrusted seq beyond the cutoff must still be checked at position 1.
+    with pytest.raises(IntegrityError, match="line 1"):
+        replay(events, KEY, upto_seq=1)
+    assert replay(events, KEY, upto_seq=0) == {}
+
+
+def test_sequence_replay_ordinary_prefixes(log):
+    _approved(log)
+    events = log.events
+    assert replay(events, KEY, upto_seq=0) == {}
+    assert replay(events, KEY, upto_seq=1)["F-1"]["status"] == "draft"
+    assert replay(events, KEY, upto_seq=2)["F-1"]["status"] == "under_review"
+    assert replay(events, KEY, upto_seq=3)["F-1"]["status"] == "approved"
+    assert replay(events, KEY, upto_seq=4) == replay(events, KEY)
+
+
+def test_cli_sequence_cutoff_still_verifies_the_whole_log(log, monkeypatch, capsys):
+    _approved(log)
+    events = log.events
+    events[2]["hash"] = "0" * 64
+    write_lines(log.path, events)
+    monkeypatch.setenv(KEY_ENV, KEY.decode())
+    assert main(["state", str(log.path), "F-1", "--seq", "2"]) == 1
+    assert "FAILED: line 3" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("command", ["verify", "state"])
+@pytest.mark.parametrize(
+    "timestamp, diagnostic",
+    [
+        ("\ud800", r"\ud800"),
+        ("\udfff", r"\udfff"),
+        ("bad\n\t\x1b[31m", r"bad\n\t\x1b[31m"),
+        ("2026-01-01T00:00:00", "timestamp must include a timezone"),
+        ("2026-01-01T01:00:00+01:00", "timestamp must be stored in UTC"),
+    ],
+)
+def test_cli_timestamp_diagnostics_with_strict_utf8(
+    log, command, timestamp, diagnostic
+):
+    new_finding(log)
+    events = log.events
+    events[0]["timestamp"] = timestamp
+    write_lines(log.path, resign(events, KEY))
+    args = [sys.executable, "-B", str(HERE / "audit_trail.py"), command, str(log.path)]
+    if command == "state":
+        args.append("F-1")
+    result = subprocess.run(
+        args,
+        check=False,
+        env={**os.environ, KEY_ENV: KEY.decode(), "PYTHONIOENCODING": "utf-8:strict"},
+        capture_output=True,
+        timeout=30,
+    )
+    assert result.returncode == 1
+    assert result.stderr == b""
+    output = result.stdout.decode("utf-8", errors="strict")
+    assert output.startswith("FAILED: line 1:")
+    assert diagnostic in output
+    assert output.count("\n") == 1
+    assert "\t" not in output
+    assert "\x1b" not in output
+
+
+@pytest.mark.parametrize("timestamp", ["\ud800", "bad\n\t\x1b[31m"])
+def test_cli_argument_timestamp_diagnostics_with_strict_utf8(log, timestamp):
+    # Pass the argument within the child so an unpaired surrogate need not be
+    # encoded in the operating system's command line.
+    script = """
+import json, sys
+sys.path.insert(0, sys.argv[1])
+from audit_trail import main
+raise SystemExit(main(["state", sys.argv[2], "F-1", "--as-of", json.loads(sys.argv[3])]))
+"""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            script,
+            str(HERE),
+            str(log.path),
+            json.dumps(timestamp),
+        ],
+        check=False,
+        env={**os.environ, KEY_ENV: KEY.decode(), "PYTHONIOENCODING": "utf-8:strict"},
+        capture_output=True,
+        timeout=30,
+    )
+    assert result.returncode == 2
+    assert result.stdout == b""
+    output = result.stderr.decode("utf-8", errors="strict")
+    assert output.startswith("error: not an ISO 8601 timestamp:")
+    assert json.dumps(timestamp)[1:-1].replace("\\u001b", "\\x1b") in output
+    assert output.count("\n") == 1
+
+
+def test_cli_valid_timestamp_with_strict_utf8(log):
+    new_finding(log)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(HERE / "audit_trail.py"),
+            "state",
+            str(log.path),
+            "F-1",
+            "--as-of",
+            "2026-01-01T01:00:00+01:00",
+        ],
+        check=False,
+        env={**os.environ, KEY_ENV: KEY.decode(), "PYTHONIOENCODING": "utf-8:strict"},
+        capture_output=True,
+        timeout=30,
+    )
+    assert result.returncode == 0
+    assert result.stderr == b""
+    assert json.loads(result.stdout)["status"] == "draft"

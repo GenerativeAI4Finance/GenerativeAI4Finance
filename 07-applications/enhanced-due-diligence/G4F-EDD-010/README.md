@@ -80,6 +80,11 @@ through `AuditLog`. That includes the fields that follow from earlier events:
 `status_before`, `status_after`, `previous_event_seq` and the `from` side of
 each change must match what the events before it give.
 
+Standalone `replay(events, key, upto_seq=N)` checks only the first N event
+positions and reconstructs that prefix. To verify the entire log, use
+`verify_events`. Opening `AuditLog` and running either CLI command always
+verify the entire log, including when the requested state has a sequence cutoff.
+
 ## Sensitive fields
 
 `subject_name` and `analyst_notes` are never written to the log in clear text.

@@ -241,9 +241,9 @@ def parse_ts(ts) -> datetime:
     try:
         dt = datetime.fromisoformat(ts)
     except ValueError:
-        raise AuditError(f"not an ISO 8601 timestamp: {ts}") from None
+        raise AuditError(f"not an ISO 8601 timestamp: {ts!r}") from None
     if dt.tzinfo is None:
-        raise AuditError(f"timestamp must include a timezone: {ts}")
+        raise AuditError(f"timestamp must include a timezone: {ts!r}")
     return dt
 
 
@@ -428,7 +428,7 @@ def _check_event(event, states: dict, prev: dict | None, keys: Keys):
     _check_refs(event["refs"])
     ts = event["timestamp"]
     if to_utc(ts) != ts:
-        raise AuditError(f"timestamp must be stored in UTC: {ts}")
+        raise AuditError(f"timestamp must be stored in UTC: {ts!r}")
     if prev and parse_ts(ts) < parse_ts(prev["timestamp"]):
         raise AuditError("timestamp is earlier than the last event")
 
@@ -524,9 +524,10 @@ def _replay(events, keys: Keys, as_of=None, upto_seq=None) -> dict:
     states: dict = {}
     prev = None
     for line, event in enumerate(events, start=1):
-        fid, new = _checked(event, states, prev, keys, line)
-        if upto_seq is not None and event["seq"] > upto_seq:
+        # The expected position determines inclusion, never an untrusted seq.
+        if upto_seq is not None and line > upto_seq:
             break
+        fid, new = _checked(event, states, prev, keys, line)
         if cutoff is not None and parse_ts(event["timestamp"]) > cutoff:
             break
         states[fid] = new
