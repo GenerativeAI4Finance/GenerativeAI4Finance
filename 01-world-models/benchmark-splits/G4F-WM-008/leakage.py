@@ -394,7 +394,9 @@ def check_post_outcome_fields(
             if col in bad:
                 continue
             x = df[col][kept].reset_index(drop=True)
-            usual = x[neg].mode(dropna=False).iloc[0]
+            # pandas 3.0's nullable boolean mode fails when NA is present.
+            # Object values retain NA as a possible mode for this heuristic.
+            usual = x[neg].astype(object).mode(dropna=False).iloc[0]
             is_set = (
                 x.notna() if pd.isna(usual) else x.ne(usual).fillna(True)
             ).to_numpy(dtype=bool)

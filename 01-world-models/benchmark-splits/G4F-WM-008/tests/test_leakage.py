@@ -690,3 +690,45 @@ def test_post_outcome_nullable_features_count_missing_as_a_value(
     if missing_only_on_positive:
         assert out["suspects"][0]["share_of_positive_rows"] == 1.0
         assert out["suspects"][0]["share_of_negative_rows"] == 0.0
+
+
+@pytest.mark.parametrize("policy", ["time", "entity", "time_entity"])
+@pytest.mark.parametrize(
+    "case",
+    ["independent", "missing_mode_leak", "present_mode_leak", "missing_mode_clean"],
+)
+def test_nullable_boolean_features_work_in_full_reports(panel, policy, case):
+    df, spec = panel
+    positive = df[spec.target_col] == 1
+    if case == "independent":
+        feature = pd.Series(df.index % 2 == 0, index=df.index, dtype="boolean")
+        feature.loc[df.index % 7 == 0] = pd.NA
+    elif case == "present_mode_leak":
+        feature = pd.Series(False, index=df.index, dtype="boolean")
+        feature.loc[positive] = pd.NA
+    else:
+        feature = pd.Series(pd.NA, index=df.index, dtype="boolean")
+        selected = positive
+        if case == "missing_mode_clean":
+            selected = positive & (df.index % 4 == 0)
+        feature.loc[selected] = True
+    df["nullable_flag"] = feature
+    spec.feature_cols.append("nullable_flag")
+    res = split(df, spec, policy)
+    report = run_checks(df, res.labels, spec, res.manifest)
+    expected_failure = case.endswith("_leak")
+    assert report["ok"] is not expected_failure, report
+    assert report["all_applicable_checks_passed"] is not expected_failure, report
+    outcome = report["checks"]["post_outcome_fields"]
+    assert outcome["value_check"] == "ran"
+    assert outcome["status"] == ("fail" if expected_failure else "pass")
+    if expected_failure:
+        hit = next(s for s in outcome["suspects"] if s["feature"] == "nullable_flag")
+        assert hit["share_of_positive_rows"] == 1.0
+        assert hit["share_of_negative_rows"] == 0.0
+    # The established object-backed path must have the same value semantics.
+    df["nullable_flag"] = df["nullable_flag"].astype(object)
+    assert (
+        run_checks(df, res.labels, spec, res.manifest)["checks"]["post_outcome_fields"]
+        == outcome
+    )

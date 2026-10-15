@@ -311,11 +311,11 @@ under all three policies.
 
 ## Tests
 
-198 tests run with `python -m pytest` on Python 3.12. Regression cases also
+210 tests run with `python -m pytest` on Python 3.12. Regression cases also
 cover invalid and overflowing horizons, embargoes and cutoffs; nanosecond
 hash differences for naive and timezone-aware data; delimiter and entity
 type hash collisions; arbitrary helper names as feature and schema columns;
-nullable numeric/text feature missing values; and zero cross-split comparison coverage.
+nullable numeric/text/boolean feature missing values; and zero cross-split comparison coverage.
 An alignment regression ensures the total unmatched-row budget is enforced,
 even when gaps on opposite sides cancel their displacement.
 Time-order tests inspect every actual outcome-window end, including a valid
