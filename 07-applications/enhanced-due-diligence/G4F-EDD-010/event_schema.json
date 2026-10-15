@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "g4f-edd-010/audit-event.schema.json",
+  "title": "EDD finding audit event",
+  "description": "One line of the append-only audit log. Sensitive finding fields are stored as keyed digests, never in clear text. This schema covers the shape of a single event; rules that depend on earlier events (status changes, separation of duties, timestamp order, the hash chain) are checked by audit_trail.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seq",
+    "finding_id",
+    "event_type",
+    "actor_id",
+    "actor_role",
+    "timestamp",
+    "reason",
+    "refs",
+    "status_before",
+    "status_after",
+    "previous_event_seq",
+    "changes",
+    "key_id",
+    "prev_hash",
+    "hash"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "seq": { "type": "integer", "minimum": 1 },
+    "finding_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "event_type": {
+      "enum": ["created", "edited", "submitted", "approved", "rejected", "escalated", "closed"]
+    },
+    "actor_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "Pseudonymous id in lower case. Do not put names or emails here."
+    },
+    "actor_role": { "enum": ["analyst", "reviewer", "senior_reviewer"] },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{6})?\\+00:00$",
+      "description": "ISO 8601 in UTC."
+    },
+    "reason": { "type": ["string", "null"] },
+    "refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,31}:[A-Za-z0-9._:/#-]{1,128}$"
+      },
+      "description": "References to related records, for example case:CASE-0042 or evidence:EV-101."
+    },
+    "status_before": {
+      "enum": [null, "draft", "under_review", "approved", "rejected", "escalated"]
+    },
+    "status_after": {
+      "enum": ["draft", "under_review", "approved", "rejected", "escalated", "closed"]
+    },
+    "previous_event_seq": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "seq of the previous event for the same finding."
+    },
+    "changes": {
+      "type": "object",
+      "description": "Field-level diff. Only fields that actually changed are listed.",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/change" },
+        "summary": { "$ref": "#/$defs/change" },
+        "risk_category": { "$ref": "#/$defs/change" },
+        "confidence": { "$ref": "#/$defs/change" },
+        "evidence_refs": { "$ref": "#/$defs/change" },
+        "subject_name": { "$ref": "#/$defs/sensitive_change" },
+        "analyst_notes": { "$ref": "#/$defs/sensitive_change" }
+      }
+    },
+    "key_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "description": "Names the key the event was written with, without revealing it."
+    },
+    "prev_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "HMAC-SHA256 of the canonical JSON of the event without this field, under a key derived from the log key."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "enum": ["created", "edited", "submitted"] } } },
+      "then": { "properties": { "actor_role": { "const": "analyst" } } },
+      "else": { "properties": { "actor_role": { "enum": ["reviewer", "senior_reviewer"] } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": { "enum": ["edited", "approved", "rejected", "escalated", "closed"] }
+        }
+      },
+      "then": { "properties": { "reason": { "type": "string", "pattern": "\\S" } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": { "enum": ["submitted", "approved", "rejected", "escalated", "closed"] }
+        }
+      },
+      "then": { "properties": { "changes": { "maxProperties": 0 } } }
+    }
+  ],
+  "$defs": {
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": { "from": {}, "to": {} }
+    },
+    "sensitive_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/redacted" }] },
+        "to": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/redacted" }] }
+      }
+    },
+    "redacted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["redacted", "hmac_sha256"],
+      "properties": {
+        "redacted": { "const": true },
+        "hmac_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}
