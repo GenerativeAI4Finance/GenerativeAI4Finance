@@ -226,7 +226,9 @@ def _digest(keys: Keys, finding_id: str, field: str, value) -> dict:
 
 
 def matches_redacted(value, stored: dict, key, *, finding_id: str, field: str) -> bool:
-    """Check a value against the digest recorded for it. Needs the key."""
+    """Check a value against its keyed digest; malformed digests return False."""
+    if not _is_digest(stored):
+        return False
     expected = _digest(_as_keys(key), finding_id, field, value)["hmac_sha256"]
     return hmac.compare_digest(expected, stored["hmac_sha256"])
 
@@ -519,7 +521,13 @@ def _check_head(events: list[dict], expected) -> None:
         )
 
 
+def _check_upto_seq(upto_seq) -> None:
+    if upto_seq is not None and (type(upto_seq) is not int or upto_seq < 0):
+        raise AuditError("upto_seq must be a non-negative integer or None")
+
+
 def _replay(events, keys: Keys, as_of=None, upto_seq=None) -> dict:
+    _check_upto_seq(upto_seq)
     cutoff = parse_ts(as_of) if as_of is not None else None
     states: dict = {}
     prev = None
@@ -539,6 +547,9 @@ def replay(events, key, as_of=None, upto_seq=None) -> dict:
     """Rebuild finding state from events, optionally stopping at a time or seq.
 
     Every event up to the cutoff is checked exactly as when it was written.
+    ``upto_seq`` must be None or an exact non-negative int, otherwise AuditError
+    is raised. Zero returns empty state; a cutoff beyond the head includes all
+    events. Events after the sequence cutoff are not checked.
     """
     return _replay(events, _as_keys(key), as_of, upto_seq)
 
@@ -699,7 +710,7 @@ class AuditLog:
     def state(
         self, finding_id: str, as_of: str | None = None, upto_seq: int | None = None
     ):
-        """A copy of a finding's state, now or at an earlier time or seq."""
+        """A copy of a finding's state, using replay's time and seq cutoffs."""
         if as_of is None and upto_seq is None:
             return copy.deepcopy(self._states.get(finding_id))
         return _replay(self._events, self._keys, as_of, upto_seq).get(finding_id)
@@ -854,6 +865,7 @@ def main(argv=None):
             raise AuditError(f"set {KEY_ENV} to the key the log was written with")
         keys = Keys(os.environ[KEY_ENV].encode())
         head = Head.parse(args.head) if args.head else None
+        _check_upto_seq(getattr(args, "seq", None))
         as_of = getattr(args, "as_of", None)
         if as_of is not None:
             parse_ts(as_of)

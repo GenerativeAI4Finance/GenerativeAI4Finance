@@ -120,6 +120,57 @@ def test_state_at_earlier_seq(log):
     assert log.state("F-1")["fields"]["confidence"] == "high"
 
 
+@pytest.mark.parametrize("nonempty", [False, True])
+@pytest.mark.parametrize(
+    "seq",
+    [
+        True,
+        False,
+        -1,
+        -0.5,
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        float("nan"),
+        float("inf"),
+        float("-inf"),
+        "1",
+        [],
+        {},
+        object(),
+        1j,
+    ],
+)
+def test_sequence_cutoff_requires_non_negative_integer(log, nonempty, seq):
+    if nonempty:
+        _approved(log)
+    with pytest.raises(AuditError, match="upto_seq must be a non-negative integer"):
+        replay(log.events, KEY, upto_seq=seq)
+    with pytest.raises(AuditError, match="upto_seq must be a non-negative integer"):
+        log.state("F-1", upto_seq=seq)
+
+
+def test_invalid_sequence_cutoff_is_rejected_before_iteration():
+    def unreadable_events():
+        raise AssertionError("events must not be read for an invalid cutoff")
+        yield
+
+    with pytest.raises(AuditError, match="upto_seq must be a non-negative integer"):
+        replay(unreadable_events(), KEY, upto_seq=True)
+
+
+@pytest.mark.parametrize("nonempty", [False, True])
+@pytest.mark.parametrize("seq", [None, 0, 1, 4])
+def test_valid_sequence_cutoff_for_replay_and_state(log, nonempty, seq):
+    if nonempty:
+        _approved(log)
+    events = log.events
+    expected = replay(events if seq is None else events[:seq], KEY)
+    assert replay(events, KEY, upto_seq=seq) == expected
+    assert log.state("F-1", upto_seq=seq) == expected.get("F-1")
+
+
 def test_state_as_of_timestamp(example):
     before_review = example.state("F-002", as_of="2026-03-03T09:00:00+00:00")
     assert before_review["status"] == "under_review"
@@ -926,6 +977,67 @@ def test_redacted_values_can_be_checked_with_key(log):
     assert not matches_redacted("Fictional Co Ltd", stored, other_key, **scope)
     scope["finding_id"] = "F-2"
     assert not matches_redacted("Fictional Co Ltd", stored, KEY, **scope)
+    scope = {"finding_id": "F-1", "field": "analyst_notes"}
+    assert not matches_redacted("Fictional Co Ltd", stored, KEY, **scope)
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        None,
+        {},
+        [],
+        "0" * 64,
+        {"hmac_sha256": "0" * 64},
+        {"redacted": True, "hmac_sha256": None},
+        {"redacted": True, "hmac_sha256": 1},
+        {"redacted": True, "hmac_sha256": "é" * 64},
+        {"redacted": True, "hmac_sha256": "\ud800"},
+        {"redacted": True, "hmac_sha256": "0" * 63},
+        {"redacted": True, "hmac_sha256": "A" * 64},
+        {"redacted": True, "hmac_sha256": "0" * 64, "extra": True},
+    ],
+)
+def test_malformed_redacted_value_does_not_match(stored):
+    assert not matches_redacted(
+        "Fictional Co Ltd", stored, KEY, finding_id="F-1", field="subject_name"
+    )
+
+
+@pytest.mark.parametrize("marker", [False, None, 1, "true"])
+def test_redacted_value_requires_true_marker(log, marker):
+    new_finding(log)
+    stored = log.state("F-1")["fields"]["subject_name"]
+    stored["redacted"] = marker
+    assert not matches_redacted(
+        "Fictional Co Ltd", stored, KEY, finding_id="F-1", field="subject_name"
+    )
+
+
+@pytest.mark.parametrize("value", [object(), float("nan"), float("inf"), 1j])
+def test_redacted_candidate_must_still_be_plain_json(log, value):
+    new_finding(log)
+    stored = log.state("F-1")["fields"]["subject_name"]
+    with pytest.raises(AuditError, match="plain JSON data"):
+        matches_redacted(value, stored, KEY, finding_id="F-1", field="subject_name")
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        {},
+        {"redacted": False, "hmac_sha256": "0" * 64},
+        {"redacted": True, "hmac_sha256": "é" * 64},
+        {"redacted": True, "hmac_sha256": None},
+    ],
+)
+def test_malformed_redacted_value_still_fails_signed_log_verification(log, stored):
+    new_finding(log)
+    events = log.events
+    events[0]["changes"]["subject_name"]["to"] = stored
+    resign(events, KEY)
+    with pytest.raises(IntegrityError, match="subject_name must be a keyed digest"):
+        verify_events(events, KEY)
 
 
 def test_same_subject_in_two_findings_gives_different_digests(log):
@@ -1119,6 +1231,31 @@ def test_cli_truncated_log_fails_against_head(example, cli_key, capsys):
 def test_cli_bad_arguments(example, cli_key, capsys, args, message):
     assert main(["state", str(example.path), "F-002", *args]) == 2
     assert message in capsys.readouterr().err
+
+
+def test_cli_negative_sequence_cutoff_is_a_clean_argument_error(log):
+    _approved(log)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(HERE / "audit_trail.py"),
+            "state",
+            str(log.path),
+            "F-1",
+            "--seq",
+            "-1",
+        ],
+        check=False,
+        env={**os.environ, KEY_ENV: KEY.decode(), "PYTHONIOENCODING": "utf-8:strict"},
+        capture_output=True,
+        timeout=30,
+    )
+    assert result.returncode == 2
+    assert result.stdout == b""
+    error = result.stderr.decode("utf-8", errors="strict")
+    assert "upto_seq must be a non-negative integer" in error
+    assert "Traceback" not in error
 
 
 @pytest.mark.parametrize("value", [None, "too-short"])
