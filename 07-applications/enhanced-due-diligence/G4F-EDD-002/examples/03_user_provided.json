@@ -1,0 +1,21 @@
+
+{
+  "evidence_id": "EDD-EV-003",
+  "claim_reference": "CLAIM-003",
+  "title": "Fictional Supplier Declaration",
+  "publisher": null,
+  "url": null,
+  "reference": "FICTIONAL-UPLOAD-003",
+  "publication_date": null,
+  "access_date": "2026-10-12",
+  "source_type": "user_document",
+  "source_classification": ["primary", "user_provided"],
+  "jurisdiction": "Example Jurisdiction",
+  "excerpt_or_summary": "FICTIONAL EXAMPLE: An illustrative supplier declaration states that a fictional supplier maintains a written compliance policy. The document has not been authenticated.",
+  "provenance_notes": "Synthetic test fixture; no actual file was received. CLAIM-003 is an illustrative identifier. In a real review, record the actual receipt date, document reference, available metadata and verification steps.",
+  "evidence_status": "available",
+  "limitations": [
+    "The publisher and publication date are unknown.",
+    "Authenticity and the statement's accuracy have not been independently verified."
+  ]
+}

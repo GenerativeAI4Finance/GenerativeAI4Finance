@@ -1,0 +1,22 @@
+
+{
+  "evidence_id": "EDD-EV-005",
+  "claim_reference": "CLAIM-005",
+  "title": "Fictional Unavailable Registry Document",
+  "publisher": null,
+  "url": null,
+  "reference": "FICTIONAL-UNAVAILABLE-005",
+  "publication_date": null,
+  "access_date": null,
+  "source_type": "unknown",
+  "source_classification": ["primary"],
+  "jurisdiction": "Example Jurisdiction",
+  "excerpt_or_summary": null,
+  "provenance_notes": "Synthetic test fixture representing a referenced document that has not been obtained or inspected. No actual retrieval attempt occurred. CLAIM-005 is illustrative.",
+  "evidence_status": "unavailable",
+  "limitations": [
+    "The source document was not obtained.",
+    "Its contents, publication date and authenticity are unknown.",
+    "The source must be obtained and checked before relying on its contents."
+  ]
+}

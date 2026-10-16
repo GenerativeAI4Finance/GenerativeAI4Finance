@@ -1,0 +1,183 @@
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/g4f-edd-002/schema.json",
+  "title": "Enhanced Due Diligence Evidence Record",
+  "description": "Records the source, provenance, status and limitations of evidence linked to a specific claim in an EDD review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "claim_reference",
+    "title",
+    "publisher",
+    "url",
+    "reference",
+    "publication_date",
+    "access_date",
+    "source_type",
+    "source_classification",
+    "jurisdiction",
+    "excerpt_or_summary",
+    "provenance_notes",
+    "evidence_status",
+    "limitations"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^EDD-EV-[0-9]{3,}$",
+      "description": "Unique identifier for the evidence record."
+    },
+    "claim_reference": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^CLAIM-[0-9]{3,}$",
+      "description": "Identifier of the specific claim this evidence record relates to. The claim should be documented separately in the EDD case findings."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Title of the source or a clearly labelled placeholder if unavailable."
+    },
+    "publisher": {
+      "type": ["string", "null"],
+      "description": "Publisher, author or issuing organization, if known."
+    },
+    "url": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "pattern": "^https?://[^\\s/?#]+(?:[/?#][^\\s]*)?$",
+      "description": "HTTP or HTTPS URL with a non-empty authority/host, if available. A structurally valid URL is not proof that the resource exists."
+    },
+    "reference": {
+      "type": ["string", "null"],
+      "description": "Document identifier or other traceable reference, if available."
+    },
+    "publication_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Publication date in YYYY-MM-DD format, or null if unknown."
+    },
+    "access_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date the source was actually accessed or checked, or null if it was not accessed."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "official_record",
+        "regulatory_filing",
+        "news_article",
+        "research_report",
+        "user_document",
+        "website",
+        "database_record",
+        "other",
+        "unknown"
+      ]
+    },
+    "source_classification": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "secondary",
+          "user_provided",
+          "generated"
+        ]
+      },
+      "description": "One or more applicable classifications. These categories may overlap."
+    },
+    "jurisdiction": {
+      "type": ["string", "null"],
+      "description": "Relevant country, territory or legal jurisdiction, if known."
+    },
+    "excerpt_or_summary": {
+      "type": ["string", "null"],
+      "description": "Relevant excerpt or neutral summary. Do not invent quotations or attribute unsupported claims to a source."
+    },
+    "provenance_notes": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explains how the source was obtained, what was checked and any known provenance limitations."
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "unavailable",
+        "disputed",
+        "outdated"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Known gaps, uncertainty and verification limitations. Use an empty array if none are identified."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence_status": {
+            "const": "unavailable"
+          }
+        },
+        "required": ["evidence_status"]
+      },
+      "then": {
+        "properties": {
+          "limitations": {
+            "contains": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_status": {
+            "const": "disputed"
+          }
+        },
+        "required": ["evidence_status"]
+      },
+      "then": {
+        "properties": {
+          "limitations": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_status": {
+            "const": "outdated"
+          }
+        },
+        "required": ["evidence_status"]
+      },
+      "then": {
+        "properties": {
+          "limitations": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}
