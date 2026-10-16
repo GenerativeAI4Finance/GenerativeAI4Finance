@@ -82,7 +82,7 @@ From the `G4F-EDD-001` directory:
 python -m unittest discover -s tests -v
 ```
 
-The tests validate every JSON example and check that representative invalid cases are rejected with field-specific validation errors. Examples with individuals and entities are synthetic; a name-only hit is not treated as a confirmed identity match.
+The tests verify that both examples are valid and that representative invalid cases are rejected with field-specific validation errors.
 
 ## Validate a JSON file manually
 
