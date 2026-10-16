@@ -1,0 +1,21 @@
+
+{
+  "evidence_id": "EDD-EV-001",
+  "claim_reference": "CLAIM-001",
+  "title": "Fictional Company Registration Extract",
+  "publisher": "Example Corporate Registry",
+  "url": "https://example.com/fictional-registry-extract",
+  "reference": "FICTIONAL-REG-001",
+  "publication_date": "2026-01-15",
+  "access_date": "2026-10-10",
+  "source_type": "official_record",
+  "source_classification": ["primary"],
+  "jurisdiction": "Example Jurisdiction",
+  "excerpt_or_summary": "FICTIONAL EXAMPLE: An illustrative registration extract describes Northstar Trading Ltd. as registered on 2026-01-15. This is not an actual registry result.",
+  "provenance_notes": "Synthetic test fixture. The publisher and URL are placeholders, and no actual registry was consulted. CLAIM-001 is an illustrative claim identifier.",
+  "evidence_status": "available",
+  "limitations": [
+    "Entire record is fictional and must not be used for a real EDD assessment.",
+    "The record demonstrates how evidence can be linked to a claim; it does not establish a real-world fact."
+  ]
+}

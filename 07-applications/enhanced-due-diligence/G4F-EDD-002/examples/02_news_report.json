@@ -1,0 +1,21 @@
+
+{
+  "evidence_id": "EDD-EV-002",
+  "claim_reference": "CLAIM-002",
+  "title": "Illustrative News Report About Northstar Trading",
+  "publisher": "Example News Desk",
+  "url": "https://example.com/fictional-news-report",
+  "reference": "FICTIONAL-NEWS-002",
+  "publication_date": "2026-06-12",
+  "access_date": "2026-10-11",
+  "source_type": "news_article",
+  "source_classification": ["secondary"],
+  "jurisdiction": "Example Jurisdiction",
+  "excerpt_or_summary": "FICTIONAL EXAMPLE: A hypothetical news report describes a fictional trading company's review of supplier relationships. This is an invented scenario, not a real report or allegation.",
+  "provenance_notes": "Synthetic test fixture; no article exists at the example URL. CLAIM-002 is an illustrative identifier. In real work, record the actual article and distinguish reported statements from independently verified facts.",
+  "evidence_status": "available",
+  "limitations": [
+    "Fictional content; not independently verified.",
+    "A secondary report alone does not establish that a reported claim is true."
+  ]
+}
