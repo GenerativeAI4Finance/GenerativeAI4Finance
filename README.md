@@ -3,11 +3,20 @@
 - You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
 - How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance that does that. And it's built from scratch.
 
+<p align="left">
+  <img src="assets/demos/vaayu-decision-intelligence.gif" width="40%">
+  <img src="assets/demos/swarm-attack.gif" width="40%">
+  <img src="assets/demos/edd-mule-account.gif" width="40%">
+  <img src="assets/demos/second_third_order_effects.png" width="40%">
+  <img src="assets/demos/1b-param.png" width="40%">
+</p>
+
+
 # What is this about?
 GenerativeAI 4 Finance consists of following parts
 
 ### Foundational models for finance (Refer vs-neev repository)
-- 🌱 Small Reasoning Foundational models built from scratch for Banking. Which are pre-trained and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management, Reducing GNPA, Cybersecurity
+- 🌱 Small Reasoning & Decisioning models built from scratch for BFSI. You may use pre-trained models or these can be trained on-premesis for your data. and can be used for several use cases across Lending, Investment Banking, Wealth, Asset Management, Reducing GNPA, Cybersecurity
    (Refer vs-neev repository)
 ### Innovation & technologies we work on
 Our team works on Edge of AI & emerging technologies like JEPA world models, Financial Intelligence, Decision infra
@@ -70,12 +79,6 @@ It will be making some parts of its code as open-source.
 # Foundational Models(TBD-Contributions invited)
 
 ### How to participate
-- 👀 Start referring use cases below and you can start contributing more use cases for your domain.
-- 🌱 Create, Train, Fine-tuen models
-- 🌱 Create high level librarires, tools for others to build upon
+- 👀 **Contribution Firs step:** one focused task → implementation or research → tests/validation → documentation → one pull request.
+- 🌱 Start referring to tasks in contribution.md
 - 💞️ Give us star, share, Follow
-
-<!---
-GenerativeAI4Finance/GenerativeAI4Finance is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
