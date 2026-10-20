@@ -1,0 +1,26 @@
+{
+  "dataset": "G4F-EDD-005 synthetic company records",
+  "version": "1.0",
+  "note": "All companies, registration numbers and aliases are fictional and made up for testing. Any resemblance to a real company is accidental.",
+  "records": [
+    {"record_id": "REG-001", "source": "registry_extract", "name": "Quillon Agro Exports Private Limited", "registration_id": "SYN-IN-100231", "jurisdiction": "IN", "city": "Pune"},
+    {"record_id": "VEN-001", "source": "vendor_list", "name": "QUILLON AGRO EXPORTS PVT. LTD.", "jurisdiction": "IN", "city": "Pune"},
+    {"record_id": "NEWS-001", "source": "news_mention", "name": "Quillon Agro", "jurisdiction": "IN"},
+    {"record_id": "REG-002", "source": "registry_extract", "name": "Shree Vaibhav Lakshmi Textiles LLP", "registration_id": "SYN-IN-100877", "jurisdiction": "IN", "city": "Surat"},
+    {"record_id": "VEN-002", "source": "vendor_list", "name": "Sri Vaibhav Laxmi Textiles L.L.P.", "registration_id": "syn-in 100877", "jurisdiction": "IN", "city": "Surat"},
+    {"record_id": "REG-003", "source": "registry_extract", "name": "Zephyrine Biolabs Inc.", "aliases": ["ZBL Research"], "registration_id": "SYN-US-55120", "jurisdiction": "US", "city": "Austin"},
+    {"record_id": "VEN-003", "source": "vendor_list", "name": "ZBL Research", "registration_id": "SYN-US-55120", "jurisdiction": "US", "city": "Austin"},
+    {"record_id": "REG-004", "source": "registry_extract", "name": "Northgate Trading Co. Ltd", "registration_id": "SYN-GB-07731", "id_scheme": "GB company number", "jurisdiction": "GB", "city": "Leeds"},
+    {"record_id": "REG-005", "source": "registry_extract", "name": "Northgate Trading Company Limited", "registration_id": "SYN-GB-09914", "id_scheme": "GB company number", "jurisdiction": "GB", "city": "Bristol"},
+    {"record_id": "VEN-004", "source": "vendor_list", "name": "Northgate Trading Pte. Ltd.", "registration_id": "SYN-SG-201188", "jurisdiction": "SG", "city": "Singapore"},
+    {"record_id": "VEN-005", "source": "vendor_list", "name": "Marlowe & Finch Logistics Corp", "jurisdiction": "US", "city": "Denver"},
+    {"record_id": "NEWS-002", "source": "news_mention", "name": "Marlowe and Finch Logistics Corporation", "jurisdiction": "US"},
+    {"record_id": "REG-006", "source": "registry_extract", "name": "Orvane Mfg. Intl. Ltd", "registration_id": "SYN-GB-04410", "jurisdiction": "GB", "city": "Leeds"},
+    {"record_id": "VEN-006", "source": "vendor_list", "name": "Orvane Manufacturing International Limited", "registration_id": "SYN-GB-04410", "jurisdiction": "GB"},
+    {"record_id": "VEN-007", "source": "vendor_list", "name": "Orvane Holdings LLP", "jurisdiction": "GB", "city": "Leeds"},
+    {"record_id": "REG-007", "source": "registry_extract", "name": "Северный Ветер Трейдинг ООО", "registration_id": "SYN-RU-30112", "jurisdiction": "RU", "city": "Moscow"},
+    {"record_id": "VEN-008", "source": "vendor_list", "name": "Severnyi Veter Trading OOO", "registration_id": "SYN-RU-30112", "jurisdiction": "RU", "city": "Moscow"},
+    {"record_id": "REG-008", "source": "registry_extract", "name": "Ashgrove Dairy Ltd", "registration_id": "SYN-GB-21500", "jurisdiction": "GB", "city": "York"},
+    {"record_id": "VEN-009", "source": "vendor_list", "name": "Pelham Widgets Ltd", "registration_id": "syn gb 21500", "jurisdiction": "UK", "city": "York"}
+  ]
+}
