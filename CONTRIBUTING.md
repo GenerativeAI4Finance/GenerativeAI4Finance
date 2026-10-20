@@ -8,24 +8,24 @@ Welcome to GenerativeAI4Finance! This repository brings together open-source wor
 
 Choose a task from the index below, then read its full specification in the relevant workstream further down this file. Difficulty and role are guides; you do not need to understand the entire repository to contribute.
 
-| Task ID | Task | Difficulty | Suggested role |
-|---|---|---|---|
-| `G4F-EDD-001` | Define the EDD case data schema | Easy | Data / Backend Intern |
-| `G4F-EDD-002` | Build a source and evidence record format | Easy | Research / Data Intern |
+| Task ID | Task | Difficulty | Suggested role | Status | Contributor
+|---|---|---|---|---|---|
+| `G4F-EDD-001` | Define the EDD case data schema | Easy | Data / Backend Intern | MERGED | @richabansal123 | 
+| `G4F-EDD-002` | Build a source and evidence record format | Easy | Research / Data Intern | PR_SUBMITTED | @richabansal123 |
 | `G4F-EDD-003` | Create an EDD review checklist | Easy | Financial Research Intern |
 | `G4F-EDD-004` | Build a synthetic EDD case dataset | Medium | Data Engineer / Researcher |
-| `G4F-EDD-005` | Implement entity resolution for company records | Medium | Python Engineer / Data Scientist |
+| `G4F-EDD-005` | Implement entity resolution for company records | Medium | Python Engineer / Data Scientist | PR_SUBMITTED | @GODOSTROYER |
 | `G4F-EDD-006` | Build a source-backed finding extractor | Medium | NLP / LLM Engineer |
 | `G4F-EDD-007` | Add contradiction and stale-evidence checks | Medium | Data / Backend Engineer |
 | `G4F-EDD-008` | Generate an auditable EDD report | Medium | Backend / Reporting Engineer |
 | `G4F-EDD-009` | Evaluate EDD extraction quality | Medium | Evaluation / Data Science Intern |
-| `G4F-EDD-010` | Add EDD human-review and audit trail | Medium | Backend Engineer / Governance Researcher |
+| `G4F-EDD-010` | Add EDD human-review and audit trail | Medium | Backend Engineer / Governance Researcher | PR_SUBMITTED | @GODOSTROYER |
 | `G4F-SW-001` | Define a Swarm AI threat and capability taxonomy | Easy | Cybersecurity / Research Intern |
 | `G4F-SW-002` | Define the EDD swarm simulation scenario format | Easy | Python / QA Intern |
 | `G4F-SW-003` | Build a multi-agent EDD baseline | Medium | Agent Engineer |
 | `G4F-SW-004` | Test evidence contamination and prompt injection resistance | Medium | AI Security Engineer |
 | `G4F-SW-005` | Measure coordination failure and correlated errors | Medium | Evaluation Engineer / Researcher |
-| `G4F-SW-006` | Implement least-privilege tool permissions for agents | Medium | Backend / Security Engineer |
+| `G4F-SW-006` | Implement least-privilege tool permissions for agents | Medium | Backend / Security Engineer | PR_SUBMITTED | @GODOSTROYER |
 | `G4F-SW-007` | Create a Swarm AI + EDD benchmark scorecard | Medium | Benchmark / Research Engineer |
 | `G4F-WM-001` | Define the financial event and state schema | Easy | Data Engineering Intern |
 | `G4F-WM-002` | Create a synthetic borrower and loan-state generator | Medium | Data Scientist / Data Engineer |
@@ -34,9 +34,9 @@ Choose a task from the index below, then read its full specification in the rele
 | `G4F-WM-005` | Document dataset provenance, licensing and limitations | Easy | Research / Data Governance Intern |
 | `G4F-WM-006` | Build an event-to-state transition dataset | Medium | Financial Modelling / Data Engineer |
 | `G4F-WM-007` | Build causal intervention scenarios | Hard | Quantitative Researcher / World Model Researcher |
-| `G4F-WM-008` | Create benchmark splits and leakage tests | Medium | ML Engineer / Data Engineer |
+| `G4F-WM-008` | Create benchmark splits and leakage tests | Medium | ML Engineer / Data Engineer | PR_SUBMITTED | @GODOSTROYER |
 | `G4F-WM-009` | Build a baseline financial state predictor | Medium | ML Engineer |
-| `G4F-WM-010` | Evaluate scenario prediction and calibration | Hard | ML Evaluation / Quantitative Researcher |
+| `G4F-WM-010` | Evaluate scenario prediction and calibration | Hard | ML Evaluation / Quantitative Researcher | PR_SUBMITTED | @GODOSTROYER |
 | `G4F-GNPA-001` | Define an early-warning prediction target | Medium | Credit Risk Researcher |
 | `G4F-GNPA-002` | Generate synthetic credit-risk labels | Medium | Data Scientist |
 | `G4F-GNPA-003` | Implement credit-risk benchmark metrics | Easy | Python / Evaluation Intern |
