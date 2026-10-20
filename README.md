@@ -2,6 +2,8 @@
 
 - You have been using OpenAI & chatGPT for Text & Audio, Video, Code & Images.
 - How about Financial Data & Decision Making? Let's build a GenerativeAI 4 Finance that does that. And it's built from scratch.
+- 
+**Click on Demo Below to have better view of Demo.**
 
 <p align="left">
   <img src="assets/demos/vaayu-decision-intelligence.gif" width="40%">
