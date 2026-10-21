@@ -2,6 +2,7 @@
 # G4F-EDD-003: EDD Review Checklist
 
 | Checklist version | 1.0 |
+|---|---|
 | Checklist effective/review date | |
 
 ## 1. Purpose and Use
