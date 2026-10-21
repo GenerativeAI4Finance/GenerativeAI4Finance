@@ -1,0 +1,22 @@
+
+{
+  "evidence_id": "EDD-EV-004",
+  "claim_reference": "CLAIM-004",
+  "title": "Fictional Conflicting Ownership Statements",
+  "publisher": "Example Review Team",
+  "url": null,
+  "reference": "FICTIONAL-DISPUTE-004",
+  "publication_date": null,
+  "access_date": "2026-10-13",
+  "source_type": "other",
+  "source_classification": ["user_provided"],
+  "jurisdiction": "Example Jurisdiction",
+  "excerpt_or_summary": "FICTIONAL EXAMPLE: Two hypothetical documents provide different ownership percentages for the same fictional company. Neither percentage is treated as confirmed.",
+  "provenance_notes": "Synthetic example of a disputed claim. The documents are not real evidence. CLAIM-004 identifies the illustrative ownership claim. In a real review, identify each document separately and cross-reference the associated evidence records.",
+  "evidence_status": "disputed",
+  "limitations": [
+    "The two hypothetical statements conflict.",
+    "The discrepancy has not been resolved.",
+    "No ownership percentage should be treated as established from this record alone."
+  ]
+}

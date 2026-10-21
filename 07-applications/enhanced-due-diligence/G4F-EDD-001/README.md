@@ -2,7 +2,7 @@
 
 ## Overview
 
-This contribution defines a JSON Schema for a fictional Enhanced Due Diligence (EDD) case, includes two fictional examples, and tests valid and invalid data using Python.
+This contribution defines a JSON Schema for a fictional Enhanced Due Diligence (EDD) case, includes fictional company, organization, trust, and individual examples, and checks valid and invalid data using Python.
 
 **All sample data is fictional.** URLs use `example.org` placeholders and do not point to real case records. Do not add real personal, sensitive, or confidential information.
 
@@ -11,7 +11,10 @@ This contribution defines a JSON Schema for a fictional Enhanced Due Diligence (
 - `schema.json` — JSON Schema Draft 2020-12 definition.
 - `examples/case_low_risk.json` — fictional company case in review.
 - `examples/case_enhanced_review.json` — fictional organization case escalated for review.
-- `tests/test_schema.py` — positive and negative validation tests.
+- `examples/case_individual_low_risk.json` — fictional individual case with identity evidence.
+- `examples/case_individual_review.json` — fictional individual case showing a possible name-only match that needs resolution.
+- `examples/case_entity_trust.json` — fictional trust case with incomplete party and control information.
+- `tests/test.py` — positive and negative validation tests.
 - `requirements.txt` — Python dependency.
 
 ## Main fields
