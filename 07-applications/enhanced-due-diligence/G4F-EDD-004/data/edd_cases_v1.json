@@ -1,0 +1,1424 @@
+{
+  "dataset_name": "GenerativeAI4Finance synthetic EDD cases",
+  "dataset_version": "1.0.0",
+  "seed": 20261022,
+  "synthetic": true,
+  "generator": "generate_dataset.py",
+  "case_count": 10,
+  "cases": [
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-401",
+        "subject_type": "company",
+        "jurisdiction": "SG",
+        "review_date": "2026-10-22",
+        "risk_categories": [],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-001-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-02",
+            "url": "https://example.org/synthetic-edd/001/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-001-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-02"
+          }
+        ],
+        "findings": [],
+        "confidence": 0.91,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=normal; no real entity, person, source, or allegation is represented.",
+        "review_status": "completed"
+      },
+      "scenario": "normal",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-001",
+        "synthetic_name": "Synthetic Meridian Entity 001",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000001",
+        "registration_jurisdiction": "SG",
+        "incorporation_date": "2021-02-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-001-01",
+            "address_line": "2 Fictional Example Road, Sample District",
+            "jurisdiction": "SG",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-001-01",
+          "synthetic_name": "Synthetic Person 001-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-001-02",
+          "synthetic_name": "Synthetic Person 001-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-001-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-001-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-001-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 001",
+          "jurisdiction": "US",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-001-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-02",
+          "url": "https://example.org/synthetic-edd/001/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/001/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-02",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-001-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-02",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-02",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-402",
+        "subject_type": "company",
+        "jurisdiction": "SG",
+        "review_date": "2026-10-22",
+        "risk_categories": [],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-002-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-03",
+            "url": "https://example.org/synthetic-edd/002/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-002-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-03"
+          }
+        ],
+        "findings": [],
+        "confidence": 0.91,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=normal; no real entity, person, source, or allegation is represented.",
+        "review_status": "completed"
+      },
+      "scenario": "normal",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-002",
+        "synthetic_name": "Synthetic Meridian Entity 002",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000002",
+        "registration_jurisdiction": "SG",
+        "incorporation_date": "2022-03-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-002-01",
+            "address_line": "3 Fictional Example Road, Sample District",
+            "jurisdiction": "SG",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-002-01",
+          "synthetic_name": "Synthetic Person 002-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-002-02",
+          "synthetic_name": "Synthetic Person 002-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-002-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-002-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-002-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 002",
+          "jurisdiction": "CA",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-002-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-03",
+          "url": "https://example.org/synthetic-edd/002/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/002/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-03",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-002-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-03",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-03",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-403",
+        "subject_type": "company",
+        "jurisdiction": "GB",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "identity_verification"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-003-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-04",
+            "url": "https://example.org/synthetic-edd/003/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-003-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-04"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-003",
+            "category": "identity_verification",
+            "summary": "Synthetic training scenario: a label-only candidate cannot be resolved without additional distinguishing identifiers.",
+            "severity": "medium",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.48,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=ambiguous_entity_match; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "ambiguous_entity_match",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-003",
+        "synthetic_name": "Synthetic Meridian Entity 003",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000003",
+        "registration_jurisdiction": "GB",
+        "incorporation_date": "2023-04-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-003-01",
+            "address_line": "4 Fictional Example Road, Sample District",
+            "jurisdiction": "GB",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-003-01",
+          "synthetic_name": "Synthetic Person 003-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-003-02",
+          "synthetic_name": "Synthetic Person 003-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-003-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-003-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-003-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 003",
+          "jurisdiction": "CA",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-003-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-04",
+          "url": "https://example.org/synthetic-edd/003/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/003/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-04",
+          "jurisdiction": "GB",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-003-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-04",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-04",
+          "jurisdiction": "GB",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "ambiguous_entity_match",
+          "status": "unresolved",
+          "detail": "Synthetic candidate label Synthetic Meridian Entity 003-A resembles the subject label; no real entity is implicated."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-404",
+        "subject_type": "company",
+        "jurisdiction": "CA",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "identity_verification"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-004-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-05",
+            "url": "https://example.org/synthetic-edd/004/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-004-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-05"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-004",
+            "category": "identity_verification",
+            "summary": "Synthetic training scenario: a label-only candidate cannot be resolved without additional distinguishing identifiers.",
+            "severity": "medium",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.48,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=ambiguous_entity_match; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "ambiguous_entity_match",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-004",
+        "synthetic_name": "Synthetic Meridian Entity 004",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000004",
+        "registration_jurisdiction": "CA",
+        "incorporation_date": "2024-05-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-004-01",
+            "address_line": "5 Fictional Example Road, Sample District",
+            "jurisdiction": "CA",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-004-01",
+          "synthetic_name": "Synthetic Person 004-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-004-02",
+          "synthetic_name": "Synthetic Person 004-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-004-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-004-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-004-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 004",
+          "jurisdiction": "CA",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-004-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-05",
+          "url": "https://example.org/synthetic-edd/004/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/004/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-05",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-004-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-05",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-05",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "ambiguous_entity_match",
+          "status": "unresolved",
+          "detail": "Synthetic candidate label Synthetic Meridian Entity 004-A resembles the subject label; no real entity is implicated."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-405",
+        "subject_type": "company",
+        "jurisdiction": "GB",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-005-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-06",
+            "url": "https://example.org/synthetic-edd/005/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-005-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-06"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-005",
+            "category": "ownership_opacity",
+            "summary": "Synthetic training scenario: the ownership chain is incomplete; additional evidence would be needed before a conclusion.",
+            "severity": "medium",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.55,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=incomplete_records; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "incomplete_records",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-005",
+        "synthetic_name": "Synthetic Meridian Entity 005",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000005",
+        "registration_jurisdiction": "GB",
+        "incorporation_date": "2020-06-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-005-01",
+            "address_line": "6 Fictional Example Road, Sample District",
+            "jurisdiction": "GB",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-005-01",
+          "synthetic_name": "Synthetic Person 005-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-005-02",
+          "synthetic_name": "Synthetic Person 005-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-005-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-005-01",
+          "owner_type": "individual",
+          "ownership_percent": null
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-005-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 005",
+          "jurisdiction": "US",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-005-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-06",
+          "url": "https://example.org/synthetic-edd/005/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/005/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-06",
+          "jurisdiction": "GB",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-005-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-06",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-06",
+          "jurisdiction": "GB",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "incomplete_ownership_record",
+          "status": "incomplete",
+          "detail": "A fictional ownership percentage is missing from the synthetic declaration."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-406",
+        "subject_type": "company",
+        "jurisdiction": "CA",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-006-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-07",
+            "url": "https://example.org/synthetic-edd/006/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-006-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-07"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-006",
+            "category": "ownership_opacity",
+            "summary": "Synthetic training scenario: the ownership chain is incomplete; additional evidence would be needed before a conclusion.",
+            "severity": "medium",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.55,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=incomplete_records; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "incomplete_records",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-006",
+        "synthetic_name": "Synthetic Meridian Entity 006",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000006",
+        "registration_jurisdiction": "CA",
+        "incorporation_date": "2021-07-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-006-01",
+            "address_line": "7 Fictional Example Road, Sample District",
+            "jurisdiction": "CA",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-006-01",
+          "synthetic_name": "Synthetic Person 006-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-006-02",
+          "synthetic_name": "Synthetic Person 006-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-006-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-006-01",
+          "owner_type": "individual",
+          "ownership_percent": null
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-006-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 006",
+          "jurisdiction": "GB",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-006-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-07",
+          "url": "https://example.org/synthetic-edd/006/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/006/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-07",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-006-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-07",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-07",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "incomplete_ownership_record",
+          "status": "incomplete",
+          "detail": "A fictional ownership percentage is missing from the synthetic declaration."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-407",
+        "subject_type": "company",
+        "jurisdiction": "CA",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-007-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-08",
+            "url": "https://example.org/synthetic-edd/007/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-007-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-08"
+          },
+          {
+            "source_id": "SRC-SYN-007-03",
+            "source_type": "other",
+            "description": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+            "checked_date": "2026-10-08",
+            "url": "https://example.org/synthetic-edd/007/source-03"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-007",
+            "category": "ownership_opacity",
+            "summary": "Synthetic training scenario: source records conflict on ownership; preserve both claims and seek human reconciliation.",
+            "severity": "high",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.4,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=conflicting_claims; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "conflicting_claims",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-007",
+        "synthetic_name": "Synthetic Meridian Entity 007",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000007",
+        "registration_jurisdiction": "CA",
+        "incorporation_date": "2022-08-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-007-01",
+            "address_line": "8 Fictional Example Road, Sample District",
+            "jurisdiction": "CA",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-007-01",
+          "synthetic_name": "Synthetic Person 007-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-007-02",
+          "synthetic_name": "Synthetic Person 007-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-007-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-007-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-007-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 007",
+          "jurisdiction": "CA",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-007-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-08",
+          "url": "https://example.org/synthetic-edd/007/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/007/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-08",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-007-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-08",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-08",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-007-03",
+          "source_type": "other",
+          "description": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "checked_date": "2026-10-08",
+          "url": "https://example.org/synthetic-edd/007/source-03",
+          "title": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/007/source-03",
+          "publication_date": null,
+          "access_date": "2026-10-08",
+          "jurisdiction": "CA",
+          "evidence_status": "disputed",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "conflicting_claims",
+          "status": "disputed",
+          "detail": "The synthetic onboarding declaration states 60/40 while a second synthetic schedule states 55/45; neither is treated as authoritative by this fixture."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-408",
+        "subject_type": "company",
+        "jurisdiction": "SG",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-008-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+            "checked_date": "2026-10-09",
+            "url": "https://example.org/synthetic-edd/008/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-008-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-09"
+          },
+          {
+            "source_id": "SRC-SYN-008-03",
+            "source_type": "other",
+            "description": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+            "checked_date": "2026-10-09",
+            "url": "https://example.org/synthetic-edd/008/source-03"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-008",
+            "category": "ownership_opacity",
+            "summary": "Synthetic training scenario: source records conflict on ownership; preserve both claims and seek human reconciliation.",
+            "severity": "high",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.4,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=conflicting_claims; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "conflicting_claims",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-008",
+        "synthetic_name": "Synthetic Meridian Entity 008",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000008",
+        "registration_jurisdiction": "SG",
+        "incorporation_date": "2023-09-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-008-01",
+            "address_line": "9 Fictional Example Road, Sample District",
+            "jurisdiction": "SG",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-008-01",
+          "synthetic_name": "Synthetic Person 008-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-008-02",
+          "synthetic_name": "Synthetic Person 008-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "SG",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-008-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-008-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-008-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 008",
+          "jurisdiction": "US",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-008-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "checked_date": "2026-10-09",
+          "url": "https://example.org/synthetic-edd/008/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/008/source-01",
+          "publication_date": null,
+          "access_date": "2026-10-09",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-008-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-09",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-09",
+          "jurisdiction": "SG",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-008-03",
+          "source_type": "other",
+          "description": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "checked_date": "2026-10-09",
+          "url": "https://example.org/synthetic-edd/008/source-03",
+          "title": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/008/source-03",
+          "publication_date": null,
+          "access_date": "2026-10-09",
+          "jurisdiction": "SG",
+          "evidence_status": "disputed",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional ownership schedule claiming a 55/45 split, conflicting with the 60/40 onboarding declaration",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "conflicting_claims",
+          "status": "disputed",
+          "detail": "The synthetic onboarding declaration states 60/40 while a second synthetic schedule states 55/45; neither is treated as authoritative by this fixture."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-409",
+        "subject_type": "company",
+        "jurisdiction": "GB",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-009-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+            "checked_date": "2024-01-15",
+            "url": "https://example.org/synthetic-edd/009/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-009-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-10"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-009",
+            "category": "adverse_media",
+            "summary": "Synthetic training scenario: evidence is stale and cannot support a current-state conclusion without an updated check.",
+            "severity": "low",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.52,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=stale_evidence; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "stale_evidence",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-009",
+        "synthetic_name": "Synthetic Meridian Entity 009",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000009",
+        "registration_jurisdiction": "GB",
+        "incorporation_date": "2024-01-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-009-01",
+            "address_line": "10 Fictional Example Road, Sample District",
+            "jurisdiction": "GB",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-009-01",
+          "synthetic_name": "Synthetic Person 009-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-009-02",
+          "synthetic_name": "Synthetic Person 009-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "GB",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-009-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-009-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-009-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 009",
+          "jurisdiction": "CA",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-009-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "checked_date": "2024-01-15",
+          "url": "https://example.org/synthetic-edd/009/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/009/source-01",
+          "publication_date": null,
+          "access_date": "2024-01-15",
+          "jurisdiction": "GB",
+          "evidence_status": "outdated",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-009-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-10",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-10",
+          "jurisdiction": "GB",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "stale_evidence",
+          "status": "outdated",
+          "detail": "The synthetic registry snapshot predates the review and may not establish current status."
+        }
+      ],
+      "synthetic": true
+    },
+    {
+      "case_record": {
+        "case_id": "G4F-EDD-410",
+        "subject_type": "company",
+        "jurisdiction": "CA",
+        "review_date": "2026-10-22",
+        "risk_categories": [
+          "ownership_opacity"
+        ],
+        "source_records": [
+          {
+            "source_id": "SRC-SYN-010-01",
+            "source_type": "registry",
+            "description": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+            "checked_date": "2024-01-15",
+            "url": "https://example.org/synthetic-edd/010/source-01"
+          },
+          {
+            "source_id": "SRC-SYN-010-02",
+            "source_type": "internal_record",
+            "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+            "checked_date": "2026-10-11"
+          }
+        ],
+        "findings": [
+          {
+            "finding_id": "F-010",
+            "category": "adverse_media",
+            "summary": "Synthetic training scenario: evidence is stale and cannot support a current-state conclusion without an updated check.",
+            "severity": "low",
+            "disposition": "unresolved"
+          }
+        ],
+        "confidence": 0.52,
+        "analyst_notes": "SYNTHETIC TRAINING FIXTURE; scenario=stale_evidence; no real entity, person, source, or allegation is represented.",
+        "review_status": "escalated"
+      },
+      "scenario": "stale_evidence",
+      "subject_entity": {
+        "entity_id": "ENT-SYN-010",
+        "synthetic_name": "Synthetic Meridian Entity 010",
+        "entity_type": "company",
+        "registration_id": "SYN-REG-000010",
+        "registration_jurisdiction": "CA",
+        "incorporation_date": "2020-02-15",
+        "status": "active",
+        "addresses": [
+          {
+            "address_id": "ADDR-SYN-010-01",
+            "address_line": "11 Fictional Example Road, Sample District",
+            "jurisdiction": "CA",
+            "synthetic": true
+          }
+        ],
+        "synthetic": true
+      },
+      "directors": [
+        {
+          "person_id": "PER-SYN-010-01",
+          "synthetic_name": "Synthetic Person 010-A",
+          "roles": [
+            "director"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        },
+        {
+          "person_id": "PER-SYN-010-02",
+          "synthetic_name": "Synthetic Person 010-B",
+          "roles": [
+            "director",
+            "shareholder"
+          ],
+          "jurisdiction": "CA",
+          "synthetic": true
+        }
+      ],
+      "shareholders": [
+        {
+          "owner_id": "PER-SYN-010-02",
+          "owner_type": "individual",
+          "ownership_percent": 60
+        },
+        {
+          "owner_id": "PER-SYN-010-01",
+          "owner_type": "individual",
+          "ownership_percent": 40
+        }
+      ],
+      "subsidiaries": [
+        {
+          "entity_id": "SUB-SYN-010-01",
+          "synthetic_name": "Synthetic Meridian Subsidiary 010",
+          "jurisdiction": "US",
+          "ownership_percent": 100,
+          "synthetic": true
+        }
+      ],
+      "source_records": [
+        {
+          "source_id": "SRC-SYN-010-01",
+          "source_type": "registry",
+          "description": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "checked_date": "2024-01-15",
+          "url": "https://example.org/synthetic-edd/010/source-01",
+          "title": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": "https://example.org/synthetic-edd/010/source-01",
+          "publication_date": null,
+          "access_date": "2024-01-15",
+          "jurisdiction": "CA",
+          "evidence_status": "outdated",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional entity register extract (stale synthetic snapshot)",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        },
+        {
+          "source_id": "SRC-SYN-010-02",
+          "source_type": "internal_record",
+          "description": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "checked_date": "2026-10-11",
+          "title": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "publisher": "Synthetic EDD Dataset Generator",
+          "reference": null,
+          "publication_date": null,
+          "access_date": "2026-10-11",
+          "jurisdiction": "CA",
+          "evidence_status": "available",
+          "excerpt_or_summary": "SYNTHETIC FIXTURE: fictional onboarding declaration showing a 60/40 ownership split",
+          "provenance_notes": "Generated fixture only; placeholder reference, not a real citation."
+        }
+      ],
+      "risk_indicators": [
+        {
+          "indicator": "stale_evidence",
+          "status": "outdated",
+          "detail": "The synthetic registry snapshot predates the review and may not establish current status."
+        }
+      ],
+      "synthetic": true
+    }
+  ]
+}
