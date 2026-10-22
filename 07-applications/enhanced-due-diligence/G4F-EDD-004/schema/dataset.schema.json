@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-edd-synthetic-dataset.schema.json",
+  "title": "G4F Synthetic EDD Dataset",
+  "type": "object",
+  "required": ["dataset_name", "dataset_version", "seed", "synthetic", "generator", "case_count", "cases"],
+  "properties": {
+    "dataset_name": {"type": "string", "const": "GenerativeAI4Finance synthetic EDD cases"},
+    "dataset_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "seed": {"type": "integer"},
+    "synthetic": {"type": "boolean", "const": true},
+    "generator": {"type": "string"},
+    "case_count": {"type": "integer", "minimum": 1},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["case_record", "scenario", "subject_entity", "directors", "shareholders", "subsidiaries", "source_records", "risk_indicators", "synthetic"],
+        "properties": {
+          "case_record": {"type": "object"},
+          "scenario": {"enum": ["normal", "ambiguous_entity_match", "incomplete_records", "conflicting_claims", "stale_evidence"]},
+          "subject_entity": {"type": "object", "required": ["entity_id", "synthetic_name", "entity_type", "registration_id", "registration_jurisdiction", "incorporation_date", "status", "addresses", "synthetic"], "properties": {"synthetic": {"const": true}, "addresses": {"type": "array", "items": {"type": "object", "required": ["address_id", "address_line", "jurisdiction", "synthetic"], "properties": {"synthetic": {"const": true}}}}}},
+          "directors": {"type": "array", "items": {"type": "object", "required": ["person_id", "synthetic_name", "roles", "jurisdiction", "synthetic"], "properties": {"synthetic": {"const": true}}}},
+          "shareholders": {"type": "array", "items": {"type": "object", "required": ["owner_id", "owner_type", "ownership_percent"]}},
+          "subsidiaries": {"type": "array", "items": {"type": "object", "required": ["entity_id", "synthetic_name", "jurisdiction", "ownership_percent", "synthetic"], "properties": {"synthetic": {"const": true}}}},
+          "source_records": {"type": "array", "items": {"type": "object", "required": ["source_id", "source_type", "checked_date", "title", "publisher", "publication_date", "access_date", "jurisdiction", "evidence_status", "excerpt_or_summary", "provenance_notes"]}},
+          "risk_indicators": {"type": "array", "items": {"type": "object", "required": ["indicator", "status", "detail"]}},
+          "synthetic": {"const": true}
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
