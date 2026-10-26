@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-edd-extraction-result.schema.json",
+  "title": "Source-backed EDD candidate extraction result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "findings", "rejected_candidates", "message"],
+  "properties": {
+    "status": {"enum": ["candidates_extracted", "human_review_required", "insufficient_evidence"]},
+    "message": {"type": ["string", "null"]},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["finding_id", "statement", "statement_type", "source_reference", "evidence", "review_status", "reviewer_note"],
+        "properties": {
+          "finding_id": {"type": "string", "minLength": 1},
+          "statement": {"type": "string", "minLength": 1},
+          "statement_type": {"enum": ["source_claim", "extracted_fact", "model_inference", "unresolved"]},
+          "source_reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source_id", "title", "reference"],
+            "properties": {"source_id": {"type": "string", "minLength": 1}, "evidence_id": {"type": ["string", "null"], "pattern": "^EDD-EV-[0-9]{3,}$"}, "claim_reference": {"type": ["string", "null"], "pattern": "^CLAIM-[0-9]{3,}$"}, "finding_reference": {"type": ["string", "null"], "pattern": "^F-[0-9]{3,}$"}, "source_type": {"type": ["string", "null"]}, "title": {"type": "string"}, "reference": {"type": ["string", "null"]}, "url": {"type": ["string", "null"], "format": "uri"}}
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["quote", "start_char", "end_char"],
+            "properties": {"quote": {"type": "string", "minLength": 1}, "start_char": {"type": "integer", "minimum": 0}, "end_char": {"type": "integer", "minimum": 1}}
+          },
+          "review_status": {"enum": ["source_backed_candidate", "requires_human_review", "unresolved"]},
+          "reviewer_note": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "rejected_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate", "code", "reason"],
+        "properties": {"candidate": {"type": "object"}, "code": {"type": "string"}, "reason": {"type": "string"}}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "insufficient_evidence"}}, "required": ["status"]},
+      "then": {"properties": {"findings": {"maxItems": 0}, "message": {"type": "string", "minLength": 1}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "human_review_required"}}, "required": ["status"]},
+      "then": {"properties": {"findings": {"minItems": 1}, "message": {"type": "string", "minLength": 1}}}
+    }
+  ]
+}

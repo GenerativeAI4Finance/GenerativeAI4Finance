@@ -1,0 +1,21 @@
+{
+  "evidence_record": {
+    "evidence_id": "EDD-EV-006",
+    "claim_reference": "CLAIM-006",
+    "finding_reference": "F-006",
+    "title": "Synthetic training registry record",
+    "publisher": "Synthetic Registry Fixture",
+    "url": "https://example.org/synthetic-edd/registry-record-006",
+    "reference": "SYNTHETIC-REF-006",
+    "publication_date": "2026-10-01",
+    "access_date": "2026-10-22",
+    "source_type": "official_record",
+    "source_classification": ["primary", "generated"],
+    "jurisdiction": "GB",
+    "excerpt_or_summary": "Synthetic fixture; source text is provided separately for extraction.",
+    "provenance_notes": "Fabricated test record; placeholder URL only.",
+    "evidence_status": "available",
+    "limitations": ["Entirely fictional test fixture."]
+  },
+  "source_text": "SYNTHETIC FIXTURE: The fictional registry entry lists Example Entity 006 as active."
+}
