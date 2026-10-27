@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+files = ["evaluate.py", "make_synthetic.py", "scenario_eval"]
+check_untyped_defs = true
+warn_unused_ignores = true
+cache_dir = ".venv/mypy-cache"
