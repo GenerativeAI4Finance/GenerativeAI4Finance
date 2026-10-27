@@ -1,0 +1,42 @@
+{
+  "synthetic": true,
+  "as_of": "2026-10-27",
+  "observations": [
+    {
+      "observation_id": "OBS-ENTITY-001",
+      "subject_id": "SYNTHETIC-COMPANY-001",
+      "attribute": "ownership_percentage",
+      "value": 60,
+      "checked_date": "2026-10-20",
+      "record_status": "available",
+      "source_reference": {"evidence_id": "EDD-EV-701", "claim_reference": "CLAIM-701", "finding_reference": "F-701", "title": "Synthetic ownership register"}
+    },
+    {
+      "observation_id": "OBS-ENTITY-002",
+      "subject_id": "SYNTHETIC-COMPANY-001",
+      "attribute": "ownership_percentage",
+      "value": 40,
+      "checked_date": "2026-10-21",
+      "record_status": "available",
+      "source_reference": {"source_id": "SRC-701", "title": "Synthetic shareholder declaration", "supporting_passage": {"quote": "Synthetic fixture: shareholder holds 40 percent."}}
+    },
+    {
+      "observation_id": "OBS-ENTITY-003",
+      "subject_id": "SYNTHETIC-COMPANY-001",
+      "attribute": "company_status",
+      "value": "active",
+      "checked_date": "2026-01-01",
+      "record_status": "available",
+      "source_reference": {"evidence_id": "EDD-EV-702", "claim_reference": "CLAIM-702", "title": "Synthetic status record"}
+    },
+    {
+      "observation_id": "OBS-INDIVIDUAL-001",
+      "subject_id": "SYNTHETIC-PERSON-001",
+      "attribute": "pep_screening",
+      "value": "no_match",
+      "checked_date": "2026-08-01",
+      "record_status": "available",
+      "source_reference": {"evidence_id": "EDD-EV-703", "claim_reference": "CLAIM-703", "title": "Synthetic screening result"}
+    }
+  ]
+}

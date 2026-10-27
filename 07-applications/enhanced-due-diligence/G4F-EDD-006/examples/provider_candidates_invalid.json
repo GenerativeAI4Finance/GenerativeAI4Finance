@@ -1,0 +1,26 @@
+[
+  {
+    "statement": "Synthetic Example Company 006 is sanctioned.",
+    "statement_type": "model_inference",
+    "source_id": "SRC-SYN-006-001",
+    "quote": "Synthetic Example Company 006 is sanctioned.",
+    "start_char": 22,
+    "end_char": 84
+  },
+  {
+    "statement": "Synthetic Person 006-A is the beneficial owner.",
+    "statement_type": "source_claim",
+    "source_id": "SRC-SYN-006-001",
+    "quote": "The fictional filing states that Synthetic Person 006-A holds 60 percent of the shares.",
+    "start_char": 89,
+    "end_char": 176
+  },
+  {
+    "statement": "An unsupported statement with a missing source reference.",
+    "statement_type": "source_claim",
+    "source_id": "SRC-DOES-NOT-EXIST",
+    "quote": "not in source",
+    "start_char": 0,
+    "end_char": 13
+  }
+]

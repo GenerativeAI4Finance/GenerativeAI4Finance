@@ -1,0 +1,14 @@
+[
+  {
+    "source_id": "SRC-SYN-006-001",
+    "title": "Synthetic training registry extract",
+    "reference": "https://example.org/synthetic-edd/source-001",
+    "text": "SYNTHETIC FIXTURE: The fictional register lists Synthetic Example Company 006 as active. The fictional filing states that Synthetic Person 006-A holds 60 percent of the shares."
+  },
+  {
+    "source_id": "SRC-SYN-006-002",
+    "title": "Synthetic training note with an unresolved question",
+    "reference": "internal://synthetic-training/case-006/note",
+    "text": "SYNTHETIC FIXTURE: The note mentions a possible similarly named company, but provides no registration number or other distinguishing identifier."
+  }
+]

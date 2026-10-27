@@ -1,0 +1,37 @@
+[
+  {
+    "statement": "The fictional register lists Synthetic Example Company 006 as active.",
+    "statement_type": "source_claim",
+    "source_id": "SRC-SYN-006-001",
+    "quote": "The fictional register lists Synthetic Example Company 006 as active.",
+    "start_char": 19,
+    "end_char": 88
+  },
+  {
+    "statement": "Synthetic Person 006-A holds 60 percent of the shares.",
+    "statement_type": "extracted_fact",
+    "source_id": "SRC-SYN-006-001",
+    "quote": "The fictional filing states that Synthetic Person 006-A holds 60 percent of the shares.",
+    "start_char": 89,
+    "end_char": 176,
+    "note": "Structured value extracted from the cited source sentence; verify source context."
+  },
+  {
+    "statement": "A similarly named company may be the same entity, but the supplied text does not resolve the match.",
+    "statement_type": "unresolved",
+    "source_id": "SRC-SYN-006-002",
+    "quote": "The note mentions a possible similarly named company, but provides no registration number or other distinguishing identifier.",
+    "start_char": 19,
+    "end_char": 144,
+    "note": "No registration number or other distinguishing identifier is present."
+  },
+  {
+    "statement": "The active-status statement may refer to a current operating status.",
+    "statement_type": "model_inference",
+    "source_id": "SRC-SYN-006-001",
+    "quote": "The fictional register lists Synthetic Example Company 006 as active.",
+    "start_char": 19,
+    "end_char": 88,
+    "note": "Interpretation only; confirm what the source means by active and check source freshness."
+  }
+]

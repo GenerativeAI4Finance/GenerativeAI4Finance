@@ -1,0 +1,9 @@
+{
+  "default_max_age_days": 180,
+  "freshness_windows_days": {
+    "ownership_percentage": 365,
+    "company_status": 90,
+    "sanctions_screening": 30,
+    "pep_screening": 30
+  }
+}
