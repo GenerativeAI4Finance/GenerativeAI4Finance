@@ -1,0 +1,118 @@
+{
+  "dataset_version": "1.0.0",
+  "synthetic": true,
+  "generated_at": "2026-10-28T12:00:00Z",
+  "scope": "Illustrative review of synthetic ownership records for the fictional Example Orchard Trading Ltd.",
+  "subject_entity": {"entity_id": "SYN-ENTITY-801", "synthetic_name": "Example Orchard Trading Ltd."},
+  "case_record": {
+    "case_id": "G4F-EDD-801",
+    "subject_type": "company",
+    "jurisdiction": "GB",
+    "review_date": "2026-10-28",
+    "risk_categories": ["ownership_opacity"],
+    "source_records": [
+      {"source_id": "SRC-801", "source_type": "registry", "description": "Synthetic registry excerpt A", "url": "https://example.org/synthetic/record-a", "checked_date": "2026-10-27"},
+      {"source_id": "SRC-802", "source_type": "other", "description": "Synthetic shareholder statement B", "url": "https://example.org/synthetic/record-b", "checked_date": "2026-10-27"}
+    ],
+    "findings": [
+      {"finding_id": "F-801", "category": "ownership_opacity", "summary": "The supplied records state different ownership percentages and require reconciliation.", "severity": "medium", "disposition": "unresolved"},
+      {"finding_id": "F-802", "category": "adverse_media", "summary": "Fictional unverified allegation deliberately has no source link.", "severity": "high", "disposition": "unresolved"}
+    ],
+    "confidence": 0.4,
+    "review_status": "in_review",
+    "analyst_notes": "Synthetic training fixture only."
+  },
+  "evidence_records": [
+    {
+      "evidence_id": "EDD-EV-801",
+      "claim_reference": "CLAIM-801",
+      "finding_reference": "F-801",
+      "title": "Synthetic ownership register excerpt A",
+      "publisher": "Synthetic Registry Fixture",
+      "url": "https://example.org/synthetic/record-a",
+      "reference": "SYN-REG-A-801",
+      "publication_date": "2026-10-20",
+      "access_date": "2026-10-27",
+      "source_type": "official_record",
+      "source_classification": ["primary"],
+      "jurisdiction": "GB",
+      "excerpt_or_summary": "SYNTHETIC SOURCE SUMMARY: Record A lists a 60 percent holding.",
+      "provenance_notes": "Fictional test record; example.org URL is a placeholder.",
+      "evidence_status": "available",
+      "limitations": ["Synthetic only; no real registry was consulted."]
+    },
+    {
+      "evidence_id": "EDD-EV-802",
+      "claim_reference": "CLAIM-801",
+      "finding_reference": "F-801",
+      "title": "Synthetic shareholder statement B",
+      "publisher": "Synthetic Case Fixture",
+      "url": "https://example.org/synthetic/record-b",
+      "reference": "SYN-USER-B-801",
+      "publication_date": null,
+      "access_date": "2026-10-27",
+      "source_type": "user_document",
+      "source_classification": ["user_provided"],
+      "jurisdiction": "GB",
+      "excerpt_or_summary": "SYNTHETIC SOURCE SUMMARY: Statement B lists a 40 percent holding.",
+      "provenance_notes": "Fictional user-provided document fixture.",
+      "evidence_status": "disputed",
+      "limitations": ["The value conflicts with the synthetic registry excerpt."]
+    },
+    {
+      "evidence_id": "EDD-EV-803",
+      "claim_reference": "CLAIM-803",
+      "finding_reference": "F-802",
+      "title": "Generated synthetic note",
+      "publisher": "Synthetic Report Fixture",
+      "url": null,
+      "reference": "SYN-GEN-803",
+      "publication_date": null,
+      "access_date": "2026-10-27",
+      "source_type": "other",
+      "source_classification": ["generated"],
+      "jurisdiction": "GB",
+      "excerpt_or_summary": "Generated placeholder; not independent evidence.",
+      "provenance_notes": "Synthetic fixture illustrating generated material.",
+      "evidence_status": "available",
+      "limitations": ["Generated content cannot independently support a case finding."]
+    }
+  ],
+  "extraction_result": {
+    "status": "human_review_required",
+    "findings": [
+      {
+        "finding_id": "CAND-0801",
+        "statement": "The difference may result from a recent ownership transfer.",
+        "statement_type": "model_inference",
+      "source_reference": {"source_id": "SRC-801", "evidence_id": "EDD-EV-801", "claim_reference": "CLAIM-801", "finding_reference": "F-801", "title": "Synthetic ownership excerpt A", "reference": "SYN-REG-A-801"},
+        "evidence": {"quote": "SYNTHETIC SOURCE: Record A lists 60 percent; Record B lists 40 percent.", "start_char": 0, "end_char": 71},
+        "review_status": "requires_human_review",
+        "reviewer_note": "Illustrative inference; verify against original documents."
+      },
+      {
+        "finding_id": "CAND-0802",
+        "statement": "A source sentence without a case finding link.",
+        "statement_type": "source_claim",
+        "source_reference": {"source_id": "SRC-999", "title": "Synthetic separate source", "reference": null},
+        "evidence": {"quote": "SYNTHETIC SOURCE: Separate example sentence.", "start_char": 0, "end_char": 44},
+        "review_status": "source_backed_candidate",
+        "reviewer_note": null
+      }
+    ],
+    "rejected_candidates": [],
+    "message": "Synthetic provider inference requires human review."
+  },
+  "evidence_review": {
+    "as_of": "2026-10-28",
+    "conflicts": [
+      {"subject_id": "SYNTHETIC-COMPANY-801", "attribute": "ownership_percentage", "values": [{"normalized_value": "6E+1", "observations": [{"observation_id": "OBS-801-A", "value": 60, "source_reference": {"evidence_id": "EDD-EV-801"}}]}, {"normalized_value": "4E+1", "observations": [{"observation_id": "OBS-801-B", "value": 40, "source_reference": {"evidence_id": "EDD-EV-802"}}]}], "resolution": "unresolved_requires_human_review"}
+    ],
+    "stale_evidence": [],
+    "evidence_status_issues": []
+  },
+  "unresolved_questions": ["Which ownership document reflects the current registered position?"],
+  "limitations": ["This example report contains synthetic, placeholder content only."],
+  "recommended_actions": ["Obtain a current ownership record and reconcile it with the shareholder statement."],
+  "report_version": "1.0.0"
+}
