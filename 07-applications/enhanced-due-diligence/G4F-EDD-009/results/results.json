@@ -1,0 +1,178 @@
+{
+  "evaluation_version": "1.0.0",
+  "gold_set_version": "1.0.0",
+  "dataset_version": "1.0.0",
+  "synthetic": true,
+  "matching_rule": "Exact normalized statement + source_id + statement_type; one-to-one matching.",
+  "citation_rule": "source_id must match the document and source_text[start_char:end_char] must equal the quote.",
+  "results": [
+    {
+      "system_name": "EDD-006 rule baseline",
+      "metrics": {
+        "documents": 6,
+        "gold_claims": 3,
+        "predictions": 6,
+        "true_positive_claims": 3,
+        "false_positive_claims": 3,
+        "missed_gold_claims": 0,
+        "extraction_precision": 0.5,
+        "extraction_recall": 1.0,
+        "extraction_f1": 0.666667,
+        "citation_correctness": 1.0,
+        "citation_correct_predictions": 6,
+        "unsupported_claim_rate": 0.5,
+        "unsupported_claims": 3,
+        "negative_case_abstention_rate": 0.333333,
+        "positive_case_false_abstention_rate": 0.0,
+        "abstention_precision": 1.0,
+        "correct_negative_abstentions": 1,
+        "negative_documents": 3,
+        "positive_documents": 3,
+        "abstained_documents": 1
+      },
+      "per_document": [
+        {
+          "document_id": "DOC-009-001",
+          "gold_count": 1,
+          "prediction_count": 1,
+          "matched_claims": 1,
+          "citation_correct": 1,
+          "unsupported_claims": 0,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-002",
+          "gold_count": 1,
+          "prediction_count": 1,
+          "matched_claims": 1,
+          "citation_correct": 1,
+          "unsupported_claims": 0,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-003",
+          "gold_count": 1,
+          "prediction_count": 1,
+          "matched_claims": 1,
+          "citation_correct": 1,
+          "unsupported_claims": 0,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-004",
+          "gold_count": 0,
+          "prediction_count": 2,
+          "matched_claims": 0,
+          "citation_correct": 2,
+          "unsupported_claims": 2,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-005",
+          "gold_count": 0,
+          "prediction_count": 1,
+          "matched_claims": 0,
+          "citation_correct": 1,
+          "unsupported_claims": 1,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-006",
+          "gold_count": 0,
+          "prediction_count": 0,
+          "matched_claims": 0,
+          "citation_correct": 0,
+          "unsupported_claims": 0,
+          "abstained": true
+        }
+      ]
+    },
+    {
+      "system_name": "synthetic mock example (not a model run)",
+      "metrics": {
+        "documents": 6,
+        "gold_claims": 3,
+        "predictions": 3,
+        "true_positive_claims": 1,
+        "false_positive_claims": 2,
+        "missed_gold_claims": 2,
+        "extraction_precision": 0.333333,
+        "extraction_recall": 0.333333,
+        "extraction_f1": 0.333333,
+        "citation_correctness": 1.0,
+        "citation_correct_predictions": 3,
+        "unsupported_claim_rate": 0.666667,
+        "unsupported_claims": 2,
+        "negative_case_abstention_rate": 0.666667,
+        "positive_case_false_abstention_rate": 0.333333,
+        "abstention_precision": 0.666667,
+        "correct_negative_abstentions": 2,
+        "negative_documents": 3,
+        "positive_documents": 3,
+        "abstained_documents": 3
+      },
+      "per_document": [
+        {
+          "document_id": "DOC-009-001",
+          "gold_count": 1,
+          "prediction_count": 1,
+          "matched_claims": 1,
+          "citation_correct": 1,
+          "unsupported_claims": 0,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-002",
+          "gold_count": 1,
+          "prediction_count": 1,
+          "matched_claims": 0,
+          "citation_correct": 1,
+          "unsupported_claims": 1,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-003",
+          "gold_count": 1,
+          "prediction_count": 0,
+          "matched_claims": 0,
+          "citation_correct": 0,
+          "unsupported_claims": 0,
+          "abstained": true
+        },
+        {
+          "document_id": "DOC-009-004",
+          "gold_count": 0,
+          "prediction_count": 0,
+          "matched_claims": 0,
+          "citation_correct": 0,
+          "unsupported_claims": 0,
+          "abstained": true
+        },
+        {
+          "document_id": "DOC-009-005",
+          "gold_count": 0,
+          "prediction_count": 1,
+          "matched_claims": 0,
+          "citation_correct": 1,
+          "unsupported_claims": 1,
+          "abstained": false
+        },
+        {
+          "document_id": "DOC-009-006",
+          "gold_count": 0,
+          "prediction_count": 0,
+          "matched_claims": 0,
+          "citation_correct": 0,
+          "unsupported_claims": 0,
+          "abstained": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "This small synthetic set is an engineering smoke test, not a representative sample or production-readiness evaluation.",
+    "Exact-string matching does not measure semantic equivalence; paraphrases are not credited as extracted claims.",
+    "A correct quote and offset do not prove that a claim is entailed by the passage.",
+    "The optional bundled mock predictions are illustrative and are not outputs from an actual language model."
+  ]
+}

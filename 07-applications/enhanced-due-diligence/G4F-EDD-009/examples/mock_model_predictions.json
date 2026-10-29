@@ -1,0 +1,42 @@
+{
+  "system_name": "synthetic mock example (not a model run)",
+  "synthetic_mock": true,
+  "predictions_by_document": {
+    "DOC-009-001": [
+      {
+        "finding_id": "CAND-0901",
+        "statement": "SYNTHETIC FIXTURE: The fictional registry lists Meridian Example Holdings as active.",
+        "statement_type": "source_claim",
+        "source_reference": {"source_id": "SRC-SYN-009-001", "title": "Synthetic company registry extract", "reference": "SYN-REG-009-001"},
+        "evidence": {"quote": "SYNTHETIC FIXTURE: The fictional registry lists Meridian Example Holdings as active.", "start_char": 0, "end_char": 84},
+        "review_status": "source_backed_candidate",
+        "reviewer_note": null
+      }
+    ],
+    "DOC-009-002": [
+      {
+        "finding_id": "CAND-0902",
+        "statement": "Synthetic Person 002 owns 60 percent of Synthetic Meridian Entity 002.",
+        "statement_type": "model_inference",
+        "source_reference": {"source_id": "SRC-SYN-009-002", "title": "Synthetic ownership register", "reference": "SYN-REG-009-002"},
+        "evidence": {"quote": "SYNTHETIC FIXTURE: The fictional register lists Synthetic Person 002 as holding 60 percent of Synthetic Meridian Entity 002.", "start_char": 0, "end_char": 124},
+        "review_status": "requires_human_review",
+        "reviewer_note": "Illustrative paraphrase; not accepted as an exact gold claim."
+      }
+    ],
+    "DOC-009-003": [],
+    "DOC-009-004": [],
+    "DOC-009-005": [
+      {
+        "finding_id": "CAND-0905",
+        "statement": "The subject owns 50 percent of the company.",
+        "statement_type": "model_inference",
+        "source_reference": {"source_id": "SRC-SYN-009-005", "title": "Synthetic blank ownership field", "reference": "SYN-FORM-009-005"},
+        "evidence": {"quote": "SYNTHETIC FIXTURE: The ownership field is blank.", "start_char": 0, "end_char": 48},
+        "review_status": "requires_human_review",
+        "reviewer_note": "Deliberately unsupported mock example; the passage states that the field is blank."
+      }
+    ],
+    "DOC-009-006": []
+  }
+}

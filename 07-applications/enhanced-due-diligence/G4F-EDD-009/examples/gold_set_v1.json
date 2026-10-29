@@ -1,0 +1,111 @@
+{
+  "gold_set_name": "G4F-EDD-009 synthetic EDD extraction gold set",
+  "gold_set_version": "1.0.0",
+  "dataset_version": "1.0.0",
+  "synthetic": true,
+  "annotation_protocol": "Two reviewers are expected to inspect each synthetic source sentence and adjudicate whether it contains a subject-specific EDD fact. This bundled fixture records a single documented illustrative annotation; it is not a claim of independent double review.",
+  "documents": [
+    {
+      "document_id": "DOC-009-001",
+      "scenario": "company_status_positive",
+      "source": {
+        "source_id": "SRC-SYN-009-001",
+        "title": "Synthetic company registry extract",
+        "reference": "SYN-REG-009-001",
+        "source_type": "official_record",
+        "text": "SYNTHETIC FIXTURE: The fictional registry lists Meridian Example Holdings as active."
+      },
+      "gold_findings": [
+        {
+          "gold_id": "GOLD-009-001",
+          "statement": "SYNTHETIC FIXTURE: The fictional registry lists Meridian Example Holdings as active.",
+          "statement_type": "source_claim",
+          "quote": "SYNTHETIC FIXTURE: The fictional registry lists Meridian Example Holdings as active.",
+          "start_char": 0,
+          "end_char": 84,
+          "annotation_note": "Verbatim, subject-specific status claim in synthetic text."
+        }
+      ]
+    },
+    {
+      "document_id": "DOC-009-002",
+      "scenario": "ownership_positive",
+      "source": {
+        "source_id": "SRC-SYN-009-002",
+        "title": "Synthetic ownership register",
+        "reference": "SYN-REG-009-002",
+        "source_type": "official_record",
+        "text": "SYNTHETIC FIXTURE: The fictional register lists Synthetic Person 002 as holding 60 percent of Synthetic Meridian Entity 002."
+      },
+      "gold_findings": [
+        {
+          "gold_id": "GOLD-009-002",
+          "statement": "SYNTHETIC FIXTURE: The fictional register lists Synthetic Person 002 as holding 60 percent of Synthetic Meridian Entity 002.",
+          "statement_type": "source_claim",
+          "quote": "SYNTHETIC FIXTURE: The fictional register lists Synthetic Person 002 as holding 60 percent of Synthetic Meridian Entity 002.",
+          "start_char": 0,
+          "end_char": 124,
+          "annotation_note": "Verbatim ownership percentage, person placeholder, and company placeholder."
+        }
+      ]
+    },
+    {
+      "document_id": "DOC-009-003",
+      "scenario": "individual_role_positive",
+      "source": {
+        "source_id": "SRC-SYN-009-003",
+        "title": "Synthetic individual profile",
+        "reference": "SYN-PROFILE-009-003",
+        "source_type": "research_report",
+        "text": "SYNTHETIC FIXTURE: Synthetic Person 003 held the fictional office of Example District Treasurer from 2020 through 2022."
+      },
+      "gold_findings": [
+        {
+          "gold_id": "GOLD-009-003",
+          "statement": "SYNTHETIC FIXTURE: Synthetic Person 003 held the fictional office of Example District Treasurer from 2020 through 2022.",
+          "statement_type": "source_claim",
+          "quote": "SYNTHETIC FIXTURE: Synthetic Person 003 held the fictional office of Example District Treasurer from 2020 through 2022.",
+          "start_char": 0,
+          "end_char": 119,
+          "annotation_note": "Verbatim, time-bounded role claim about a synthetic individual."
+        }
+      ]
+    },
+    {
+      "document_id": "DOC-009-004",
+      "scenario": "generic_boilerplate_negative",
+      "source": {
+        "source_id": "SRC-SYN-009-004",
+        "title": "Synthetic template disclaimer",
+        "reference": "SYN-TEMPLATE-009-004",
+        "source_type": "other",
+        "text": "SYNTHETIC FIXTURE: This blank template is provided for training only.\nSYNTHETIC FIXTURE: No subject-specific information is entered."
+      },
+      "gold_findings": []
+    },
+    {
+      "document_id": "DOC-009-005",
+      "scenario": "empty_field_negative",
+      "source": {
+        "source_id": "SRC-SYN-009-005",
+        "title": "Synthetic blank ownership field",
+        "reference": "SYN-FORM-009-005",
+        "source_type": "user_document",
+        "text": "SYNTHETIC FIXTURE: The ownership field is blank."
+      },
+      "gold_findings": []
+    },
+    {
+      "document_id": "DOC-009-006",
+      "scenario": "empty_document_negative",
+      "source": {
+        "source_id": "SRC-SYN-009-006",
+        "title": "Synthetic empty document",
+        "reference": "SYN-EMPTY-009-006",
+        "source_type": "other",
+        "text": ""
+      },
+      "gold_findings": []
+    }
+  ]
+}

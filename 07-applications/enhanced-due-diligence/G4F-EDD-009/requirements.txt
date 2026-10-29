@@ -1,0 +1,3 @@
+# Runtime uses the Python standard library and G4F-EDD-006; these support validation and tests.
+pytest>=7.0
+jsonschema>=4.0
