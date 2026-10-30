@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "agents": {
+    "collector-01": "source_collector",
+    "matcher-01": "entity_matcher",
+    "analyst-01": "evidence_analyst",
+    "reviewer-01": "reviewer"
+  },
+  "roles": {
+    "source_collector": {
+      "tools": {
+        "fetch_source": {
+          "args": {
+            "source_id": {"pattern": "SYN-SRC-[0-9]{4}", "log_value": true}
+          }
+        },
+        "list_sources": {}
+      }
+    },
+    "entity_matcher": {
+      "tools": {
+        "read_evidence": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true}
+          }
+        },
+        "match_entities": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true},
+            "threshold": {"min": 0.5, "max": 1.0, "log_value": true}
+          }
+        }
+      }
+    },
+    "evidence_analyst": {
+      "tools": {
+        "read_evidence": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true}
+          }
+        },
+        "write_note": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true},
+            "note": {"max_length": 2000}
+          }
+        }
+      }
+    },
+    "reviewer": {
+      "tools": {
+        "read_evidence": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true}
+          }
+        },
+        "set_review_status": {
+          "args": {
+            "case_id": {"pattern": "SYN-CASE-[0-9]{4}", "log_value": true},
+            "status": {
+              "allowed": ["needs_more_evidence", "escalated_to_human", "closed_no_finding"],
+              "log_value": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
