@@ -1,0 +1,682 @@
+{
+  "report": {
+    "report_version": "1.0.0",
+    "run_id": "f48cd4ed171173ad",
+    "scenario_id": "G4F-SW-002-001",
+    "scenario_version": "1.0.0",
+    "synthetic": true,
+    "subject": "Northstar Components Ltd.",
+    "subject_kind": "entity",
+    "entity_match": {
+      "subject": "Northstar Components Ltd.",
+      "subject_kind": "entity",
+      "match_status": "subject_name_observed",
+      "matching_sources": [
+        {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-001",
+          "source_id": "SRC-001",
+          "synthetic": true
+        },
+        {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-002",
+          "source_id": "SRC-002",
+          "synthetic": true
+        },
+        {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-003",
+          "source_id": "SRC-003",
+          "synthetic": true
+        }
+      ],
+      "uncertainty": "Exact name presence is not independent identity verification."
+    },
+    "findings": [
+      {
+        "claim_type": "source_claim",
+        "predicate": "ownership_percentage_claim",
+        "value": 60.0,
+        "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+        "source_reference": {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-001",
+          "source_id": "SRC-001",
+          "synthetic": true
+        },
+        "evidence": {
+          "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+          "start_char": 0,
+          "end_char": 145
+        },
+        "trust": "authoritative_for_scenario",
+        "duplicate_of": null
+      },
+      {
+        "claim_type": "source_claim",
+        "predicate": "ownership_percentage_claim",
+        "value": 40.0,
+        "statement": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+        "source_reference": {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-002",
+          "source_id": "SRC-002",
+          "synthetic": true
+        },
+        "evidence": {
+          "quote": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+          "start_char": 0,
+          "end_char": 143
+        },
+        "trust": "authoritative_for_scenario",
+        "duplicate_of": null
+      },
+      {
+        "claim_type": "source_claim",
+        "predicate": "ownership_percentage_claim",
+        "value": 60.0,
+        "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+        "source_reference": {
+          "scenario_id": "G4F-SW-002-001",
+          "input_id": "IN-003",
+          "source_id": "SRC-003",
+          "synthetic": true
+        },
+        "evidence": {
+          "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+          "start_char": 0,
+          "end_char": 166
+        },
+        "trust": "unknown",
+        "duplicate_of": "SRC-001"
+      }
+    ],
+    "source_references": [
+      {
+        "scenario_id": "G4F-SW-002-001",
+        "input_id": "IN-001",
+        "source_id": "SRC-001",
+        "synthetic": true
+      },
+      {
+        "scenario_id": "G4F-SW-002-001",
+        "input_id": "IN-002",
+        "source_id": "SRC-002",
+        "synthetic": true
+      },
+      {
+        "scenario_id": "G4F-SW-002-001",
+        "input_id": "IN-003",
+        "source_id": "SRC-003",
+        "synthetic": true
+      }
+    ],
+    "evidence_lineage": {
+      "unique_source_lineages": [
+        "SRC-001",
+        "SRC-002"
+      ],
+      "duplicate_records": [
+        {
+          "source_id": "SRC-003",
+          "duplicate_of": "SRC-001",
+          "source_reference": {
+            "scenario_id": "G4F-SW-002-001",
+            "input_id": "IN-003",
+            "source_id": "SRC-003",
+            "synthetic": true
+          }
+        }
+      ]
+    },
+    "uncertainty": [
+      "Exact name presence is not independent identity verification."
+    ],
+    "unresolved_issues": [
+      {
+        "issue": "conflicting_ownership_claims",
+        "values": [
+          40.0,
+          60.0
+        ],
+        "source_ids": [
+          "SRC-001",
+          "SRC-002",
+          "SRC-003"
+        ],
+        "status": "unresolved"
+      }
+    ],
+    "review": {
+      "status": "human_review_required",
+      "disposition": "human_review_required_no_final_decision",
+      "rationale": "A configured materiality rule requires a human to review unresolved evidence.",
+      "reviewer_decision": null,
+      "consensus_is_proof": false,
+      "mock_review_event": null
+    },
+    "limitations": [
+      "All records are fictional scenario inputs, not independently verified sources.",
+      "The rule-based role outputs are candidate observations, not a final EDD decision.",
+      "Agreement among agents is not independent corroboration or proof of truth."
+    ]
+  },
+  "trace": [
+    {
+      "step_type": "agent",
+      "agent": "source_collector",
+      "input": {
+        "scenario_id": "G4F-SW-002-001",
+        "synthetic_inputs": [
+          {
+            "input_id": "IN-001",
+            "input_type": "source_record",
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+            "trust": "authoritative_for_scenario",
+            "source_id": "SRC-001",
+            "duplicate_of": null
+          },
+          {
+            "input_id": "IN-002",
+            "input_type": "source_record",
+            "text": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+            "trust": "authoritative_for_scenario",
+            "source_id": "SRC-002",
+            "duplicate_of": null
+          },
+          {
+            "input_id": "IN-003",
+            "input_type": "source_record",
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+            "trust": "unknown",
+            "source_id": "SRC-003",
+            "duplicate_of": "SRC-001"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "input_id": "IN-001",
+            "source_id": "SRC-001",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-001",
+              "source_id": "SRC-001",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-002",
+            "source_id": "SRC-002",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-002",
+              "source_id": "SRC-002",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-003",
+            "source_id": "SRC-003",
+            "source_type": "source_record",
+            "trust": "unknown",
+            "duplicate_of": "SRC-001",
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            }
+          }
+        ],
+        "source_count": 3
+      }
+    },
+    {
+      "step_type": "agent",
+      "agent": "entity_matcher",
+      "input": {
+        "subject": "Northstar Components Ltd.",
+        "profile": {
+          "subject": "Northstar Components Ltd.",
+          "entity_kind": "entity",
+          "review_policy": "escalate_material_conflicts"
+        },
+        "sources": [
+          {
+            "input_id": "IN-001",
+            "source_id": "SRC-001",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-001",
+              "source_id": "SRC-001",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-002",
+            "source_id": "SRC-002",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-002",
+              "source_id": "SRC-002",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-003",
+            "source_id": "SRC-003",
+            "source_type": "source_record",
+            "trust": "unknown",
+            "duplicate_of": "SRC-001",
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            }
+          }
+        ]
+      },
+      "output": {
+        "subject": "Northstar Components Ltd.",
+        "subject_kind": "entity",
+        "match_status": "subject_name_observed",
+        "matching_sources": [
+          {
+            "scenario_id": "G4F-SW-002-001",
+            "input_id": "IN-001",
+            "source_id": "SRC-001",
+            "synthetic": true
+          },
+          {
+            "scenario_id": "G4F-SW-002-001",
+            "input_id": "IN-002",
+            "source_id": "SRC-002",
+            "synthetic": true
+          },
+          {
+            "scenario_id": "G4F-SW-002-001",
+            "input_id": "IN-003",
+            "source_id": "SRC-003",
+            "synthetic": true
+          }
+        ],
+        "uncertainty": "Exact name presence is not independent identity verification."
+      }
+    },
+    {
+      "step_type": "agent",
+      "agent": "evidence_analyst",
+      "input": {
+        "profile": {
+          "subject": "Northstar Components Ltd.",
+          "entity_kind": "entity",
+          "review_policy": "escalate_material_conflicts"
+        },
+        "sources": [
+          {
+            "input_id": "IN-001",
+            "source_id": "SRC-001",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-001",
+              "source_id": "SRC-001",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-002",
+            "source_id": "SRC-002",
+            "source_type": "source_record",
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null,
+            "text": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-002",
+              "source_id": "SRC-002",
+              "synthetic": true
+            }
+          },
+          {
+            "input_id": "IN-003",
+            "source_id": "SRC-003",
+            "source_type": "source_record",
+            "trust": "unknown",
+            "duplicate_of": "SRC-001",
+            "text": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            }
+          }
+        ],
+        "config": {
+          "config_version": "1.0.0",
+          "workflow_order": [
+            "source_collector",
+            "entity_matcher",
+            "evidence_analyst",
+            "reviewer"
+          ],
+          "scenario_profiles": {
+            "G4F-SW-002-001": {
+              "subject": "Northstar Components Ltd.",
+              "entity_kind": "entity",
+              "review_policy": "escalate_material_conflicts"
+            },
+            "G4F-SW-002-002": {
+              "subject": "Blue Cedar Payments LLC",
+              "entity_kind": "entity",
+              "review_policy": "ignore_untrusted_instructions"
+            },
+            "G4F-SW-002-003": {
+              "subject": "Arin Sol",
+              "entity_kind": "individual",
+              "review_policy": "escalate_name_only_matches"
+            }
+          },
+          "ownership_pattern": "(?P<value>\\d+(?:\\.\\d+)?)%",
+          "instruction_markers": [
+            "ignore prior",
+            "ignore all",
+            "mark this company approved"
+          ],
+          "pending_markers": [
+            "pending verification"
+          ]
+        }
+      },
+      "output": {
+        "findings": [
+          {
+            "claim_type": "source_claim",
+            "predicate": "ownership_percentage_claim",
+            "value": 60.0,
+            "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-001",
+              "source_id": "SRC-001",
+              "synthetic": true
+            },
+            "evidence": {
+              "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+              "start_char": 0,
+              "end_char": 145
+            },
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null
+          },
+          {
+            "claim_type": "source_claim",
+            "predicate": "ownership_percentage_claim",
+            "value": 40.0,
+            "statement": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-002",
+              "source_id": "SRC-002",
+              "synthetic": true
+            },
+            "evidence": {
+              "quote": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+              "start_char": 0,
+              "end_char": 143
+            },
+            "trust": "authoritative_for_scenario",
+            "duplicate_of": null
+          },
+          {
+            "claim_type": "source_claim",
+            "predicate": "ownership_percentage_claim",
+            "value": 60.0,
+            "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            },
+            "evidence": {
+              "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+              "start_char": 0,
+              "end_char": 166
+            },
+            "trust": "unknown",
+            "duplicate_of": "SRC-001"
+          }
+        ],
+        "ownership_claims": [
+          {
+            "value": 60.0,
+            "source_id": "SRC-001",
+            "duplicate_of": null
+          },
+          {
+            "value": 40.0,
+            "source_id": "SRC-002",
+            "duplicate_of": null
+          },
+          {
+            "value": 60.0,
+            "source_id": "SRC-003",
+            "duplicate_of": "SRC-001"
+          }
+        ],
+        "ownership_conflict_detected": true,
+        "duplicate_records": [
+          {
+            "source_id": "SRC-003",
+            "duplicate_of": "SRC-001",
+            "source_reference": {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            }
+          }
+        ],
+        "untrusted_instructions": [],
+        "unresolved_issues": [
+          {
+            "issue": "conflicting_ownership_claims",
+            "values": [
+              40.0,
+              60.0
+            ],
+            "source_ids": [
+              "SRC-001",
+              "SRC-002",
+              "SRC-003"
+            ],
+            "status": "unresolved"
+          }
+        ]
+      }
+    },
+    {
+      "step_type": "agent",
+      "agent": "reviewer",
+      "input": {
+        "profile": {
+          "subject": "Northstar Components Ltd.",
+          "entity_kind": "entity",
+          "review_policy": "escalate_material_conflicts"
+        },
+        "entity_match": {
+          "subject": "Northstar Components Ltd.",
+          "subject_kind": "entity",
+          "match_status": "subject_name_observed",
+          "matching_sources": [
+            {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-001",
+              "source_id": "SRC-001",
+              "synthetic": true
+            },
+            {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-002",
+              "source_id": "SRC-002",
+              "synthetic": true
+            },
+            {
+              "scenario_id": "G4F-SW-002-001",
+              "input_id": "IN-003",
+              "source_id": "SRC-003",
+              "synthetic": true
+            }
+          ],
+          "uncertainty": "Exact name presence is not independent identity verification."
+        },
+        "analysis": {
+          "findings": [
+            {
+              "claim_type": "source_claim",
+              "predicate": "ownership_percentage_claim",
+              "value": 60.0,
+              "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+              "source_reference": {
+                "scenario_id": "G4F-SW-002-001",
+                "input_id": "IN-001",
+                "source_id": "SRC-001",
+                "synthetic": true
+              },
+              "evidence": {
+                "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10.",
+                "start_char": 0,
+                "end_char": 145
+              },
+              "trust": "authoritative_for_scenario",
+              "duplicate_of": null
+            },
+            {
+              "claim_type": "source_claim",
+              "predicate": "ownership_percentage_claim",
+              "value": 40.0,
+              "statement": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+              "source_reference": {
+                "scenario_id": "G4F-SW-002-001",
+                "input_id": "IN-002",
+                "source_id": "SRC-002",
+                "synthetic": true
+              },
+              "evidence": {
+                "quote": "Synthetic filing summary for fictional entity Northstar Components Ltd. states that Mira Vale holds 40% of the shares. Record date: 2026-02-02.",
+                "start_char": 0,
+                "end_char": 143
+              },
+              "trust": "authoritative_for_scenario",
+              "duplicate_of": null
+            },
+            {
+              "claim_type": "source_claim",
+              "predicate": "ownership_percentage_claim",
+              "value": 60.0,
+              "statement": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+              "source_reference": {
+                "scenario_id": "G4F-SW-002-001",
+                "input_id": "IN-003",
+                "source_id": "SRC-003",
+                "synthetic": true
+              },
+              "evidence": {
+                "quote": "Synthetic registry extract for fictional entity Northstar Components Ltd. states that Mira Vale holds 60% of the shares. Record date: 2026-01-10. Copied from SRC-001.",
+                "start_char": 0,
+                "end_char": 166
+              },
+              "trust": "unknown",
+              "duplicate_of": "SRC-001"
+            }
+          ],
+          "ownership_claims": [
+            {
+              "value": 60.0,
+              "source_id": "SRC-001",
+              "duplicate_of": null
+            },
+            {
+              "value": 40.0,
+              "source_id": "SRC-002",
+              "duplicate_of": null
+            },
+            {
+              "value": 60.0,
+              "source_id": "SRC-003",
+              "duplicate_of": "SRC-001"
+            }
+          ],
+          "ownership_conflict_detected": true,
+          "duplicate_records": [
+            {
+              "source_id": "SRC-003",
+              "duplicate_of": "SRC-001",
+              "source_reference": {
+                "scenario_id": "G4F-SW-002-001",
+                "input_id": "IN-003",
+                "source_id": "SRC-003",
+                "synthetic": true
+              }
+            }
+          ],
+          "untrusted_instructions": [],
+          "unresolved_issues": [
+            {
+              "issue": "conflicting_ownership_claims",
+              "values": [
+                40.0,
+                60.0
+              ],
+              "source_ids": [
+                "SRC-001",
+                "SRC-002",
+                "SRC-003"
+              ],
+              "status": "unresolved"
+            }
+          ]
+        },
+        "allowed_tools": [
+          "read_synthetic_case",
+          "compare_source_records"
+        ]
+      },
+      "output": {
+        "status": "human_review_required",
+        "disposition": "human_review_required_no_final_decision",
+        "recommended_tool_action": null,
+        "rationale": "A configured materiality rule requires a human to review unresolved evidence.",
+        "consensus_is_proof": false,
+        "reviewer_decision": null
+      }
+    }
+  ]
+}
