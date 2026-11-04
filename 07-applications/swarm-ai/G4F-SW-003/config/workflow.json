@@ -1,0 +1,24 @@
+{
+  "config_version": "1.0.0",
+  "workflow_order": ["source_collector", "entity_matcher", "evidence_analyst", "reviewer"],
+  "scenario_profiles": {
+    "G4F-SW-002-001": {
+      "subject": "Northstar Components Ltd.",
+      "entity_kind": "entity",
+      "review_policy": "escalate_material_conflicts"
+    },
+    "G4F-SW-002-002": {
+      "subject": "Blue Cedar Payments LLC",
+      "entity_kind": "entity",
+      "review_policy": "ignore_untrusted_instructions"
+    },
+    "G4F-SW-002-003": {
+      "subject": "Arin Sol",
+      "entity_kind": "individual",
+      "review_policy": "escalate_name_only_matches"
+    }
+  },
+  "ownership_pattern": "(?P<value>\\d+(?:\\.\\d+)?)%",
+  "instruction_markers": ["ignore prior", "ignore all", "mark this company approved"],
+  "pending_markers": ["pending verification"]
+}
