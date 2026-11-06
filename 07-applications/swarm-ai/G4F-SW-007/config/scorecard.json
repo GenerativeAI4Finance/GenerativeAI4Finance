@@ -1,0 +1,7 @@
+{
+  "scorecard_version": "1.0.0",
+  "claim_matching": "exact claim_key, allowed source_id, and structurally valid citation",
+  "citation_offsets": "zero-based Unicode string character offsets; end exclusive",
+  "unsupported_claim_rule": "not supported by a manually reviewed gold claim key and allowed cited source",
+  "aggregate_score": "not_computed"
+}

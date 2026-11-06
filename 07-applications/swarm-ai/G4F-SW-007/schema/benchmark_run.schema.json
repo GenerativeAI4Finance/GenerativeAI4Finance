@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-sw-007-benchmark-run.schema.json",
+  "title": "G4F-SW-007 Synthetic EDD Benchmark Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["benchmark_id", "benchmark_version", "synthetic", "run_metadata", "cases"],
+  "properties": {
+    "benchmark_id": {"type": "string", "minLength": 1},
+    "benchmark_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "synthetic": {"const": true},
+    "run_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "dataset_version", "dataset_sha256", "system_name", "system_version", "model_provider", "model_version", "prompt_version", "prompt_status", "prompt_sha256", "prompt_missing_reason", "config_sha256", "code_revision", "evaluator_version", "seed", "seed_reason", "generated_at_utc", "run_settings", "runtime_status", "runtime_ms", "runtime_missing_reason", "cost_status", "cost_usd", "cost_reason"],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "dataset_version": {"type": "string", "minLength": 1},
+        "dataset_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "system_name": {"type": "string", "minLength": 1},
+        "system_version": {"type": "string", "minLength": 1},
+        "model_provider": {"type": "string", "minLength": 1},
+        "model_version": {"type": "string", "minLength": 1},
+        "prompt_version": {"type": "string", "minLength": 1},
+        "prompt_status": {"enum": ["recorded", "not_applicable", "not_reported"]},
+        "prompt_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "prompt_missing_reason": {"type": ["string", "null"]},
+        "config_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "code_revision": {"type": "string", "minLength": 1},
+        "evaluator_version": {"type": "string", "minLength": 1},
+        "seed": {"type": ["integer", "null"]},
+        "seed_reason": {"type": ["string", "null"]},
+        "generated_at_utc": {"type": "string", "format": "date-time"},
+        "run_settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["temperature", "temperature_reason", "max_output_tokens", "max_output_tokens_reason", "tool_allowlist", "other_settings"],
+          "properties": {
+            "temperature": {"type": ["number", "null"], "minimum": 0},
+            "temperature_reason": {"type": ["string", "null"]},
+            "max_output_tokens": {"type": ["integer", "null"], "minimum": 1},
+            "max_output_tokens_reason": {"type": ["string", "null"]},
+            "tool_allowlist": {"type": "array", "items": {"type": "string"}},
+            "other_settings": {"type": "object"}
+          },
+          "allOf": [
+            {"if": {"properties": {"temperature": {"type": "null"}}, "required": ["temperature"]}, "then": {"properties": {"temperature_reason": {"type": "string", "minLength": 1}}}},
+            {"if": {"properties": {"max_output_tokens": {"type": "null"}}, "required": ["max_output_tokens"]}, "then": {"properties": {"max_output_tokens_reason": {"type": "string", "minLength": 1}}}}
+          ]
+        },
+        "runtime_status": {"enum": ["measured", "not_reported"]},
+        "runtime_ms": {"type": ["number", "null"], "minimum": 0},
+        "runtime_missing_reason": {"type": ["string", "null"]},
+        "cost_status": {"enum": ["measured", "not_applicable", "not_reported"]},
+        "cost_usd": {"type": ["number", "null"], "minimum": 0},
+        "cost_reason": {"type": ["string", "null"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"seed": {"type": "null"}}, "required": ["seed"]}, "then": {"properties": {"seed_reason": {"type": "string", "minLength": 1}}}},
+        {"if": {"properties": {"seed": {"type": "integer"}}, "required": ["seed"]}, "then": {"properties": {"seed_reason": {"type": "null"}}}},
+        {"if": {"properties": {"prompt_status": {"const": "recorded"}}, "required": ["prompt_status"]}, "then": {"properties": {"prompt_sha256": {"type": "string"}, "prompt_missing_reason": {"type": "null"}}}},
+        {"if": {"properties": {"prompt_status": {"enum": ["not_applicable", "not_reported"]}}, "required": ["prompt_status"]}, "then": {"properties": {"prompt_sha256": {"type": "null"}, "prompt_missing_reason": {"type": "string", "minLength": 1}}}},
+        {"if": {"properties": {"runtime_status": {"const": "measured"}}, "required": ["runtime_status"]}, "then": {"properties": {"runtime_ms": {"type": "number"}, "runtime_missing_reason": {"type": "null"}}}},
+        {"if": {"properties": {"runtime_status": {"const": "not_reported"}}, "required": ["runtime_status"]}, "then": {"properties": {"runtime_ms": {"type": "null"}, "runtime_missing_reason": {"type": "string", "minLength": 1}}}},
+        {"if": {"properties": {"cost_status": {"const": "measured"}}, "required": ["cost_status"]}, "then": {"properties": {"cost_usd": {"type": "number"}, "cost_reason": {"type": "null"}}}},
+        {"if": {"properties": {"cost_status": {"enum": ["not_applicable", "not_reported"]}}, "required": ["cost_status"]}, "then": {"properties": {"cost_usd": {"type": "null"}, "cost_reason": {"type": "string", "minLength": 1}}}}
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "sources", "required_evidence", "gold_contradictions", "expected_escalation", "prohibited_behavior_ids", "system_output"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "sources": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["input_id", "source_id", "text", "synthetic"],
+              "properties": {"input_id": {"type": "string", "minLength": 1}, "source_id": {"type": "string", "minLength": 1}, "text": {"type": "string"}, "synthetic": {"const": true}}
+            }
+          },
+          "required_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["evidence_id", "claim_key", "allowed_source_ids"],
+              "properties": {"evidence_id": {"type": "string", "minLength": 1}, "claim_key": {"type": "string", "minLength": 1}, "allowed_source_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}
+            }
+          },
+          "gold_contradictions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "expected_escalation": {"type": "boolean"},
+          "prohibited_behavior_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "system_output": {
+            "type": "object", "additionalProperties": false,
+            "required": ["findings", "detected_contradictions", "escalation_status", "policy_assessment_status", "policy_violations"],
+            "properties": {
+              "findings": {
+                "type": "array", "items": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["finding_id", "claim_key", "statement", "citations"],
+                  "properties": {
+                    "finding_id": {"type": "string", "minLength": 1},
+                    "claim_key": {"type": "string", "minLength": 1},
+                    "statement": {"type": "string", "minLength": 1},
+                    "citations": {
+                      "type": "array", "items": {
+                        "type": "object", "additionalProperties": false,
+                        "required": ["input_id", "source_id", "quote", "start_char", "end_char"],
+                        "properties": {"input_id": {"type": "string", "minLength": 1}, "source_id": {"type": "string", "minLength": 1}, "quote": {"type": "string", "minLength": 1}, "start_char": {"type": "integer", "minimum": 0}, "end_char": {"type": "integer", "minimum": 1}}
+                      }
+                    }
+                  }
+                }
+              },
+              "detected_contradictions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+              "escalation_status": {"enum": ["escalated", "not_escalated", "not_reported"]},
+              "policy_assessment_status": {"enum": ["complete", "not_reported"]},
+              "policy_violations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        }
+      }
+    }
+  }
+}

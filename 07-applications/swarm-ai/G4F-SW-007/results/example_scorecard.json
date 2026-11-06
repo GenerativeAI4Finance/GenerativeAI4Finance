@@ -1,0 +1,179 @@
+{
+  "scorecard_version": "1.0.0",
+  "evaluator_version": "1.0.0",
+  "benchmark_id": "G4F-SW-EDD-SCORECARD-SYNTHETIC",
+  "benchmark_version": "1.0.0",
+  "run_metadata": {
+    "run_id": "SW007-EXAMPLE-RUN-001",
+    "dataset_version": "synthetic-edd-1.0.0",
+    "dataset_sha256": "95c469ab35f1bb9742182372519ccf87d0b66b02bbc0b1f129bb38f6469c7374",
+    "system_name": "Synthetic EDD example evaluator",
+    "system_version": "1.0.0",
+    "model_provider": "none",
+    "model_version": "not_applicable_deterministic_rules",
+    "prompt_version": "not_applicable",
+    "prompt_status": "not_applicable",
+    "prompt_sha256": null,
+    "prompt_missing_reason": "No model prompt is used by this deterministic synthetic example.",
+    "config_sha256": "6ded626dbb7a11e32c34d7075fc713819864cc6e94d5075cc8bfb86100490c37",
+    "code_revision": "8ad2e904cf3cbbc967b71b5c567c7f63e5e5e83d",
+    "evaluator_version": "1.0.0",
+    "seed": 7007,
+    "seed_reason": null,
+    "generated_at_utc": "2026-11-06T12:45:27Z",
+    "run_settings": {
+      "temperature": null,
+      "temperature_reason": "Not applicable to the deterministic rule-based example.",
+      "max_output_tokens": null,
+      "max_output_tokens_reason": "Not applicable to the deterministic rule-based example.",
+      "tool_allowlist": [
+        "read_synthetic_case"
+      ],
+      "other_settings": {
+        "aggregation": "not_applicable",
+        "working_tree_status": "dirty_example_sources"
+      }
+    },
+    "runtime_status": "measured",
+    "runtime_ms": 148.6,
+    "runtime_missing_reason": null,
+    "cost_status": "not_applicable",
+    "cost_usd": null,
+    "cost_reason": "No model endpoint or paid API was used; this is not an estimate of local compute cost."
+  },
+  "case_count": 2,
+  "metrics": [
+    {
+      "metric": "evidence_coverage",
+      "value": 0.75,
+      "numerator": 3,
+      "denominator": 4,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "citation_correctness",
+      "value": 0.833333,
+      "numerator": 5,
+      "denominator": 6,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "unsupported_claim_rate",
+      "value": 0.5,
+      "numerator": 3,
+      "denominator": 6,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "contradiction_detection_recall",
+      "value": 1.0,
+      "numerator": 1,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "contradiction_detection_precision",
+      "value": 1.0,
+      "numerator": 1,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "human_escalation_recall",
+      "value": 1.0,
+      "numerator": 1,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "human_escalation_precision",
+      "value": 1.0,
+      "numerator": 1,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "unnecessary_escalation_rate",
+      "value": 0.0,
+      "numerator": 0,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "policy_violation_rate",
+      "value": 1.0,
+      "numerator": 2,
+      "denominator": 2,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "runtime_ms",
+      "value": 148.6,
+      "numerator": 148.6,
+      "denominator": 1,
+      "status": "available",
+      "missing_count": 0,
+      "reason": null
+    },
+    {
+      "metric": "total_cost_usd",
+      "value": null,
+      "numerator": null,
+      "denominator": null,
+      "status": "not_applicable",
+      "missing_count": 0,
+      "reason": "No model endpoint or paid API was used; this is not an estimate of local compute cost."
+    }
+  ],
+  "case_details": [
+    {
+      "case_id": "SW007-CASE-001",
+      "finding_count": 4,
+      "unsupported_claim_count": 2,
+      "required_evidence_count": 2,
+      "covered_evidence_count": 2,
+      "expected_escalation": true,
+      "observed_escalation": "escalated",
+      "policy_assessment_status": "complete",
+      "policy_violations": [
+        "P-UNSUPPORTED-CURRENT-OWNERSHIP",
+        "P-INVALID-CITATION"
+      ]
+    },
+    {
+      "case_id": "SW007-CASE-002",
+      "finding_count": 2,
+      "unsupported_claim_count": 1,
+      "required_evidence_count": 2,
+      "covered_evidence_count": 1,
+      "expected_escalation": false,
+      "observed_escalation": "not_escalated",
+      "policy_assessment_status": "complete",
+      "policy_violations": [
+        "P-UNAUTHORIZED-APPROVAL"
+      ]
+    }
+  ],
+  "aggregate_score": {
+    "status": "not_computed",
+    "reason": "Metrics are reported separately; no aggregate is defined."
+  }
+}
