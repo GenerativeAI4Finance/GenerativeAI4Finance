@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-wm-001-financial-event.schema.json",
+  "title": "G4F-WM-001 Financial Event and State Record",
+  "description": "Prediction-time observations are structurally separated from future outcomes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "record_id", "entity_id", "entity_type",
+    "prediction_time_utc", "event_timestamp_utc", "event_type",
+    "action_taken", "observation_source", "target_horizon_days",
+    "features_at_t", "outcomes_after_t", "quality_notes", "synthetic"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "record_id": {"type": "string", "minLength": 1},
+    "entity_id": {"type": "string", "minLength": 1},
+    "entity_type": {"enum": ["company", "individual", "account"]},
+    "prediction_time_utc": {"type": "string", "format": "date-time"},
+    "event_timestamp_utc": {"type": ["string", "null"], "format": "date-time"},
+    "event_type": {"enum": ["none", "scheduled_review", "payment", "delinquency", "balance_update", "other"]},
+    "action_taken": {"enum": ["none", "payment_received", "payment_missed", "limit_changed", "review_completed", "other"]},
+    "observation_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_type", "reference"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "source_type": {"enum": ["synthetic", "ledger", "application", "servicer", "other"]},
+        "reference": {"type": "string", "minLength": 1}
+      }
+    },
+    "target_horizon_days": {"type": "integer", "minimum": 1},
+    "features_at_t": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["as_of_utc", "values"],
+      "properties": {
+        "as_of_utc": {"type": "string", "format": "date-time"},
+        "values": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["balance_usd", "monthly_revenue_usd", "debt_to_income_ratio", "days_past_due", "account_status"],
+          "properties": {
+            "balance_usd": {"$ref": "#/$defs/numberFeature"},
+            "monthly_revenue_usd": {"$ref": "#/$defs/numberFeature"},
+            "debt_to_income_ratio": {"$ref": "#/$defs/ratioFeature"},
+            "days_past_due": {"$ref": "#/$defs/countFeature"},
+            "account_status": {"$ref": "#/$defs/statusFeature"}
+          }
+        }
+      }
+    },
+    "outcomes_after_t": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at_utc", "values"],
+      "properties": {
+        "status": {"enum": ["observed", "pending", "unavailable"]},
+        "observed_at_utc": {"type": ["string", "null"], "format": "date-time"},
+        "values": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["default_within_horizon", "realized_loss_usd"],
+          "properties": {
+            "default_within_horizon": {"$ref": "#/$defs/booleanOutcome"},
+            "realized_loss_usd": {"$ref": "#/$defs/nonnegativeNumberOutcome"}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "observed"}}, "required": ["status"]},
+          "then": {
+            "properties": {
+              "observed_at_utc": {"type": "string"},
+              "values": {
+                "properties": {
+                  "default_within_horizon": {"properties": {"missing": {"const": false}}},
+                  "realized_loss_usd": {"properties": {"missing": {"const": false}}}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["pending", "unavailable"]}}, "required": ["status"]},
+          "then": {
+            "properties": {
+              "observed_at_utc": {"type": "null"},
+              "values": {
+                "properties": {
+                  "default_within_horizon": {"properties": {"value": {"type": "null"}, "missing": {"const": true}}},
+                  "realized_loss_usd": {"properties": {"value": {"type": "null"}, "missing": {"const": true}}}
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "quality_notes": {"type": "array", "items": {"type": "string"}},
+    "synthetic": {"type": "boolean"}
+  },
+  "$defs": {
+    "numberFeature": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["number", "null"]}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "number"}}}}]
+    },
+    "ratioFeature": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["number", "null"], "minimum": 0, "maximum": 1}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "number"}}}}]
+    },
+    "countFeature": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["integer", "null"], "minimum": 0}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "integer"}}}}]
+    },
+    "statusFeature": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["string", "null"], "enum": ["current", "delinquent", "closed", null]}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "string"}}}}]
+    },
+    "booleanOutcome": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["boolean", "null"]}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "boolean"}}}}]
+    },
+    "nonnegativeNumberOutcome": {
+      "type": "object", "additionalProperties": false, "required": ["value", "missing"],
+      "properties": {"value": {"type": ["number", "null"], "minimum": 0}, "missing": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"missing": {"const": true}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "null"}}}}, {"if": {"properties": {"missing": {"const": false}}, "required": ["missing"]}, "then": {"properties": {"value": {"type": "number"}}}}]
+    }
+  }
+}
