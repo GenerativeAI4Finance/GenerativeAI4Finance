@@ -1,0 +1,98 @@
+[
+  {
+    "schema_version": "1.0.0",
+    "record_id": "WM001-REC-001",
+    "entity_id": "SYN-COMPANY-001",
+    "entity_type": "company",
+    "prediction_time_utc": "2026-01-31T23:59:59Z",
+    "event_timestamp_utc": "2026-01-31T09:00:00Z",
+    "event_type": "scheduled_review",
+    "action_taken": "review_completed",
+    "observation_source": {"source_id": "SYN-SRC-001", "source_type": "synthetic", "reference": "fictional ledger snapshot"},
+    "target_horizon_days": 30,
+    "features_at_t": {
+      "as_of_utc": "2026-01-31T23:59:59Z",
+      "values": {
+        "balance_usd": {"value": 125000.0, "missing": false},
+        "monthly_revenue_usd": {"value": 85000.0, "missing": false},
+        "debt_to_income_ratio": {"value": 0.42, "missing": false},
+        "days_past_due": {"value": 0, "missing": false},
+        "account_status": {"value": "current", "missing": false}
+      }
+    },
+    "outcomes_after_t": {
+      "status": "observed",
+      "observed_at_utc": "2026-03-02T00:00:00Z",
+      "values": {
+        "default_within_horizon": {"value": false, "missing": false},
+        "realized_loss_usd": {"value": 0.0, "missing": false}
+      }
+    },
+    "quality_notes": [],
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "record_id": "WM001-REC-002",
+    "entity_id": "SYN-INDIVIDUAL-001",
+    "entity_type": "individual",
+    "prediction_time_utc": "2026-02-15T12:00:00Z",
+    "event_timestamp_utc": "2026-02-15T08:30:00Z",
+    "event_type": "payment",
+    "action_taken": "payment_received",
+    "observation_source": {"source_id": "SYN-SRC-002", "source_type": "synthetic", "reference": "fictional account observation"},
+    "target_horizon_days": 90,
+    "features_at_t": {
+      "as_of_utc": "2026-02-15T12:00:00Z",
+      "values": {
+        "balance_usd": {"value": 4200.0, "missing": false},
+        "monthly_revenue_usd": {"value": null, "missing": true},
+        "debt_to_income_ratio": {"value": 0.31, "missing": false},
+        "days_past_due": {"value": 2, "missing": false},
+        "account_status": {"value": "delinquent", "missing": false}
+      }
+    },
+    "outcomes_after_t": {
+      "status": "observed",
+      "observed_at_utc": "2026-05-16T12:00:00Z",
+      "values": {
+        "default_within_horizon": {"value": false, "missing": false},
+        "realized_loss_usd": {"value": 0.0, "missing": false}
+      }
+    },
+    "quality_notes": ["monthly_revenue_usd was not present in the synthetic input."],
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "record_id": "WM001-REC-003",
+    "entity_id": "SYN-ACCOUNT-001",
+    "entity_type": "account",
+    "prediction_time_utc": "2026-03-01T00:00:00Z",
+    "event_timestamp_utc": null,
+    "event_type": "none",
+    "action_taken": "none",
+    "observation_source": {"source_id": "SYN-SRC-003", "source_type": "synthetic", "reference": "fictional account state snapshot"},
+    "target_horizon_days": 30,
+    "features_at_t": {
+      "as_of_utc": "2026-03-01T00:00:00Z",
+      "values": {
+        "balance_usd": {"value": 900.0, "missing": false},
+        "monthly_revenue_usd": {"value": null, "missing": true},
+        "debt_to_income_ratio": {"value": null, "missing": true},
+        "days_past_due": {"value": 0, "missing": false},
+        "account_status": {"value": "current", "missing": false}
+      }
+    },
+    "outcomes_after_t": {
+      "status": "pending",
+      "observed_at_utc": null,
+      "values": {
+        "default_within_horizon": {"value": null, "missing": true},
+        "realized_loss_usd": {"value": null, "missing": true}
+      }
+    },
+    "quality_notes": ["Outcome horizon has not completed; no negative outcome is inferred."],
+    "synthetic": true
+  }
+]
