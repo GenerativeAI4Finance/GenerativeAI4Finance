@@ -1,0 +1,32 @@
+{
+  "dataset_name": "G4F-WM-002-synthetic-borrower-loan-states",
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "synthetic": true,
+  "seed": 20261110,
+  "runtime_versions": {
+    "python": "3.14.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3"
+  },
+  "config_sha256": "a77e1651abe48b673d52ff8870eaea6306ab5b6e3c23e15676aced67fe762233",
+  "output_sha256": {
+    "borrowers.csv": "6f9dc61d0cf29cc4d6718c02056f4f8c10f5499077abefa128ef0466a4249bd4",
+    "loans.csv": "07241b011dd15eec23e0c1330393d6b9806b11c63fedc83acdfbaa8fba9d92e5",
+    "monthly_states.csv": "465f1b5189d2ea3a79fb2c87368f06e65715efb694cf49a30a5958634845202b",
+    "repayment_history.csv": "7fc1420c7540f53e7ed6f3c184777c9a2f43b14317ea2927bc7a8e126a57e180"
+  },
+  "row_counts": {
+    "borrowers": 16,
+    "loans": 16,
+    "monthly_states": 96,
+    "repayment_history": 96
+  },
+  "scenario_counts": {
+    "cure": 3,
+    "default": 3,
+    "delinquency": 3,
+    "liquidity_stress": 3,
+    "normal_repayment": 4
+  }
+}

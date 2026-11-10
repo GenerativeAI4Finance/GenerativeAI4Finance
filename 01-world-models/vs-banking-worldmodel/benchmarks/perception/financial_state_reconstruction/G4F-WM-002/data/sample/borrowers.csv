@@ -1,0 +1,17 @@
+borrower_id,borrower_type,annual_income_usd,home_region_code,synthetic
+SYN-BOR-0001,individual,126155.35,SYN-R02,True
+SYN-BOR-0002,small_business,137932.35,SYN-R03,True
+SYN-BOR-0003,individual,134338.19,SYN-R04,True
+SYN-BOR-0004,small_business,74990.10,SYN-R05,True
+SYN-BOR-0005,individual,165546.71,SYN-R01,True
+SYN-BOR-0006,small_business,55109.29,SYN-R02,True
+SYN-BOR-0007,individual,154025.13,SYN-R03,True
+SYN-BOR-0008,small_business,51932.51,SYN-R04,True
+SYN-BOR-0009,individual,89411.49,SYN-R05,True
+SYN-BOR-0010,small_business,132069.11,SYN-R01,True
+SYN-BOR-0011,individual,39887.02,SYN-R02,True
+SYN-BOR-0012,small_business,98599.95,SYN-R03,True
+SYN-BOR-0013,individual,58510.85,SYN-R04,True
+SYN-BOR-0014,small_business,134891.21,SYN-R05,True
+SYN-BOR-0015,individual,137272.34,SYN-R01,True
+SYN-BOR-0016,small_business,118064.01,SYN-R02,True

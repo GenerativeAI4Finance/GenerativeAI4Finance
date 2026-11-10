@@ -1,0 +1,28 @@
+{
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "seed": 20261110,
+  "start_date": "2025-01-15",
+  "observation_months": 6,
+  "term_months": 24,
+  "default_after_days_past_due": 90,
+  "borrower_count_by_path": {
+    "normal_repayment": 4,
+    "liquidity_stress": 3,
+    "delinquency": 3,
+    "cure": 3,
+    "default": 3
+  },
+  "assumptions": {
+    "annual_income_usd_range": [36000, 180000],
+    "annual_interest_rate_range": [0.045, 0.18],
+    "loan_principal_usd_range": [5000, 60000],
+    "monthly_expense_share_range": [0.45, 0.78],
+    "liquidity_stress_income_multiplier": 0.35,
+    "stress_month_indices": [2, 3],
+    "delinquency_missed_month_indices": [3, 4, 5],
+    "cure_missed_month_indices": [2],
+    "cure_month_index": 3,
+    "default_missed_month_indices": [1, 2, 3, 4, 5]
+  }
+}
