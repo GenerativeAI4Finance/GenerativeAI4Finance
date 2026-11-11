@@ -1,0 +1,5 @@
+event_id,scenario,date,sector,event_name,policy_rate_change_pct_points,commodity_price_change_pct,sector_demand_change_pct,relationship_type,synthetic
+SYN-EVT-STRESS-MANUFACTURING-008,stress,2025-09-30,manufacturing,input_cost_and_demand_shock,2.500000,30.000000,-22.000000,simulation_assumption,True
+SYN-EVT-STRESS-AGRICULTURE-008,stress,2025-09-30,agriculture,input_cost_and_demand_shock,2.500000,30.000000,-10.000000,simulation_assumption,True
+SYN-EVT-STRESS-RETAIL-008,stress,2025-09-30,retail,consumer_demand_shock,2.500000,30.000000,-25.000000,simulation_assumption,True
+SYN-EVT-STRESS-ENERGY-008,stress,2025-09-30,energy,commodity_price_shock,2.500000,30.000000,-8.000000,simulation_assumption,True

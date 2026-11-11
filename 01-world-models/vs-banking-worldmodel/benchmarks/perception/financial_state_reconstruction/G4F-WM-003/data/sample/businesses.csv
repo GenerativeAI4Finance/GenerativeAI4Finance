@@ -1,0 +1,9 @@
+business_id,sector,synthetic
+SYN-BIZ-MAN-001,manufacturing,True
+SYN-BIZ-MAN-002,manufacturing,True
+SYN-BIZ-AGR-001,agriculture,True
+SYN-BIZ-AGR-002,agriculture,True
+SYN-BIZ-RET-001,retail,True
+SYN-BIZ-RET-002,retail,True
+SYN-BIZ-ENE-001,energy,True
+SYN-BIZ-ENE-002,energy,True

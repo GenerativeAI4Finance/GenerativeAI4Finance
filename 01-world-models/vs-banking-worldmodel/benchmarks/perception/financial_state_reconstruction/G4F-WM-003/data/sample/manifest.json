@@ -1,0 +1,29 @@
+{
+  "dataset_name": "G4F-WM-003-synthetic-macro-sector-sequences",
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "synthetic": true,
+  "seed": 20261111,
+  "runtime_versions": {
+    "python": "3.14.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3"
+  },
+  "config_sha256": "ed59aba44debb73363c4da083a772b265601f30c163c3208a2736e368f95c83a",
+  "output_sha256": {
+    "businesses.csv": "459d15985bfda69e80fe7f36c221aed5f0307071cd822f395ae6eaee3dd0802b",
+    "macro_sequences.csv": "446c3b2973ed589cb6685d8dc55e7203d1b160185e99edcd6b72d2ed2418df2c",
+    "sector_events.csv": "2fef15fa64b51db664907a545cd39afc33185e2e598087aedf6dd329d6b86603",
+    "business_outcomes.csv": "a991273167e23fa7323c4eb8b118faaf91e42dc08f5514a0b010eceb882691fe"
+  },
+  "row_counts": {
+    "businesses": 8,
+    "macro_sequences": 192,
+    "sector_events": 4,
+    "business_outcomes": 384
+  },
+  "scenario_counts": {
+    "baseline": 96,
+    "stress": 96
+  }
+}
