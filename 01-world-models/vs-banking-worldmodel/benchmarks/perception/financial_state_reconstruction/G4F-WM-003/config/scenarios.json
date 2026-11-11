@@ -1,0 +1,73 @@
+{
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "seed": 20261111,
+  "start_month": "2025-01-31",
+  "periods": 24,
+  "base_policy_rate_pct": 4.0,
+  "synthetic_businesses_per_sector": 2,
+  "scenarios": {
+    "baseline": {
+      "description": "No discrete macro or sector shock; small seeded variation around baseline paths.",
+      "shock_start_month_index": null,
+      "policy_rate_increase_pct_points": 0.0,
+      "commodity_price_increase_pct": 0.0,
+      "demand_change_pct_by_sector": {
+        "manufacturing": 0.0,
+        "agriculture": 0.0,
+        "retail": 0.0,
+        "energy": 0.0
+      }
+    },
+    "stress": {
+      "description": "Illustrative concurrent rate, input-price, and sector-demand stress beginning at the configured month.",
+      "shock_start_month_index": 8,
+      "policy_rate_increase_pct_points": 2.5,
+      "commodity_price_increase_pct": 0.30,
+      "aggregate_demand_change_pct": -0.12,
+      "demand_change_pct_by_sector": {
+        "manufacturing": -0.22,
+        "agriculture": -0.10,
+        "retail": -0.25,
+        "energy": -0.08
+      }
+    }
+  },
+  "sectors": {
+    "manufacturing": {
+      "commodity_revenue_sensitivity": 0.15,
+      "commodity_cost_sensitivity": 0.60,
+      "rate_sensitivity": 0.30,
+      "event_name": "input_cost_and_demand_shock"
+    },
+    "agriculture": {
+      "commodity_revenue_sensitivity": 0.25,
+      "commodity_cost_sensitivity": 0.45,
+      "rate_sensitivity": 0.15,
+      "event_name": "input_cost_and_demand_shock"
+    },
+    "retail": {
+      "commodity_revenue_sensitivity": 0.00,
+      "commodity_cost_sensitivity": 0.25,
+      "rate_sensitivity": 0.40,
+      "event_name": "consumer_demand_shock"
+    },
+    "energy": {
+      "commodity_revenue_sensitivity": 0.65,
+      "commodity_cost_sensitivity": 0.15,
+      "rate_sensitivity": 0.20,
+      "event_name": "commodity_price_shock"
+    }
+  },
+  "assumptions": {
+    "monthly_rate_noise_std_pct_points": 0.04,
+    "monthly_commodity_noise_std_pct": 0.012,
+    "monthly_demand_noise_std_pct": 0.008,
+    "initial_commodity_price_index": 100.0,
+    "initial_sector_demand_index": 100.0,
+    "business_revenue_index_range": [80.0, 120.0],
+    "operating_cost_share_range": [0.55, 0.72],
+    "baseline_debt_service_share_range": [0.08, 0.18],
+    "cashflow_stress_threshold_index": 16.0
+  }
+}
