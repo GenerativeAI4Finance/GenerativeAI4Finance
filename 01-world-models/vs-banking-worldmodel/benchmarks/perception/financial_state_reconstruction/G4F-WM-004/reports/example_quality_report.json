@@ -1,0 +1,194 @@
+{
+  "report_version": "1.0.0",
+  "dataset_id": "WM004-SYNTHETIC-INVALID-FAILURES",
+  "synthetic": true,
+  "generated_at_utc": "2026-11-12T13:20:05.013700Z",
+  "rules_version": "1.0.0",
+  "record_count": 8,
+  "split_assignment_count": 8,
+  "summary": {
+    "status": "fail",
+    "check_count": 9,
+    "failed_check_count": 9,
+    "issue_count": 13
+  },
+  "checks": [
+    {
+      "check_id": "duplicate_keys",
+      "title": "Primary key uniqueness",
+      "status": "fail",
+      "issue_count": 2,
+      "issues": [
+        {
+          "code": "duplicate_primary_key",
+          "message": "Primary key values occur more than once.",
+          "record_id": "I-002",
+          "key": {
+            "entity_id": "SYN-BOR-A",
+            "timestamp": "2025-02-28T00:00:00Z"
+          }
+        },
+        {
+          "code": "duplicate_primary_key",
+          "message": "Primary key values occur more than once.",
+          "record_id": "I-003",
+          "key": {
+            "entity_id": "SYN-BOR-A",
+            "timestamp": "2025-02-28T00:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "check_id": "missing_timestamps",
+      "title": "Required timestamps",
+      "status": "fail",
+      "issue_count": 1,
+      "issues": [
+        {
+          "code": "record_timestamp_missing_or_invalid",
+          "message": "Record timestamp is missing or invalid.",
+          "record_id": "I-008",
+          "timestamp": null
+        }
+      ]
+    },
+    {
+      "check_id": "impossible_transitions",
+      "title": "State transition validity",
+      "status": "fail",
+      "issue_count": 2,
+      "issues": [
+        {
+          "code": "transition_not_allowed",
+          "message": "State transition is not in configured transition graph.",
+          "entity_id": "SYN-BOR-A",
+          "from_state": "current",
+          "to_state": "default",
+          "from_record_id": "I-001",
+          "to_record_id": "I-002"
+        },
+        {
+          "code": "transition_not_allowed",
+          "message": "State transition is not in configured transition graph.",
+          "entity_id": "SYN-BOR-A",
+          "from_state": "default",
+          "to_state": "current",
+          "from_record_id": "I-003",
+          "to_record_id": "I-006"
+        }
+      ]
+    },
+    {
+      "check_id": "unit_consistency",
+      "title": "Feature unit consistency",
+      "status": "fail",
+      "issue_count": 1,
+      "issues": [
+        {
+          "code": "unexpected_unit",
+          "message": "Feature unit does not match configured unit.",
+          "record_id": "I-007",
+          "feature": "balance_usd",
+          "expected": "USD",
+          "actual": "EUR"
+        }
+      ]
+    },
+    {
+      "check_id": "invalid_ranges",
+      "title": "Configured value ranges",
+      "status": "fail",
+      "issue_count": 2,
+      "issues": [
+        {
+          "code": "value_out_of_range",
+          "message": "Feature value is outside configured limits.",
+          "record_id": "I-007",
+          "feature": "balance_usd",
+          "value": -25,
+          "minimum": 0,
+          "maximum": 10000000
+        },
+        {
+          "code": "value_out_of_range",
+          "message": "Feature value is outside configured limits.",
+          "record_id": "I-007",
+          "feature": "days_past_due",
+          "value": 4000,
+          "minimum": 0,
+          "maximum": 3650
+        }
+      ]
+    },
+    {
+      "check_id": "future_data_leakage",
+      "title": "Feature and outcome time boundary",
+      "status": "fail",
+      "issue_count": 2,
+      "issues": [
+        {
+          "code": "feature_available_after_record_time",
+          "message": "Feature was not available at the record timestamp.",
+          "record_id": "I-007",
+          "feature": "balance_usd",
+          "available_at": "2025-06-01T00:00:00+00:00",
+          "record_timestamp": "2025-05-15T00:00:00+00:00"
+        },
+        {
+          "code": "outcome_not_future",
+          "message": "Outcome timestamp must be after the observation timestamp.",
+          "record_id": "I-007",
+          "outcome_timestamp": "2025-05-15T00:00:00+00:00",
+          "record_timestamp": "2025-05-15T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "check_id": "split_assignment_integrity",
+      "title": "Split assignment integrity",
+      "status": "fail",
+      "issue_count": 1,
+      "issues": [
+        {
+          "code": "split_timestamp_mismatch",
+          "message": "Split timestamp must match the record timestamp.",
+          "record_id": "I-008"
+        }
+      ]
+    },
+    {
+      "check_id": "split_temporal_order",
+      "title": "Chronological split order",
+      "status": "fail",
+      "issue_count": 1,
+      "issues": [
+        {
+          "code": "time_order_violation",
+          "message": "Earlier split contains a timestamp at or after the next split begins.",
+          "earlier_split": "validation",
+          "earlier_max": "2025-05-31T00:00:00+00:00",
+          "later_split": "test",
+          "later_min": "2025-05-15T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "check_id": "split_entity_disjointness",
+      "title": "Entity separation across splits",
+      "status": "fail",
+      "issue_count": 1,
+      "issues": [
+        {
+          "code": "entity_crosses_splits",
+          "message": "Entity appears in more than one data split.",
+          "entity_id": "SYN-BOR-A",
+          "splits": [
+            "train",
+            "validation"
+          ]
+        }
+      ]
+    }
+  ]
+}

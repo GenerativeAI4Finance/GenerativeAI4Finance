@@ -1,0 +1,24 @@
+{
+  "dataset_id": "WM004-SYNTHETIC-INVALID-FAILURES",
+  "synthetic": true,
+  "records": [
+    {"record_id":"I-001","entity_id":"SYN-BOR-A","timestamp":"2025-01-31T00:00:00Z","state":"current","features":{"balance_usd":{"value":12000,"unit":"USD","available_at":"2025-01-31T00:00:00Z"}},"outcome":{"label":"no_default","observed_at":"2025-03-02T00:00:00Z"}},
+    {"record_id":"I-002","entity_id":"SYN-BOR-A","timestamp":"2025-02-28T00:00:00Z","state":"default","features":{"balance_usd":{"value":11800,"unit":"USD","available_at":"2025-02-28T00:00:00Z"}}},
+    {"record_id":"I-003","entity_id":"SYN-BOR-A","timestamp":"2025-02-28T00:00:00Z","state":"default","features":{"balance_usd":{"value":11800,"unit":"USD","available_at":"2025-02-28T00:00:00Z"}}},
+    {"record_id":"I-004","entity_id":"SYN-BOR-B","timestamp":"2025-03-31T00:00:00Z","state":"current","features":{"balance_usd":{"value":8000,"unit":"USD","available_at":"2025-03-31T00:00:00Z"}}},
+    {"record_id":"I-005","entity_id":"SYN-BOR-B","timestamp":"2025-04-30T00:00:00Z","state":"current","features":{"balance_usd":{"value":7900,"unit":"USD","available_at":"2025-04-30T00:00:00Z"}}},
+    {"record_id":"I-006","entity_id":"SYN-BOR-A","timestamp":"2025-05-31T00:00:00Z","state":"current","features":{"balance_usd":{"value":11700,"unit":"USD","available_at":"2025-05-31T00:00:00Z"}}},
+    {"record_id":"I-007","entity_id":"SYN-BOR-C","timestamp":"2025-05-15T00:00:00Z","state":"current","features":{"balance_usd":{"value":-25,"unit":"EUR","available_at":"2025-06-01T00:00:00Z"},"days_past_due":{"value":4000,"unit":"days","available_at":"2025-05-15T00:00:00Z"}},"outcome":{"label":"default","observed_at":"2025-05-15T00:00:00Z"}},
+    {"record_id":"I-008","entity_id":"SYN-BOR-C","timestamp":null,"state":"delinquent","features":{"balance_usd":{"value":500,"unit":"USD","available_at":"2025-06-30T00:00:00Z"}}}
+  ],
+  "splits": [
+    {"record_id":"I-001","entity_id":"SYN-BOR-A","timestamp":"2025-01-31T00:00:00Z","split":"train"},
+    {"record_id":"I-002","entity_id":"SYN-BOR-A","timestamp":"2025-02-28T00:00:00Z","split":"train"},
+    {"record_id":"I-003","entity_id":"SYN-BOR-A","timestamp":"2025-02-28T00:00:00Z","split":"train"},
+    {"record_id":"I-004","entity_id":"SYN-BOR-B","timestamp":"2025-03-31T00:00:00Z","split":"validation"},
+    {"record_id":"I-005","entity_id":"SYN-BOR-B","timestamp":"2025-04-30T00:00:00Z","split":"validation"},
+    {"record_id":"I-006","entity_id":"SYN-BOR-A","timestamp":"2025-05-31T00:00:00Z","split":"validation"},
+    {"record_id":"I-007","entity_id":"SYN-BOR-C","timestamp":"2025-05-15T00:00:00Z","split":"test"},
+    {"record_id":"I-008","entity_id":"SYN-BOR-C","timestamp":null,"split":"test"}
+  ]
+}
