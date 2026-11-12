@@ -1,0 +1,26 @@
+{
+  "rules_version": "1.0.0",
+  "primary_key": ["entity_id", "timestamp"],
+  "entity_disjoint_splits": true,
+  "required_splits": ["train", "validation", "test"],
+  "split_order": ["train", "validation", "test"],
+  "expected_units": {
+    "balance_usd": "USD",
+    "days_past_due": "days",
+    "policy_rate_pct": "percent",
+    "demand_index": "index"
+  },
+  "value_ranges": {
+    "balance_usd": {"min": 0, "max": 10000000},
+    "days_past_due": {"min": 0, "max": 3650},
+    "policy_rate_pct": {"min": 0, "max": 100},
+    "demand_index": {"min": 0, "max": 1000}
+  },
+  "allowed_state_transitions": {
+    "current": ["current", "liquidity_stress", "delinquent"],
+    "liquidity_stress": ["liquidity_stress", "current", "delinquent"],
+    "delinquent": ["delinquent", "cured", "default"],
+    "cured": ["cured", "current", "delinquent"],
+    "default": ["default"]
+  }
+}
