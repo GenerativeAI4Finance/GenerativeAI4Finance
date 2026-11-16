@@ -1,0 +1,32 @@
+{
+  "dataset_name": "G4F-WM-006-synthetic-event-state-transitions",
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "synthetic": true,
+  "seed": 20261116,
+  "config_sha256": "8cf5b2ca922e2a34ed0b0b477f7f3131dc6055a5b0200d9252a39f4b2f37fc76",
+  "runtime_versions": {
+    "python": "3.14.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3"
+  },
+  "row_count": 9,
+  "path_counts": {
+    "normal": 2,
+    "recovery": 4,
+    "stress": 3
+  },
+  "event_counts": {
+    "liquidity_normalization": 1,
+    "liquidity_shock": 2,
+    "new_credit_exposure": 1,
+    "payment_delay": 2,
+    "rate_change": 1,
+    "recovery_payment": 1,
+    "scheduled_payment": 1
+  },
+  "output_sha256": {
+    "example_trajectories.json": "c9c1bde1acd4deedd67891fdde2552b3138a80042b0df8b49a83fa970a0dcbfd",
+    "transitions.csv": "59676330cc602d531147a3d858d50df645311e572bae94e6e1e35cb92b2fa42b"
+  }
+}

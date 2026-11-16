@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-wm-006-event-state-transition.schema.json",
+  "title": "G4F-WM-006 Event-to-State Transition Record",
+  "description": "A synthetic, replayable state change caused by one timestamped event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "transition_id", "scenario_id", "path_type", "entity_id", "sequence", "transition_timestamp_utc", "event", "action", "initial_state", "resulting_state", "synthetic"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "transition_id": {"type": "string", "minLength": 1},
+    "scenario_id": {"type": "string", "minLength": 1},
+    "path_type": {"enum": ["normal", "stress", "recovery"]},
+    "entity_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer", "minimum": 1},
+    "transition_timestamp_utc": {"type": "string", "format": "date-time"},
+    "event": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event_type", "attributes"],
+      "properties": {
+        "event_type": {"enum": ["scheduled_payment", "payment_delay", "liquidity_shock", "rate_change", "new_credit_exposure", "recovery_payment", "liquidity_normalization"]},
+        "attributes": {"type": "object", "additionalProperties": {"type": ["string", "number", "integer", "boolean", "null"]}}
+      }
+    },
+    "action": {"type": ["string", "null"]},
+    "initial_state": {"$ref": "#/$defs/state"},
+    "resulting_state": {"$ref": "#/$defs/state"},
+    "synthetic": {"const": true}
+  },
+  "$defs": {
+    "state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["account_status", "balance_usd", "monthly_revenue_usd", "debt_to_income_ratio", "days_past_due", "interest_rate_pct", "monthly_debt_service_usd"],
+      "properties": {
+        "account_status": {"enum": ["current", "liquidity_stress", "delinquent", "cured"]},
+        "balance_usd": {"type": "number", "minimum": 0},
+        "monthly_revenue_usd": {"type": "number", "exclusiveMinimum": 0},
+        "debt_to_income_ratio": {"type": "number", "minimum": 0},
+        "days_past_due": {"type": "integer", "minimum": 0},
+        "interest_rate_pct": {"type": "number", "minimum": 0, "maximum": 100},
+        "monthly_debt_service_usd": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}
