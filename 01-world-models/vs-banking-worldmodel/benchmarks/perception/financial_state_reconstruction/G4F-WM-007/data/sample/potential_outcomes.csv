@@ -1,0 +1,201 @@
+entity_id,arm_id,horizon_months,intervention_kind,term_months,collections_delay_days,interest_rate_pct,credit_limit_usd,intervention_change_json,shared_exogenous_shock,monthly_payment_usd,projected_net_cashflow_usd,modeled_default_probability,simulated_default_within_horizon,synthetic
+SYN-WM007-0001,observed_policy,12,control,24,15,17.32508,24523.21,{},0.705146190004,964.95,690.41,0.80136266,True,True
+SYN-WM007-0001,rate_reduction_2pp,12,interest_rate,24,15,15.32508,24523.21,"{""delta_pct_points"": -2.0}",0.705146190004,946.33,709.04,0.7978086,True,True
+SYN-WM007-0001,term_extension_12m,12,repayment_term,36,15,17.32508,24523.21,"{""delta_months"": 12}",0.705146190004,696.78,958.58,0.74788547,True,True
+SYN-WM007-0001,limit_increase_20pct,12,credit_limit,24,15,17.32508,29427.852,"{""multiplier"": 1.2}",0.705146190004,989.28,666.09,0.82842822,True,True
+SYN-WM007-0001,collections_delay_plus_15d,12,collections_timing,24,30,17.32508,24523.21,"{""delta_days"": 15}",0.705146190004,964.95,690.41,0.863562,True,True
+SYN-WM007-0002,observed_policy,12,control,36,30,8.398865,13395.4,{},0.467302986063,235.09,3617.53,0.08038815,False,True
+SYN-WM007-0002,rate_reduction_2pp,12,interest_rate,36,30,6.398865000000001,13395.4,"{""delta_pct_points"": -2.0}",0.467302986063,228.24,3624.37,0.08021959,False,True
+SYN-WM007-0002,term_extension_12m,12,repayment_term,48,30,8.398865,13395.4,"{""delta_months"": 12}",0.467302986063,183.48,3669.14,0.0791254,False,True
+SYN-WM007-0002,limit_increase_20pct,12,credit_limit,36,30,8.398865,16074.48,"{""multiplier"": 1.2}",0.467302986063,243.53,3609.08,0.08226799,False,True
+SYN-WM007-0002,collections_delay_plus_15d,12,collections_timing,36,45,8.398865,13395.4,"{""delta_days"": 15}",0.467302986063,235.09,3617.53,0.09954673,False,True
+SYN-WM007-0003,observed_policy,12,control,36,30,13.92212,31337.29,{},0.271409370706,730.44,2598.64,0.30661474,True,True
+SYN-WM007-0003,rate_reduction_2pp,12,interest_rate,36,30,11.92212,31337.29,"{""delta_pct_points"": -2.0}",0.271409370706,709.84,2619.24,0.30496233,True,True
+SYN-WM007-0003,term_extension_12m,12,repayment_term,48,30,13.92212,31337.29,"{""delta_months"": 12}",0.271409370706,583.83,2745.25,0.29499839,True,True
+SYN-WM007-0003,limit_increase_20pct,12,credit_limit,36,30,13.92212,37604.748,"{""multiplier"": 1.2}",0.271409370706,751.83,2577.24,0.32117992,True,True
+SYN-WM007-0003,collections_delay_plus_15d,12,collections_timing,36,45,13.92212,31337.29,"{""delta_days"": 15}",0.271409370706,730.44,2598.64,0.36670802,True,True
+SYN-WM007-0004,observed_policy,12,control,36,30,14.50118,39272.18,{},0.195994485086,945.37,2520.24,0.44358633,True,True
+SYN-WM007-0004,rate_reduction_2pp,12,interest_rate,36,30,12.50118,39272.18,"{""delta_pct_points"": -2.0}",0.195994485086,918.8,2546.8,0.44092596,True,True
+SYN-WM007-0004,term_extension_12m,12,repayment_term,48,30,14.50118,39272.18,"{""delta_months"": 12}",0.195994485086,757.43,2708.17,0.42495395,True,True
+SYN-WM007-0004,limit_increase_20pct,12,credit_limit,36,30,14.50118,47126.616,"{""multiplier"": 1.2}",0.195994485086,972.4,2493.2,0.46628291,True,True
+SYN-WM007-0004,collections_delay_plus_15d,12,collections_timing,36,45,14.50118,39272.18,"{""delta_days"": 15}",0.195994485086,945.37,2520.24,0.51797007,True,True
+SYN-WM007-0005,observed_policy,12,control,24,15,15.239855,27259.37,{},0.140485586175,956.13,1208.7,0.53420112,True,True
+SYN-WM007-0005,rate_reduction_2pp,12,interest_rate,24,15,13.239855,27259.37,"{""delta_pct_points"": -2.0}",0.140485586175,937.52,1227.31,0.53097654,True,True
+SYN-WM007-0005,term_extension_12m,12,repayment_term,36,15,15.239855,27259.37,"{""delta_months"": 12}",0.140485586175,684.29,1480.54,0.48780065,True,True
+SYN-WM007-0005,limit_increase_20pct,12,credit_limit,24,15,15.239855,32711.244,"{""multiplier"": 1.2}",0.140485586175,982.63,1182.2,0.56263584,True,True
+SYN-WM007-0005,collections_delay_plus_15d,12,collections_timing,24,30,15.239855,27259.37,"{""delta_days"": 15}",0.140485586175,956.13,1208.7,0.61299947,True,True
+SYN-WM007-0006,observed_policy,12,control,24,15,18.4367,32018.7,{},0.519740585571,1344.67,682.05,0.90520831,True,True
+SYN-WM007-0006,rate_reduction_2pp,12,interest_rate,24,15,16.4367,32018.7,"{""delta_pct_points"": -2.0}",0.519740585571,1318.84,707.88,0.90253742,True,True
+SYN-WM007-0006,term_extension_12m,12,repayment_term,36,15,18.4367,32018.7,"{""delta_months"": 12}",0.519740585571,975.52,1051.2,0.86280098,True,True
+SYN-WM007-0006,limit_increase_20pct,12,credit_limit,24,15,18.4367,38422.44,"{""multiplier"": 1.2}",0.519740585571,1376.78,649.94,0.92364436,True,True
+SYN-WM007-0006,collections_delay_plus_15d,12,collections_timing,24,30,18.4367,32018.7,"{""delta_days"": 15}",0.519740585571,1344.67,682.05,0.94409241,True,True
+SYN-WM007-0007,observed_policy,12,control,36,30,14.00294,32221.33,{},0.847217042932,754.4,1418.0,0.76122086,False,True
+SYN-WM007-0007,rate_reduction_2pp,12,interest_rate,36,30,12.00294,32221.33,"{""delta_pct_points"": -2.0}",0.847217042932,733.14,1439.27,0.75731074,False,True
+SYN-WM007-0007,term_extension_12m,12,repayment_term,48,30,14.00294,32221.33,"{""delta_months"": 12}",0.847217042932,603.18,1569.22,0.73297551,False,True
+SYN-WM007-0007,limit_increase_20pct,12,credit_limit,36,30,14.00294,38665.596,"{""multiplier"": 1.2}",0.847217042932,776.43,1395.98,0.79393086,False,True
+SYN-WM007-0007,collections_delay_plus_15d,12,collections_timing,36,45,14.00294,32221.33,"{""delta_days"": 15}",0.847217042932,754.4,1418.0,0.82934628,False,True
+SYN-WM007-0008,observed_policy,12,control,36,30,12.53456,32106.18,{},0.626615859878,694.22,2221.52,0.38847002,False,True
+SYN-WM007-0008,rate_reduction_2pp,12,interest_rate,36,30,10.53456,32106.18,"{""delta_pct_points"": -2.0}",0.626615859878,674.48,2241.26,0.38609301,False,True
+SYN-WM007-0008,term_extension_12m,12,repayment_term,48,30,12.53456,32106.18,"{""delta_months"": 12}",0.626615859878,551.66,2364.08,0.37150839,False,True
+SYN-WM007-0008,limit_increase_20pct,12,credit_limit,36,30,12.53456,38527.416,"{""multiplier"": 1.2}",0.626615859878,715.71,2200.03,0.41082225,False,True
+SYN-WM007-0008,collections_delay_plus_15d,12,collections_timing,36,45,12.53456,32106.18,"{""delta_days"": 15}",0.626615859878,694.22,2221.52,0.45814738,False,True
+SYN-WM007-0009,observed_policy,12,control,36,30,12.02834,18326.98,{},0.262407694085,385.84,1154.54,0.44724736,True,True
+SYN-WM007-0009,rate_reduction_2pp,12,interest_rate,36,30,10.02834,18326.98,"{""delta_pct_points"": -2.0}",0.262407694085,374.84,1165.54,0.44439937,True,True
+SYN-WM007-0009,term_extension_12m,12,repayment_term,48,30,12.02834,18326.98,"{""delta_months"": 12}",0.262407694085,305.95,1234.43,0.42678633,True,True
+SYN-WM007-0009,limit_increase_20pct,12,credit_limit,36,30,12.02834,21992.376,"{""multiplier"": 1.2}",0.262407694085,398.02,1142.36,0.47457731,True,True
+SYN-WM007-0009,collections_delay_plus_15d,12,collections_timing,36,45,12.02834,18326.98,"{""delta_days"": 15}",0.262407694085,385.84,1154.54,0.52189141,True,True
+SYN-WM007-0010,observed_policy,12,control,24,15,14.765495,41005.59,{},0.944749501358,1402.8,1518.38,0.67488451,False,True
+SYN-WM007-0010,rate_reduction_2pp,12,interest_rate,24,15,12.765495,41005.59,"{""delta_pct_points"": -2.0}",0.944749501358,1375.44,1545.74,0.6710778,False,True
+SYN-WM007-0010,term_extension_12m,12,repayment_term,36,15,14.765495,41005.59,"{""delta_months"": 12}",0.944749501358,1001.91,1919.27,0.61867711,False,True
+SYN-WM007-0010,limit_increase_20pct,12,credit_limit,24,15,14.765495,49206.70799999999,"{""multiplier"": 1.2}",0.944749501358,1442.47,1478.71,0.70857482,False,True
+SYN-WM007-0010,collections_delay_plus_15d,12,collections_timing,24,30,14.765495,41005.59,"{""delta_days"": 15}",0.944749501358,1402.8,1518.38,0.75122438,False,True
+SYN-WM007-0011,observed_policy,12,control,36,30,11.278265,18253.54,{},0.468407099239,369.62,1197.78,0.414459,False,True
+SYN-WM007-0011,rate_reduction_2pp,12,interest_rate,36,30,9.278265,18253.54,"{""delta_pct_points"": -2.0}",0.468407099239,359.04,1208.37,0.41180644,False,True
+SYN-WM007-0011,term_extension_12m,12,repayment_term,48,30,11.278265,18253.54,"{""delta_months"": 12}",0.468407099239,292.15,1275.26,0.39527778,False,True
+SYN-WM007-0011,limit_increase_20pct,12,credit_limit,36,30,11.278265,21904.248,"{""multiplier"": 1.2}",0.468407099239,381.62,1185.78,0.4408517,False,True
+SYN-WM007-0011,collections_delay_plus_15d,12,collections_timing,36,45,11.278265,18253.54,"{""delta_days"": 15}",0.468407099239,369.62,1197.78,0.48653736,True,True
+SYN-WM007-0012,observed_policy,12,control,36,30,8.253155,10447.06,{},0.441532511777,182.07,2353.59,0.08904332,False,True
+SYN-WM007-0012,rate_reduction_2pp,12,interest_rate,36,30,6.253155,10447.06,"{""delta_pct_points"": -2.0}",0.441532511777,176.76,2358.9,0.08882068,False,True
+SYN-WM007-0012,term_extension_12m,12,repayment_term,48,30,8.253155,10447.06,"{""delta_months"": 12}",0.441532511777,142.0,2393.66,0.08737495,False,True
+SYN-WM007-0012,limit_increase_20pct,12,credit_limit,36,30,8.253155,12536.472,"{""multiplier"": 1.2}",0.441532511777,188.64,2347.02,0.09154689,False,True
+SYN-WM007-0012,collections_delay_plus_15d,12,collections_timing,36,45,8.253155,10447.06,"{""delta_days"": 15}",0.441532511777,182.07,2353.59,0.11012784,False,True
+SYN-WM007-0013,observed_policy,12,control,24,15,16.64918,41326.58,{},0.818650446656,1565.14,1893.09,0.49510407,False,True
+SYN-WM007-0013,rate_reduction_2pp,12,interest_rate,24,15,14.649180000000001,41326.58,"{""delta_pct_points"": -2.0}",0.818650446656,1534.84,1923.38,0.49220669,False,True
+SYN-WM007-0013,term_extension_12m,12,repayment_term,36,15,16.64918,41326.58,"{""delta_months"": 12}",0.818650446656,1126.94,2331.29,0.45394043,False,True
+SYN-WM007-0013,limit_increase_20pct,12,credit_limit,24,15,16.64918,49591.896,"{""multiplier"": 1.2}",0.818650446656,1605.86,1852.36,0.51901302,False,True
+SYN-WM007-0013,collections_delay_plus_15d,12,collections_timing,24,30,16.64918,41326.58,"{""delta_days"": 15}",0.818650446656,1565.14,1893.09,0.57252645,False,True
+SYN-WM007-0014,observed_policy,12,control,36,30,11.558465,46421.16,{},0.660559544161,953.68,3835.58,0.2917798,False,True
+SYN-WM007-0014,rate_reduction_2pp,12,interest_rate,36,30,9.558465,46421.16,"{""delta_pct_points"": -2.0}",0.660559544161,926.41,3862.85,0.29012175,False,True
+SYN-WM007-0014,term_extension_12m,12,repayment_term,48,30,11.558465,46421.16,"{""delta_months"": 12}",0.660559544161,754.69,4034.57,0.2798449,False,True
+SYN-WM007-0014,limit_increase_20pct,12,credit_limit,36,30,11.558465,55705.392,"{""multiplier"": 1.2}",0.660559544161,984.32,3804.94,0.30812991,False,True
+SYN-WM007-0014,collections_delay_plus_15d,12,collections_timing,36,45,11.558465,46421.16,"{""delta_days"": 15}",0.660559544161,953.68,3835.58,0.34982049,False,True
+SYN-WM007-0015,observed_policy,12,control,24,15,17.238725,57214.32,{},0.700336030855,2240.2,1837.22,0.71770734,True,True
+SYN-WM007-0015,rate_reduction_2pp,12,interest_rate,24,15,15.238724999999999,57214.32,"{""delta_pct_points"": -2.0}",0.700336030855,2196.95,1880.48,0.71402218,True,True
+SYN-WM007-0015,term_extension_12m,12,repayment_term,36,15,17.238725,57214.32,"{""delta_months"": 12}",0.700336030855,1617.04,2460.39,0.66369075,False,True
+SYN-WM007-0015,limit_increase_20pct,12,credit_limit,24,15,17.238725,68657.184,"{""multiplier"": 1.2}",0.700336030855,2296.91,1780.52,0.74644746,True,True
+SYN-WM007-0015,collections_delay_plus_15d,12,collections_timing,24,30,17.238725,57214.32,"{""delta_days"": 15}",0.700336030855,2240.2,1837.22,0.79069205,True,True
+SYN-WM007-0016,observed_policy,12,control,24,15,14.77136,16974.5,{},0.58111822901,580.88,1169.13,0.30132301,False,True
+SYN-WM007-0016,rate_reduction_2pp,12,interest_rate,24,15,12.77136,16974.5,"{""delta_pct_points"": -2.0}",0.58111822901,569.55,1180.46,0.29968131,False,True
+SYN-WM007-0016,term_extension_12m,12,repayment_term,36,15,14.77136,16974.5,"{""delta_months"": 12}",0.58111822901,414.88,1335.12,0.27794607,False,True
+SYN-WM007-0016,limit_increase_20pct,12,credit_limit,24,15,14.77136,20369.399999999998,"{""multiplier"": 1.2}",0.58111822901,597.3,1152.7,0.31630191,False,True
+SYN-WM007-0016,collections_delay_plus_15d,12,collections_timing,24,30,14.77136,16974.5,"{""delta_days"": 15}",0.58111822901,580.88,1169.13,0.36069493,False,True
+SYN-WM007-0017,observed_policy,12,control,36,30,13.676045,41127.17,{},0.393338393875,945.74,3300.09,0.31909561,False,True
+SYN-WM007-0017,rate_reduction_2pp,12,interest_rate,36,30,11.676045,41127.17,"{""delta_pct_points"": -2.0}",0.393338393875,919.04,3326.79,0.31733068,False,True
+SYN-WM007-0017,term_extension_12m,12,repayment_term,48,30,13.676045,41127.17,"{""delta_months"": 12}",0.393338393875,755.14,3490.69,0.306657,False,True
+SYN-WM007-0017,limit_increase_20pct,12,credit_limit,36,30,13.676045,49352.604,"{""multiplier"": 1.2}",0.393338393875,973.73,3272.1,0.33483943,False,True
+SYN-WM007-0017,collections_delay_plus_15d,12,collections_timing,36,45,13.676045,41127.17,"{""delta_days"": 15}",0.393338393875,945.74,3300.09,0.38084236,False,True
+SYN-WM007-0018,observed_policy,12,control,24,15,15.03902,59414.11,{},0.364538448046,2061.94,2081.24,0.71239049,True,True
+SYN-WM007-0018,rate_reduction_2pp,12,interest_rate,24,15,13.03902,59414.11,"{""delta_pct_points"": -2.0}",0.364538448046,2021.77,2121.41,0.70855638,True,True
+SYN-WM007-0018,term_extension_12m,12,repayment_term,36,15,15.03902,59414.11,"{""delta_months"": 12}",0.364538448046,1474.43,2668.75,0.65537701,True,True
+SYN-WM007-0018,limit_increase_20pct,12,credit_limit,24,15,15.03902,71296.932,"{""multiplier"": 1.2}",0.364538448046,2119.58,2023.6,0.74565751,True,True
+SYN-WM007-0018,collections_delay_plus_15d,12,collections_timing,24,30,15.03902,59414.11,"{""delta_days"": 15}",0.364538448046,2061.94,2081.24,0.78586583,True,True
+SYN-WM007-0019,observed_policy,12,control,36,30,12.545435,45036.04,{},0.074957219047,974.36,3071.58,0.39725784,True,True
+SYN-WM007-0019,rate_reduction_2pp,12,interest_rate,36,30,10.545435,45036.04,"{""delta_pct_points"": -2.0}",0.074957219047,946.66,3099.28,0.39481397,True,True
+SYN-WM007-0019,term_extension_12m,12,repayment_term,48,30,12.545435,45036.04,"{""delta_months"": 12}",0.074957219047,774.31,3271.63,0.37981753,True,True
+SYN-WM007-0019,limit_increase_20pct,12,credit_limit,36,30,12.545435,54043.248,"{""multiplier"": 1.2}",0.074957219047,1004.51,3041.43,0.4202185,True,True
+SYN-WM007-0019,collections_delay_plus_15d,12,collections_timing,36,45,12.545435,45036.04,"{""delta_days"": 15}",0.074957219047,974.36,3071.58,0.46778277,True,True
+SYN-WM007-0020,observed_policy,12,control,24,15,17.51174,56511.92,{},0.215023636257,2247.66,1133.96,0.95299568,True,True
+SYN-WM007-0020,rate_reduction_2pp,12,interest_rate,24,15,15.51174,56511.92,"{""delta_pct_points"": -2.0}",0.215023636257,2204.31,1177.31,0.951156,True,True
+SYN-WM007-0020,term_extension_12m,12,repayment_term,36,15,17.51174,56511.92,"{""delta_months"": 12}",0.215023636257,1624.3,1757.33,0.92152473,True,True
+SYN-WM007-0020,limit_increase_20pct,12,credit_limit,24,15,17.51174,67814.30399999999,"{""multiplier"": 1.2}",0.215023636257,2303.82,1077.8,0.96569562,True,True
+SYN-WM007-0020,collections_delay_plus_15d,12,collections_timing,24,30,17.51174,56511.92,"{""delta_days"": 15}",0.215023636257,2247.66,1133.96,0.97576434,True,True
+SYN-WM007-0021,observed_policy,12,control,36,30,12.98024,70495.86,{},0.501028006748,1561.03,3439.75,0.6679144,True,True
+SYN-WM007-0021,rate_reduction_2pp,12,interest_rate,36,30,10.98024,70495.86,"{""delta_pct_points"": -2.0}",0.501028006748,1516.77,3484.01,0.66398864,True,True
+SYN-WM007-0021,term_extension_12m,12,repayment_term,48,30,12.98024,70495.86,"{""delta_months"": 12}",0.501028006748,1242.8,3757.97,0.63958146,True,True
+SYN-WM007-0021,limit_increase_20pct,12,credit_limit,36,30,12.98024,84595.03199999999,"{""multiplier"": 1.2}",0.501028006748,1608.52,3392.26,0.70304725,True,True
+SYN-WM007-0021,collections_delay_plus_15d,12,collections_timing,36,45,12.98024,70495.86,"{""delta_days"": 15}",0.501028006748,1561.03,3439.75,0.7446755,True,True
+SYN-WM007-0022,observed_policy,12,control,24,15,17.91458,20763.86,{},0.445722900727,845.43,614.7,0.74838988,True,True
+SYN-WM007-0022,rate_reduction_2pp,12,interest_rate,24,15,15.91458,20763.86,"{""delta_pct_points"": -2.0}",0.445722900727,829.15,630.98,0.74475613,True,True
+SYN-WM007-0022,term_extension_12m,12,repayment_term,36,15,17.91458,20763.86,"{""delta_months"": 12}",0.445722900727,612.0,848.13,0.6949441,True,True
+SYN-WM007-0022,limit_increase_20pct,12,credit_limit,24,15,17.91458,24916.632,"{""multiplier"": 1.2}",0.445722900727,866.15,593.98,0.77560589,True,True
+SYN-WM007-0022,collections_delay_plus_15d,12,collections_timing,24,30,17.91458,20763.86,"{""delta_days"": 15}",0.445722900727,845.43,614.7,0.81810927,True,True
+SYN-WM007-0023,observed_policy,12,control,24,15,15.105125,55506.73,{},0.061140221771,1933.07,2295.65,0.58531342,True,True
+SYN-WM007-0023,rate_reduction_2pp,12,interest_rate,24,15,13.105125,55506.73,"{""delta_pct_points"": -2.0}",0.061140221771,1895.42,2333.3,0.58182381,True,True
+SYN-WM007-0023,term_extension_12m,12,repayment_term,36,15,15.105125,55506.73,"{""delta_months"": 12}",0.061140221771,1382.67,2846.05,0.53472439,True,True
+SYN-WM007-0023,limit_increase_20pct,12,credit_limit,24,15,15.105125,66608.076,"{""multiplier"": 1.2}",0.061140221771,1986.95,2241.77,0.61611593,True,True
+SYN-WM007-0023,collections_delay_plus_15d,12,collections_timing,24,30,15.105125,55506.73,"{""delta_days"": 15}",0.061140221771,1933.07,2295.65,0.66462169,True,True
+SYN-WM007-0024,observed_policy,12,control,36,30,11.85026,14577.61,{},0.725067577753,304.06,1895.66,0.16845894,False,True
+SYN-WM007-0024,rate_reduction_2pp,12,interest_rate,36,30,9.85026,14577.61,"{""delta_pct_points"": -2.0}",0.725067577753,295.38,1904.34,0.16778964,False,True
+SYN-WM007-0024,term_extension_12m,12,repayment_term,48,30,11.85026,14577.61,"{""delta_months"": 12}",0.725067577753,240.92,1958.8,0.16364282,False,True
+SYN-WM007-0024,limit_increase_20pct,12,credit_limit,36,30,11.85026,17493.132,"{""multiplier"": 1.2}",0.725067577753,313.72,1886.0,0.17494495,False,True
+SYN-WM007-0024,collections_delay_plus_15d,12,collections_timing,36,45,11.85026,14577.61,"{""delta_days"": 15}",0.725067577753,304.06,1895.66,0.20592479,False,True
+SYN-WM007-0025,observed_policy,12,control,24,15,14.87912,35311.46,{},0.65080543749,1215.21,1487.76,0.57496978,False,True
+SYN-WM007-0025,rate_reduction_2pp,12,interest_rate,24,15,12.87912,35311.46,"{""delta_pct_points"": -2.0}",0.65080543749,1191.52,1511.45,0.57151118,False,True
+SYN-WM007-0025,term_extension_12m,12,repayment_term,36,15,14.87912,35311.46,"{""delta_months"": 12}",0.65080543749,868.35,1834.62,0.52483083,False,True
+SYN-WM007-0025,limit_increase_20pct,12,credit_limit,24,15,14.87912,42373.752,"{""multiplier"": 1.2}",0.65080543749,1249.41,1453.56,0.60586275,False,True
+SYN-WM007-0025,collections_delay_plus_15d,12,collections_timing,24,30,14.87912,35311.46,"{""delta_days"": 15}",0.65080543749,1215.21,1487.76,0.65429728,True,True
+SYN-WM007-0026,observed_policy,12,control,36,30,11.383805,2980.5,{},0.499655506032,60.68,877.21,0.09103856,False,True
+SYN-WM007-0026,rate_reduction_2pp,12,interest_rate,36,30,9.383805,2980.5,"{""delta_pct_points"": -2.0}",0.499655506032,58.94,878.95,0.09086828,False,True
+SYN-WM007-0026,term_extension_12m,12,repayment_term,48,30,11.383805,2980.5,"{""delta_months"": 12}",0.499655506032,47.98,889.91,0.08980046,False,True
+SYN-WM007-0026,limit_increase_20pct,12,credit_limit,36,30,11.383805,3576.6,"{""multiplier"": 1.2}",0.499655506032,62.64,875.25,0.092708,False,True
+SYN-WM007-0026,collections_delay_plus_15d,12,collections_timing,36,45,11.383805,2980.5,"{""delta_days"": 15}",0.499655506032,60.68,877.21,0.11256321,False,True
+SYN-WM007-0027,observed_policy,12,control,36,30,14.20691,30704.08,{},0.990473394156,727.06,2820.35,0.27035531,False,True
+SYN-WM007-0027,rate_reduction_2pp,12,interest_rate,36,30,12.20691,30704.08,"{""delta_pct_points"": -2.0}",0.990473394156,706.59,2840.82,0.26900399,False,True
+SYN-WM007-0027,term_extension_12m,12,repayment_term,48,30,14.20691,30704.08,"{""delta_months"": 12}",0.990473394156,581.81,2965.6,0.26088147,False,True
+SYN-WM007-0027,limit_increase_20pct,12,credit_limit,36,30,14.20691,36844.896,"{""multiplier"": 1.2}",0.990473394156,748.11,2799.3,0.28209874,False,True
+SYN-WM007-0027,collections_delay_plus_15d,12,collections_timing,36,45,14.20691,30704.08,"{""delta_days"": 15}",0.990473394156,727.06,2820.35,0.32526689,False,True
+SYN-WM007-0028,observed_policy,12,control,36,30,9.727325,28099.76,{},0.810103404022,526.18,3002.07,0.19340378,False,True
+SYN-WM007-0028,rate_reduction_2pp,12,interest_rate,36,30,7.727325,28099.76,"{""delta_pct_points"": -2.0}",0.810103404022,510.97,3017.27,0.1924663,False,True
+SYN-WM007-0028,term_extension_12m,12,repayment_term,48,30,9.727325,28099.76,"{""delta_months"": 12}",0.810103404022,413.09,3115.16,0.18652411,False,True
+SYN-WM007-0028,limit_increase_20pct,12,credit_limit,36,30,9.727325,33719.712,"{""multiplier"": 1.2}",0.810103404022,544.24,2984.01,0.20341894,False,True
+SYN-WM007-0028,collections_delay_plus_15d,12,collections_timing,36,45,9.727325,28099.76,"{""delta_days"": 15}",0.810103404022,526.18,3002.07,0.23552161,False,True
+SYN-WM007-0029,observed_policy,12,control,36,30,12.63536,39196.43,{},0.142684334095,852.08,2938.8,0.34472872,True,True
+SYN-WM007-0029,rate_reduction_2pp,12,interest_rate,36,30,10.63536,39196.43,"{""delta_pct_points"": -2.0}",0.142684334095,827.88,2963.01,0.34270108,True,True
+SYN-WM007-0029,term_extension_12m,12,repayment_term,48,30,12.63536,39196.43,"{""delta_months"": 12}",0.142684334095,677.4,3113.49,0.33028503,True,True
+SYN-WM007-0029,limit_increase_20pct,12,credit_limit,36,30,12.63536,47035.716,"{""multiplier"": 1.2}",0.142684334095,878.36,2912.52,0.36373264,True,True
+SYN-WM007-0029,collections_delay_plus_15d,12,collections_timing,36,45,12.63536,39196.43,"{""delta_days"": 15}",0.142684334095,852.08,2938.8,0.40965762,True,True
+SYN-WM007-0030,observed_policy,12,control,36,30,12.92216,43646.05,{},0.028374523581,963.47,3454.12,0.32051001,True,True
+SYN-WM007-0030,rate_reduction_2pp,12,interest_rate,36,30,10.92216,43646.05,"{""delta_pct_points"": -2.0}",0.028374523581,936.14,3481.45,0.3186919,True,True
+SYN-WM007-0030,term_extension_12m,12,repayment_term,48,30,12.92216,43646.05,"{""delta_months"": 12}",0.028374523581,766.87,3650.72,0.30759875,True,True
+SYN-WM007-0030,limit_increase_20pct,12,credit_limit,36,30,12.92216,52375.26,"{""multiplier"": 1.2}",0.028374523581,992.85,3424.74,0.33732747,True,True
+SYN-WM007-0030,collections_delay_plus_15d,12,collections_timing,36,45,12.92216,43646.05,"{""delta_days"": 15}",0.028374523581,963.47,3454.12,0.38243988,True,True
+SYN-WM007-0031,observed_policy,12,control,36,30,14.487695,38490.04,{},0.980109997933,925.84,3049.41,0.3293264,False,True
+SYN-WM007-0031,rate_reduction_2pp,12,interest_rate,36,30,12.487695,38490.04,"{""delta_pct_points"": -2.0}",0.980109997933,899.82,3075.43,0.32752701,False,True
+SYN-WM007-0031,term_extension_12m,12,repayment_term,48,30,14.487695,38490.04,"{""delta_months"": 12}",0.980109997933,741.74,3233.51,0.31674845,False,True
+SYN-WM007-0031,limit_increase_20pct,12,credit_limit,36,30,14.487695,46188.048,"{""multiplier"": 1.2}",0.980109997933,952.33,3022.92,0.34474633,False,True
+SYN-WM007-0031,collections_delay_plus_15d,12,collections_timing,36,45,14.487695,38490.04,"{""delta_days"": 15}",0.980109997933,925.84,3049.41,0.39237795,False,True
+SYN-WM007-0032,observed_policy,12,control,24,15,16.214735,43974.76,{},0.252961314046,1625.82,1554.19,0.67879461,True,True
+SYN-WM007-0032,rate_reduction_2pp,12,interest_rate,24,15,14.214735000000001,43974.76,"{""delta_pct_points"": -2.0}",0.252961314046,1594.3,1585.71,0.67508286,True,True
+SYN-WM007-0032,term_extension_12m,12,repayment_term,36,15,16.214735,43974.76,"{""delta_months"": 12}",0.252961314046,1168.46,2011.55,0.62448932,True,True
+SYN-WM007-0032,limit_increase_20pct,12,credit_limit,24,15,16.214735,52769.712,"{""multiplier"": 1.2}",0.252961314046,1668.98,1511.04,0.70945396,True,True
+SYN-WM007-0032,collections_delay_plus_15d,12,collections_timing,24,30,16.214735,43974.76,"{""delta_days"": 15}",0.252961314046,1625.82,1554.19,0.75488328,True,True
+SYN-WM007-0033,observed_policy,12,control,24,15,15.04445,66444.12,{},0.71325664499,2306.58,2264.88,0.73313782,True,True
+SYN-WM007-0033,rate_reduction_2pp,12,interest_rate,24,15,13.04445,66444.12,"{""delta_pct_points"": -2.0}",0.71325664499,2261.64,2309.82,0.72930238,True,True
+SYN-WM007-0033,term_extension_12m,12,repayment_term,36,15,15.04445,66444.12,"{""delta_months"": 12}",0.71325664499,1649.39,2922.07,0.67578099,False,True
+SYN-WM007-0033,limit_increase_20pct,12,credit_limit,24,15,15.04445,79732.94399999999,"{""multiplier"": 1.2}",0.71325664499,2371.04,2200.42,0.76625659,True,True
+SYN-WM007-0033,collections_delay_plus_15d,12,collections_timing,24,30,15.04445,66444.12,"{""delta_days"": 15}",0.71325664499,2306.58,2264.88,0.8045744,True,True
+SYN-WM007-0034,observed_policy,12,control,36,30,10.08692,11715.59,{},0.082789524626,223.34,2208.35,0.11157829,True,True
+SYN-WM007-0034,rate_reduction_2pp,12,interest_rate,36,30,8.08692,11715.59,"{""delta_pct_points"": -2.0}",0.082789524626,216.9,2214.79,0.11125387,True,True
+SYN-WM007-0034,term_extension_12m,12,repayment_term,48,30,10.08692,11715.59,"{""delta_months"": 12}",0.082789524626,175.61,2256.07,0.10919478,True,True
+SYN-WM007-0034,limit_increase_20pct,12,credit_limit,36,30,10.08692,14058.708,"{""multiplier"": 1.2}",0.082789524626,230.91,2200.78,0.11496216,True,True
+SYN-WM007-0034,collections_delay_plus_15d,12,collections_timing,36,45,10.08692,11715.59,"{""delta_days"": 15}",0.082789524626,223.34,2208.35,0.13754936,True,True
+SYN-WM007-0035,observed_policy,12,control,36,30,10.81115,49346.36,{},0.395212633275,975.65,3881.53,0.30793888,False,True
+SYN-WM007-0035,rate_reduction_2pp,12,interest_rate,36,30,8.81115,49346.36,"{""delta_pct_points"": -2.0}",0.395212633275,947.64,3909.54,0.30610972,False,True
+SYN-WM007-0035,term_extension_12m,12,repayment_term,48,30,10.81115,49346.36,"{""delta_months"": 12}",0.395212633275,769.6,4087.59,0.29467453,False,True
+SYN-WM007-0035,limit_increase_20pct,12,credit_limit,36,30,10.81115,59215.632,"{""multiplier"": 1.2}",0.395212633275,1007.88,3849.31,0.32659681,False,True
+SYN-WM007-0035,collections_delay_plus_15d,12,collections_timing,36,45,10.81115,49346.36,"{""delta_days"": 15}",0.395212633275,975.65,3881.53,0.36821076,False,True
+SYN-WM007-0036,observed_policy,12,control,36,30,12.24791,18166.93,{},0.920074212044,386.91,2017.33,0.20301295,False,True
+SYN-WM007-0036,rate_reduction_2pp,12,interest_rate,36,30,10.24791,18166.93,"{""delta_pct_points"": -2.0}",0.920074212044,375.89,2028.35,0.20209787,False,True
+SYN-WM007-0036,term_extension_12m,12,repayment_term,48,30,12.24791,18166.93,"{""delta_months"": 12}",0.920074212044,307.08,2097.16,0.19646245,False,True
+SYN-WM007-0036,limit_increase_20pct,12,credit_limit,36,30,12.24791,21800.316,"{""multiplier"": 1.2}",0.920074212044,399.02,2005.22,0.2117363,False,True
+SYN-WM007-0036,collections_delay_plus_15d,12,collections_timing,36,45,12.24791,18166.93,"{""delta_days"": 15}",0.920074212044,386.91,2017.33,0.24685804,False,True
+SYN-WM007-0037,observed_policy,12,control,24,15,15.895325,35508.65,{},0.750685200988,1290.1,1166.81,0.73995302,False,True
+SYN-WM007-0037,rate_reduction_2pp,12,interest_rate,24,15,13.895325,35508.65,"{""delta_pct_points"": -2.0}",0.750685200988,1265.05,1191.86,0.73617768,False,True
+SYN-WM007-0037,term_extension_12m,12,repayment_term,36,15,15.895325,35508.65,"{""delta_months"": 12}",0.750685200988,925.92,1531.0,0.68373075,False,True
+SYN-WM007-0037,limit_increase_20pct,12,credit_limit,24,15,15.895325,42610.38,"{""multiplier"": 1.2}",0.750685200988,1324.84,1132.08,0.77124265,True,True
+SYN-WM007-0037,collections_delay_plus_15d,12,collections_timing,24,30,15.895325,35508.65,"{""delta_days"": 15}",0.750685200988,1290.1,1166.81,0.81064569,True,True
+SYN-WM007-0038,observed_policy,12,control,24,15,17.44502,45192.58,{},0.583722953038,1790.55,959.06,0.93736614,True,True
+SYN-WM007-0038,rate_reduction_2pp,12,interest_rate,24,15,15.44502,45192.58,"{""delta_pct_points"": -2.0}",0.583722953038,1756.01,993.61,0.9351854,True,True
+SYN-WM007-0038,term_extension_12m,12,repayment_term,36,15,17.44502,45192.58,"{""delta_months"": 12}",0.583722953038,1293.6,1456.02,0.90105199,True,True
+SYN-WM007-0038,limit_increase_20pct,12,credit_limit,24,15,17.44502,54231.096,"{""multiplier"": 1.2}",0.583722953038,1835.44,914.18,0.9527452,True,True
+SYN-WM007-0038,collections_delay_plus_15d,12,collections_timing,24,30,17.44502,45192.58,"{""delta_days"": 15}",0.583722953038,1790.55,959.06,0.96591765,True,True
+SYN-WM007-0039,observed_policy,12,control,36,30,9.491795,20613.12,{},0.235062686109,381.52,3932.77,0.10718712,False,True
+SYN-WM007-0039,rate_reduction_2pp,12,interest_rate,36,30,7.491795,20613.12,"{""delta_pct_points"": -2.0}",0.235062686109,370.48,3943.81,0.10687691,False,True
+SYN-WM007-0039,term_extension_12m,12,repayment_term,48,30,9.491795,20613.12,"{""delta_months"": 12}",0.235062686109,299.21,4015.08,0.10489408,False,True
+SYN-WM007-0039,limit_increase_20pct,12,credit_limit,36,30,9.491795,24735.744,"{""multiplier"": 1.2}",0.235062686109,394.73,3919.57,0.11050613,False,True
+SYN-WM007-0039,collections_delay_plus_15d,12,collections_timing,36,45,9.491795,20613.12,"{""delta_days"": 15}",0.235062686109,381.52,3932.77,0.13222058,False,True
+SYN-WM007-0040,observed_policy,12,control,24,15,16.32206,38537.79,{},0.570952591721,1433.25,934.47,0.91425876,True,True
+SYN-WM007-0040,rate_reduction_2pp,12,interest_rate,24,15,14.32206,38537.79,"{""delta_pct_points"": -2.0}",0.570952591721,1405.48,962.25,0.91163593,True,True
+SYN-WM007-0040,term_extension_12m,12,repayment_term,36,15,16.32206,38537.79,"{""delta_months"": 12}",0.570952591721,1030.54,1337.19,0.87140636,True,True
+SYN-WM007-0040,limit_increase_20pct,12,credit_limit,24,15,16.32206,46245.348,"{""multiplier"": 1.2}",0.570952591721,1471.11,896.62,0.93410971,True,True
+SYN-WM007-0040,collections_delay_plus_15d,12,collections_timing,24,30,16.32206,38537.79,"{""delta_days"": 15}",0.570952591721,1433.25,934.47,0.95042231,True,True

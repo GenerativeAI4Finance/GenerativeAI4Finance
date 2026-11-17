@@ -1,0 +1,596 @@
+[
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0001",
+    "arm_id": "observed_policy",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 4740.09,
+      "income_volatility": 0.287924,
+      "balance_usd": 19455.22,
+      "balance_to_income_months": 4.104398,
+      "risk_index": 0.821672
+    },
+    "baseline_policy": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21
+    },
+    "intervention": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21,
+      "intervention_kind": "control",
+      "change": {}
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.705146190004
+    },
+    "outcomes": {
+      "monthly_payment_usd": 964.95,
+      "projected_net_cashflow_usd": 690.41,
+      "modeled_default_probability": 0.80136266,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0001",
+    "arm_id": "rate_reduction_2pp",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 4740.09,
+      "income_volatility": 0.287924,
+      "balance_usd": 19455.22,
+      "balance_to_income_months": 4.104398,
+      "risk_index": 0.821672
+    },
+    "baseline_policy": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21
+    },
+    "intervention": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 15.32508,
+      "credit_limit_usd": 24523.21,
+      "intervention_kind": "interest_rate",
+      "change": {
+        "delta_pct_points": -2.0
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.705146190004
+    },
+    "outcomes": {
+      "monthly_payment_usd": 946.33,
+      "projected_net_cashflow_usd": 709.04,
+      "modeled_default_probability": 0.7978086,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0001",
+    "arm_id": "term_extension_12m",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 4740.09,
+      "income_volatility": 0.287924,
+      "balance_usd": 19455.22,
+      "balance_to_income_months": 4.104398,
+      "risk_index": 0.821672
+    },
+    "baseline_policy": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21,
+      "intervention_kind": "repayment_term",
+      "change": {
+        "delta_months": 12
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.705146190004
+    },
+    "outcomes": {
+      "monthly_payment_usd": 696.78,
+      "projected_net_cashflow_usd": 958.58,
+      "modeled_default_probability": 0.74788547,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0001",
+    "arm_id": "limit_increase_20pct",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 4740.09,
+      "income_volatility": 0.287924,
+      "balance_usd": 19455.22,
+      "balance_to_income_months": 4.104398,
+      "risk_index": 0.821672
+    },
+    "baseline_policy": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21
+    },
+    "intervention": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 29427.852,
+      "intervention_kind": "credit_limit",
+      "change": {
+        "multiplier": 1.2
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.705146190004
+    },
+    "outcomes": {
+      "monthly_payment_usd": 989.28,
+      "projected_net_cashflow_usd": 666.09,
+      "modeled_default_probability": 0.82842822,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0001",
+    "arm_id": "collections_delay_plus_15d",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 4740.09,
+      "income_volatility": 0.287924,
+      "balance_usd": 19455.22,
+      "balance_to_income_months": 4.104398,
+      "risk_index": 0.821672
+    },
+    "baseline_policy": {
+      "term_months": 24,
+      "collections_delay_days": 15,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21
+    },
+    "intervention": {
+      "term_months": 24,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 17.32508,
+      "credit_limit_usd": 24523.21,
+      "intervention_kind": "collections_timing",
+      "change": {
+        "delta_days": 15
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.705146190004
+    },
+    "outcomes": {
+      "monthly_payment_usd": 964.95,
+      "projected_net_cashflow_usd": 690.41,
+      "modeled_default_probability": 0.863562,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0002",
+    "arm_id": "observed_policy",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9346.19,
+      "income_volatility": 0.107965,
+      "balance_usd": 7458.18,
+      "balance_to_income_months": 0.797992,
+      "risk_index": 0.226591
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4,
+      "intervention_kind": "control",
+      "change": {}
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.467302986063
+    },
+    "outcomes": {
+      "monthly_payment_usd": 235.09,
+      "projected_net_cashflow_usd": 3617.53,
+      "modeled_default_probability": 0.08038815,
+      "simulated_default_within_horizon": false
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0002",
+    "arm_id": "rate_reduction_2pp",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9346.19,
+      "income_volatility": 0.107965,
+      "balance_usd": 7458.18,
+      "balance_to_income_months": 0.797992,
+      "risk_index": 0.226591
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 6.398865000000001,
+      "credit_limit_usd": 13395.4,
+      "intervention_kind": "interest_rate",
+      "change": {
+        "delta_pct_points": -2.0
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.467302986063
+    },
+    "outcomes": {
+      "monthly_payment_usd": 228.24,
+      "projected_net_cashflow_usd": 3624.37,
+      "modeled_default_probability": 0.08021959,
+      "simulated_default_within_horizon": false
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0002",
+    "arm_id": "term_extension_12m",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9346.19,
+      "income_volatility": 0.107965,
+      "balance_usd": 7458.18,
+      "balance_to_income_months": 0.797992,
+      "risk_index": 0.226591
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4
+    },
+    "intervention": {
+      "term_months": 48,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4,
+      "intervention_kind": "repayment_term",
+      "change": {
+        "delta_months": 12
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.467302986063
+    },
+    "outcomes": {
+      "monthly_payment_usd": 183.48,
+      "projected_net_cashflow_usd": 3669.14,
+      "modeled_default_probability": 0.0791254,
+      "simulated_default_within_horizon": false
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0002",
+    "arm_id": "limit_increase_20pct",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9346.19,
+      "income_volatility": 0.107965,
+      "balance_usd": 7458.18,
+      "balance_to_income_months": 0.797992,
+      "risk_index": 0.226591
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 16074.48,
+      "intervention_kind": "credit_limit",
+      "change": {
+        "multiplier": 1.2
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.467302986063
+    },
+    "outcomes": {
+      "monthly_payment_usd": 243.53,
+      "projected_net_cashflow_usd": 3609.08,
+      "modeled_default_probability": 0.08226799,
+      "simulated_default_within_horizon": false
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0002",
+    "arm_id": "collections_delay_plus_15d",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9346.19,
+      "income_volatility": 0.107965,
+      "balance_usd": 7458.18,
+      "balance_to_income_months": 0.797992,
+      "risk_index": 0.226591
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 45,
+      "interest_rate_pct": 8.398865,
+      "credit_limit_usd": 13395.4,
+      "intervention_kind": "collections_timing",
+      "change": {
+        "delta_days": 15
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.467302986063
+    },
+    "outcomes": {
+      "monthly_payment_usd": 235.09,
+      "projected_net_cashflow_usd": 3617.53,
+      "modeled_default_probability": 0.09954673,
+      "simulated_default_within_horizon": false
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0003",
+    "arm_id": "observed_policy",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9332.14,
+      "income_volatility": 0.266479,
+      "balance_usd": 21395.42,
+      "balance_to_income_months": 2.29266,
+      "risk_index": 0.594808
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29,
+      "intervention_kind": "control",
+      "change": {}
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.271409370706
+    },
+    "outcomes": {
+      "monthly_payment_usd": 730.44,
+      "projected_net_cashflow_usd": 2598.64,
+      "modeled_default_probability": 0.30661474,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0003",
+    "arm_id": "rate_reduction_2pp",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9332.14,
+      "income_volatility": 0.266479,
+      "balance_usd": 21395.42,
+      "balance_to_income_months": 2.29266,
+      "risk_index": 0.594808
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 11.92212,
+      "credit_limit_usd": 31337.29,
+      "intervention_kind": "interest_rate",
+      "change": {
+        "delta_pct_points": -2.0
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.271409370706
+    },
+    "outcomes": {
+      "monthly_payment_usd": 709.84,
+      "projected_net_cashflow_usd": 2619.24,
+      "modeled_default_probability": 0.30496233,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0003",
+    "arm_id": "term_extension_12m",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9332.14,
+      "income_volatility": 0.266479,
+      "balance_usd": 21395.42,
+      "balance_to_income_months": 2.29266,
+      "risk_index": 0.594808
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29
+    },
+    "intervention": {
+      "term_months": 48,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29,
+      "intervention_kind": "repayment_term",
+      "change": {
+        "delta_months": 12
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.271409370706
+    },
+    "outcomes": {
+      "monthly_payment_usd": 583.83,
+      "projected_net_cashflow_usd": 2745.25,
+      "modeled_default_probability": 0.29499839,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0003",
+    "arm_id": "limit_increase_20pct",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9332.14,
+      "income_volatility": 0.266479,
+      "balance_usd": 21395.42,
+      "balance_to_income_months": 2.29266,
+      "risk_index": 0.594808
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 37604.748,
+      "intervention_kind": "credit_limit",
+      "change": {
+        "multiplier": 1.2
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.271409370706
+    },
+    "outcomes": {
+      "monthly_payment_usd": 751.83,
+      "projected_net_cashflow_usd": 2577.24,
+      "modeled_default_probability": 0.32117992,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "dataset_version": "1.0.0",
+    "entity_id": "SYN-WM007-0003",
+    "arm_id": "collections_delay_plus_15d",
+    "horizon_months": 12,
+    "observational_features": {
+      "monthly_income_usd": 9332.14,
+      "income_volatility": 0.266479,
+      "balance_usd": 21395.42,
+      "balance_to_income_months": 2.29266,
+      "risk_index": 0.594808
+    },
+    "baseline_policy": {
+      "term_months": 36,
+      "collections_delay_days": 30,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29
+    },
+    "intervention": {
+      "term_months": 36,
+      "collections_delay_days": 45,
+      "interest_rate_pct": 13.92212,
+      "credit_limit_usd": 31337.29,
+      "intervention_kind": "collections_timing",
+      "change": {
+        "delta_days": 15
+      }
+    },
+    "simulation_context": {
+      "shared_exogenous_shock": 0.271409370706
+    },
+    "outcomes": {
+      "monthly_payment_usd": 730.44,
+      "projected_net_cashflow_usd": 2598.64,
+      "modeled_default_probability": 0.36670802,
+      "simulated_default_within_horizon": true
+    },
+    "synthetic": true
+  }
+]

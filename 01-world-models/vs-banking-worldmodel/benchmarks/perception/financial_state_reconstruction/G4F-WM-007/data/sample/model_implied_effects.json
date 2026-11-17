@@ -1,0 +1,178 @@
+[
+  {
+    "arm_id": "rate_reduction_2pp",
+    "control_arm_id": "observed_policy",
+    "outcome": "modeled_default_probability",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.47654943,
+    "intervention_mean": 0.47424195,
+    "paired_mean_difference": -0.00230747,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "rate_reduction_2pp",
+    "control_arm_id": "observed_policy",
+    "outcome": "simulated_default_within_horizon",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.5,
+    "intervention_mean": 0.5,
+    "paired_mean_difference": 0.0,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "rate_reduction_2pp",
+    "control_arm_id": "observed_policy",
+    "outcome": "projected_net_cashflow_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 2107.4535,
+    "intervention_mean": 2130.66075,
+    "paired_mean_difference": 23.20725,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "rate_reduction_2pp",
+    "control_arm_id": "observed_policy",
+    "outcome": "monthly_payment_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 1021.57575,
+    "intervention_mean": 998.36925,
+    "paired_mean_difference": -23.2065,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "term_extension_12m",
+    "control_arm_id": "observed_policy",
+    "outcome": "modeled_default_probability",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.47654943,
+    "intervention_mean": 0.44950526,
+    "paired_mean_difference": -0.02704416,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "term_extension_12m",
+    "control_arm_id": "observed_policy",
+    "outcome": "simulated_default_within_horizon",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.5,
+    "intervention_mean": 0.45,
+    "paired_mean_difference": -0.05,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "term_extension_12m",
+    "control_arm_id": "observed_policy",
+    "outcome": "projected_net_cashflow_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 2107.4535,
+    "intervention_mean": 2366.1565,
+    "paired_mean_difference": 258.703,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "term_extension_12m",
+    "control_arm_id": "observed_policy",
+    "outcome": "monthly_payment_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 1021.57575,
+    "intervention_mean": 762.87375,
+    "paired_mean_difference": -258.702,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "limit_increase_20pct",
+    "control_arm_id": "observed_policy",
+    "outcome": "modeled_default_probability",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.47654943,
+    "intervention_mean": 0.49645662,
+    "paired_mean_difference": 0.0199072,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "limit_increase_20pct",
+    "control_arm_id": "observed_policy",
+    "outcome": "simulated_default_within_horizon",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.5,
+    "intervention_mean": 0.525,
+    "paired_mean_difference": 0.025,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "limit_increase_20pct",
+    "control_arm_id": "observed_policy",
+    "outcome": "projected_net_cashflow_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 2107.4535,
+    "intervention_mean": 2078.71525,
+    "paired_mean_difference": -28.73825,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "limit_increase_20pct",
+    "control_arm_id": "observed_policy",
+    "outcome": "monthly_payment_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 1021.57575,
+    "intervention_mean": 1050.315,
+    "paired_mean_difference": 28.73925,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "collections_delay_plus_15d",
+    "control_arm_id": "observed_policy",
+    "outcome": "modeled_default_probability",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.47654943,
+    "intervention_mean": 0.53407201,
+    "paired_mean_difference": 0.05752258,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "collections_delay_plus_15d",
+    "control_arm_id": "observed_policy",
+    "outcome": "simulated_default_within_horizon",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 0.5,
+    "intervention_mean": 0.575,
+    "paired_mean_difference": 0.075,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "collections_delay_plus_15d",
+    "control_arm_id": "observed_policy",
+    "outcome": "projected_net_cashflow_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 2107.4535,
+    "intervention_mean": 2107.4535,
+    "paired_mean_difference": 0.0,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  },
+  {
+    "arm_id": "collections_delay_plus_15d",
+    "control_arm_id": "observed_policy",
+    "outcome": "monthly_payment_usd",
+    "estimand_label": "paired_within_simulator_mean_difference",
+    "control_mean": 1021.57575,
+    "intervention_mean": 1021.57575,
+    "paired_mean_difference": 0.0,
+    "paired_unit_count": 40,
+    "interpretation_limit": "Effect implied by this configured synthetic structural model only; not an empirical causal estimate."
+  }
+]

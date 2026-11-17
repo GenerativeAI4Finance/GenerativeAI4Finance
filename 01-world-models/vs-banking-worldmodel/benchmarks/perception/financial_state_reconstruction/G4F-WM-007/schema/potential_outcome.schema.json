@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/g4f-wm-007-potential-outcome.schema.json",
+  "title": "G4F-WM-007 Synthetic Potential Outcome Record",
+  "description": "One entity under one explicitly assigned intervention arm in the synthetic simulator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_version", "entity_id", "arm_id", "horizon_months", "observational_features", "baseline_policy", "intervention", "simulation_context", "outcomes", "synthetic"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "dataset_version": {"type": "string"},
+    "entity_id": {"type": "string", "pattern": "^SYN-WM007-"},
+    "arm_id": {"type": "string"},
+    "horizon_months": {"type": "integer", "minimum": 1},
+    "observational_features": {"$ref": "#/$defs/features"},
+    "baseline_policy": {"$ref": "#/$defs/policy"},
+    "intervention": {"$ref": "#/$defs/intervention"},
+    "simulation_context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shared_exogenous_shock"],
+      "properties": {"shared_exogenous_shock": {"type": "number", "minimum": 0, "exclusiveMaximum": 1}}
+    },
+    "outcomes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["monthly_payment_usd", "projected_net_cashflow_usd", "modeled_default_probability", "simulated_default_within_horizon"],
+      "properties": {
+        "monthly_payment_usd": {"type": "number", "minimum": 0},
+        "projected_net_cashflow_usd": {"type": "number"},
+        "modeled_default_probability": {"type": "number", "minimum": 0, "maximum": 1},
+        "simulated_default_within_horizon": {"type": "boolean"}
+      }
+    },
+    "synthetic": {"const": true}
+  },
+  "$defs": {
+    "features": {
+      "type": "object", "additionalProperties": false,
+      "required": ["monthly_income_usd", "income_volatility", "balance_usd", "balance_to_income_months", "risk_index"],
+      "properties": {
+        "monthly_income_usd": {"type": "number", "exclusiveMinimum": 0},
+        "income_volatility": {"type": "number", "minimum": 0, "maximum": 1},
+        "balance_usd": {"type": "number", "minimum": 0},
+        "balance_to_income_months": {"type": "number", "minimum": 0},
+        "risk_index": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["interest_rate_pct", "term_months", "credit_limit_usd", "collections_delay_days"],
+      "properties": {
+        "interest_rate_pct": {"type": "number", "minimum": 0, "maximum": 100},
+        "term_months": {"type": "integer", "minimum": 1},
+        "credit_limit_usd": {"type": "number", "minimum": 0},
+        "collections_delay_days": {"type": "integer", "minimum": 0}
+      }
+    },
+    "intervention": {
+      "type": "object", "additionalProperties": false,
+      "required": ["interest_rate_pct", "term_months", "credit_limit_usd", "collections_delay_days", "intervention_kind", "change"],
+      "properties": {
+        "interest_rate_pct": {"type": "number", "minimum": 0, "maximum": 100},
+        "term_months": {"type": "integer", "minimum": 1},
+        "credit_limit_usd": {"type": "number", "minimum": 0},
+        "collections_delay_days": {"type": "integer", "minimum": 0},
+        "intervention_kind": {"enum": ["control", "interest_rate", "repayment_term", "credit_limit", "collections_timing"]},
+        "change": {"type": "object"}
+      }
+    }
+  }
+}
