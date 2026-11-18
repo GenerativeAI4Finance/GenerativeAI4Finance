@@ -1,0 +1,33 @@
+{
+  "dataset_version": "1.0.0",
+  "evaluation_version": "1.0.0",
+  "seed": 42,
+  "source_dataset": "G4F-WM-008 synthetic panel",
+  "source_seed": 0,
+  "target": "default_in_horizon",
+  "target_definition": "1 if the synthetic latent stress process crosses its configured threshold at any point in the next 3 monthly periods, else 0.",
+  "horizon_months": 3,
+  "timestamp_column": "timestamp",
+  "entity_column": "entity_id",
+  "observed_at": {"days_past_due": "dpd_observed_at"},
+  "feature_columns": ["utilisation", "days_past_due", "income_ratio"],
+  "excluded_post_outcome_columns": ["recovery_amount", "default_in_horizon"],
+  "validation_start": "2022-07-01",
+  "test_start": "2023-04-01",
+  "split_policy": "out_of_time_with_horizon_purge",
+  "subgroup_definition": {
+    "column": "utilisation",
+    "name": "utilisation_band",
+    "low": "<=0.50",
+    "medium": ">0.50 and <=0.80",
+    "high": ">0.80"
+  },
+  "threshold": 0.5,
+  "model": {
+    "type": "StandardScaler + LogisticRegression",
+    "C": 1.0,
+    "max_iter": 1000,
+    "class_weight": "balanced"
+  },
+  "naive_baseline": "DummyClassifier(strategy=most_frequent) fitted only on training labels"
+}

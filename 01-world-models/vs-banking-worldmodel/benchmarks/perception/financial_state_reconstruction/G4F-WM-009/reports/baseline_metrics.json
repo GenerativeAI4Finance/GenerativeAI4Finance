@@ -1,0 +1,253 @@
+{
+  "evaluation_version": "1.0.0",
+  "dataset_version": "1.0.0",
+  "target": "default_in_horizon",
+  "target_definition": "1 if the synthetic latent stress process crosses its configured threshold at any point in the next 3 monthly periods, else 0.",
+  "horizon_months": 3,
+  "split_policy": "out_of_time_with_horizon_purge",
+  "split_summary": {
+    "train": {
+      "rows": 960,
+      "entities": 60,
+      "min_timestamp": "2021-01-01T00:00:00",
+      "max_timestamp": "2022-04-01T00:00:00"
+    },
+    "validation": {
+      "rows": 420,
+      "entities": 60,
+      "min_timestamp": "2022-07-01T00:00:00",
+      "max_timestamp": "2023-01-01T00:00:00"
+    },
+    "test": {
+      "rows": 540,
+      "entities": 60,
+      "min_timestamp": "2023-04-01T00:00:00",
+      "max_timestamp": "2023-12-01T00:00:00"
+    },
+    "drop": {
+      "rows": 240,
+      "entities": 60,
+      "min_timestamp": "2022-05-01T00:00:00",
+      "max_timestamp": "2023-03-01T00:00:00"
+    }
+  },
+  "overall": {
+    "validation": {
+      "logistic_regression": {
+        "n": 420,
+        "positive_rate": 0.242857,
+        "accuracy": 0.828571,
+        "balanced_accuracy": 0.796892,
+        "precision": 0.625,
+        "recall": 0.735294,
+        "f1": 0.675676,
+        "roc_auc": 0.919565,
+        "average_precision": 0.815625,
+        "brier_score": 0.109091
+      },
+      "majority_class": {
+        "n": 420,
+        "positive_rate": 0.242857,
+        "accuracy": 0.757143,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.242857,
+        "brier_score": 0.242857
+      }
+    },
+    "test": {
+      "logistic_regression": {
+        "n": 540,
+        "positive_rate": 0.348148,
+        "accuracy": 0.877778,
+        "balanced_accuracy": 0.87775,
+        "precision": 0.793269,
+        "recall": 0.87766,
+        "f1": 0.833333,
+        "roc_auc": 0.95107,
+        "average_precision": 0.912553,
+        "brier_score": 0.086795
+      },
+      "majority_class": {
+        "n": 540,
+        "positive_rate": 0.348148,
+        "accuracy": 0.651852,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.348148,
+        "brier_score": 0.348148
+      }
+    }
+  },
+  "test_by_quarter": {
+    "2023Q2": {
+      "logistic_regression": {
+        "n": 180,
+        "positive_rate": 0.327778,
+        "accuracy": 0.838889,
+        "balanced_accuracy": 0.836742,
+        "precision": 0.720588,
+        "recall": 0.830508,
+        "f1": 0.771654,
+        "roc_auc": 0.92632,
+        "average_precision": 0.866437,
+        "brier_score": 0.108198
+      },
+      "majority_class": {
+        "n": 180,
+        "positive_rate": 0.327778,
+        "accuracy": 0.672222,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.327778,
+        "brier_score": 0.327778
+      }
+    },
+    "2023Q3": {
+      "logistic_regression": {
+        "n": 180,
+        "positive_rate": 0.372222,
+        "accuracy": 0.872222,
+        "balanced_accuracy": 0.870889,
+        "precision": 0.805556,
+        "recall": 0.865672,
+        "f1": 0.834532,
+        "roc_auc": 0.963149,
+        "average_precision": 0.942687,
+        "brier_score": 0.076511
+      },
+      "majority_class": {
+        "n": 180,
+        "positive_rate": 0.372222,
+        "accuracy": 0.627778,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.372222,
+        "brier_score": 0.372222
+      }
+    },
+    "2023Q4": {
+      "logistic_regression": {
+        "n": 180,
+        "positive_rate": 0.344444,
+        "accuracy": 0.922222,
+        "balanced_accuracy": 0.925369,
+        "precision": 0.852941,
+        "recall": 0.935484,
+        "f1": 0.892308,
+        "roc_auc": 0.961454,
+        "average_precision": 0.929107,
+        "brier_score": 0.075675
+      },
+      "majority_class": {
+        "n": 180,
+        "positive_rate": 0.344444,
+        "accuracy": 0.655556,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.344444,
+        "brier_score": 0.344444
+      }
+    }
+  },
+  "test_by_utilisation_band": {
+    "high": {
+      "logistic_regression": {
+        "n": 61,
+        "positive_rate": 0.934426,
+        "accuracy": 0.934426,
+        "balanced_accuracy": 0.5,
+        "precision": 0.934426,
+        "recall": 1.0,
+        "f1": 0.966102,
+        "roc_auc": 0.899123,
+        "average_precision": 0.991965,
+        "brier_score": 0.053697
+      },
+      "majority_class": {
+        "n": 61,
+        "positive_rate": 0.934426,
+        "accuracy": 0.065574,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.934426,
+        "brier_score": 0.934426
+      }
+    },
+    "low": {
+      "logistic_regression": {
+        "n": 319,
+        "positive_rate": 0.07837,
+        "accuracy": 0.940439,
+        "balanced_accuracy": 0.656599,
+        "precision": 0.8,
+        "recall": 0.32,
+        "f1": 0.457143,
+        "roc_auc": 0.920816,
+        "average_precision": 0.557953,
+        "brier_score": 0.050686
+      },
+      "majority_class": {
+        "n": 319,
+        "positive_rate": 0.07837,
+        "accuracy": 0.92163,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.07837,
+        "brier_score": 0.07837
+      }
+    },
+    "medium": {
+      "logistic_regression": {
+        "n": 160,
+        "positive_rate": 0.6625,
+        "accuracy": 0.73125,
+        "balanced_accuracy": 0.629106,
+        "precision": 0.729927,
+        "recall": 0.943396,
+        "f1": 0.823045,
+        "roc_auc": 0.804507,
+        "average_precision": 0.887006,
+        "brier_score": 0.171405
+      },
+      "majority_class": {
+        "n": 160,
+        "positive_rate": 0.6625,
+        "accuracy": 0.3375,
+        "balanced_accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "average_precision": 0.6625,
+        "brier_score": 0.6625
+      }
+    }
+  },
+  "metric_notes": {
+    "threshold": 0.5,
+    "undefined_metrics": "ROC AUC and balanced accuracy are null for one-class groups; average precision is null when a group has no positive rows.",
+    "naive_baseline": "Training-split most frequent class; same predicted probability is used for every validation/test row."
+  }
+}

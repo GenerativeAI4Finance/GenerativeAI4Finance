@@ -1,0 +1,13 @@
+{
+  "dataset_name": "G4F-WM-009-frozen-wm008-synthetic-panel",
+  "dataset_version": "1.0.0",
+  "source_task": "G4F-WM-008",
+  "source_generator": "synthetic.make_panel",
+  "source_seed": 0,
+  "entity_count": 60,
+  "row_count": 2160,
+  "period_count": 36,
+  "horizon_months": 3,
+  "synthetic": true,
+  "sha256": "3d5622663e6db5303519ad025d1117213a891e5cfbf2569a4ec16329f7e95928"
+}
