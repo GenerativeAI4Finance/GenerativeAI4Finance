@@ -13,6 +13,28 @@
   <img src="assets/demos/1b-param.png" width="40%">
 </p>
 
+## 🎬 Demo Videos
+### Learn about Financial World Models or build your own vertical-specific World Model
+
+#### 1. Comparing Decision Intelligence Approaches
+**OpenAI Decisions API vs Jev vs Vaayu Financial World Model**
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=UN1LIF01uHQ">
+    <img src="https://img.youtube.com/vi/UN1LIF01uHQ/maxresdefault.jpg"
+         width="75%" alt="OpenAI Decisions API vs Jev vs Vaayu Financial World Model">
+  </a>
+</p>
+
+#### 2. Decomposer – Breaking Complex Tasks into Smaller Subtasks
+Decompose complex tasks into smaller, manageable subtasks that can be assigned to SLMs or World Models.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=-PIz2vhKm18">
+    <img src="https://img.youtube.com/vi/-PIz2vhKm18/maxresdefault.jpg"
+         width="75%" alt="Decomposer Demo">
+  </a>
+</p>
 
 # What is this about?
 GenerativeAI 4 Finance consists of following parts
