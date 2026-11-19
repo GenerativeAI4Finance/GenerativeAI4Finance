@@ -36,6 +36,26 @@ Decompose complex tasks into smaller, manageable subtasks that can be assigned t
   </a>
 </p>
 
+## 🚀 Explore & Request API Access
+
+Explore Vaayu's decision intelligence and task decomposition APIs.
+Watch the demonstrations and request access to experiment with these capabilities or build your own vertical-specific applications.
+
+<p align="center">
+  <a href="https://gpt.vaayushop.com/admin/aiinfra/api-request">
+    <img src="assets/demos/api-access-portal.png"
+         width="75%"
+         alt="Vaayu API Access Portal">
+  </a>
+</p>
+
+**Available APIs:**
+
+- **Vaayu FinBench:** An action-conditioned Financial World Model for evaluating decisions and comparing potential outcomes.
+- **Task Decomposition Engine:** Break complex queries into logical subtasks that can be executed using your own SLMs, LLMs or AI agents.
+
+👉 [Explore APIs and Request Access](https://gpt.vaayushop.com/admin/aiinfra/api-request)
+
 # What is this about?
 GenerativeAI 4 Finance consists of following parts
 
