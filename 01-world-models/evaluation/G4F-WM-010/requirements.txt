@@ -1,0 +1,5 @@
+numpy==2.5.4
+pandas==3.0.6
+pytest==9.1.1
+# only used by the tests to cross-check metric values
+scikit-learn==1.9.1

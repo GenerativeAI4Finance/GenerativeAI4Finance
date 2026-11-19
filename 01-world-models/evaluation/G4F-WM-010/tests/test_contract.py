@@ -1,0 +1,428 @@
+import csv
+from io import BytesIO, StringIO
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from scenario_eval.contract import ContractError, join, load
+
+
+def frames():
+    key = {
+        "entity_id": ["a", "b", "c"],
+        "as_of": ["2025-01-31"] * 3,
+        "horizon": [12] * 3,
+        "scenario": ["baseline", "normal", "stress"],
+    }
+    preds = pd.DataFrame({**key, "p_event": [0.1, 0.2, 0.3]})
+    outs = pd.DataFrame({**key, "event": [0, 1, 1]})
+    return preds, outs
+
+
+def test_valid_join():
+    preds, outs = frames()
+    df = join(preds, outs)
+    assert len(df) == 3
+    assert df["event"].tolist() == [0, 1, 1]
+
+
+def test_unknown_scenario_label():
+    preds, outs = frames()
+    preds.loc[0, "scenario"] = "severe"
+    with pytest.raises(ContractError, match="unknown scenario"):
+        join(preds, outs)
+
+
+def test_duplicate_key():
+    preds, outs = frames()
+    preds = pd.concat([preds, preds.iloc[[0]]])
+    with pytest.raises(ContractError, match="duplicate"):
+        join(preds, outs)
+
+
+def test_prediction_without_outcome():
+    preds, outs = frames()
+    with pytest.raises(ContractError, match="no matching outcome"):
+        join(preds, outs.iloc[:2])
+
+
+def test_outcome_without_prediction():
+    preds, outs = frames()
+    with pytest.raises(ContractError, match="no matching prediction"):
+        join(preds.iloc[:2], outs)
+
+
+@pytest.mark.parametrize("value", [1.5, -0.01])
+def test_probability_out_of_range(value):
+    preds, outs = frames()
+    preds.loc[1, "p_event"] = value
+    with pytest.raises(ContractError, match=r"\[0, 1\]"):
+        join(preds, outs)
+
+
+def test_missing_column():
+    preds, outs = frames()
+    with pytest.raises(ContractError, match="missing columns"):
+        join(preds.drop(columns="horizon"), outs)
+
+
+def test_state_probabilities_must_sum_to_one():
+    preds, outs = frames()
+    preds["p_state_current"] = [0.9, 0.8, 0.6]
+    preds["p_state_default"] = [0.1, 0.2, 0.3]
+    outs["next_state"] = ["current", "default", "default"]
+    with pytest.raises(ContractError, match="sum to 1"):
+        join(preds, outs)
+
+
+def test_state_columns_need_next_state():
+    preds, outs = frames()
+    preds["p_state_current"] = [0.9, 0.8, 0.7]
+    preds["p_state_default"] = [0.1, 0.2, 0.3]
+    with pytest.raises(ContractError, match="next_state"):
+        join(preds, outs)
+
+
+def with_states(from_state=None):
+    preds, outs = frames()
+    preds["p_state_current"] = [0.9, 0.8, 0.7]
+    preds["p_state_default"] = [0.1, 0.2, 0.3]
+    outs["next_state"] = ["current", "default", "default"]
+    if from_state:
+        preds["from_state"] = from_state
+    return preds, outs
+
+
+def test_valid_state_join():
+    preds, outs = with_states(from_state=["current", "current", "late"])
+    df = join(preds, outs)
+    assert df["next_state"].tolist() == ["current", "default", "default"]
+    assert df["from_state"].tolist() == ["current", "current", "late"]
+
+
+@pytest.mark.parametrize("bad", [None, float("nan")])
+def test_nan_next_state_rejected(bad):
+    preds, outs = with_states()
+    outs["next_state"] = outs["next_state"].astype(object)
+    outs.loc[0, "next_state"] = bad
+    with pytest.raises(ContractError, match="next_state is missing"):
+        join(preds, outs)
+
+
+def test_unknown_next_state_rejected():
+    preds, outs = with_states()
+    outs.loc[0, "next_state"] = "bankrupt"
+    with pytest.raises(ContractError, match="without a p_state_ column"):
+        join(preds, outs)
+
+
+@pytest.mark.parametrize("bad", [0, -3, 1.5, 12.0001, "abc", "", True, None])
+def test_bad_horizons_rejected(bad):
+    preds, outs = frames()
+    preds["horizon"] = preds["horizon"].astype(object)
+    preds.loc[0, "horizon"] = bad
+    with pytest.raises(ContractError, match="horizon|missing values"):
+        join(preds, outs)
+
+
+def test_horizon_spellings_match_across_files():
+    preds, outs = frames()
+    preds["horizon"] = ["12", "12.0", 12.0]
+    df = join(preds, outs)
+    assert df["horizon"].tolist() == [12, 12, 12]
+
+
+@pytest.mark.parametrize("which", ["predictions", "outcomes"])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        2**63,
+        str(2**63),
+        float(2**63),
+        10**100,
+        "9223372036854775806.5",
+        np.bool_(True),
+        np.bool_(False),
+    ],
+)
+def test_horizon_overflow_and_numpy_booleans_rejected(which, bad):
+    preds, outs = frames()
+    frame = preds if which == "predictions" else outs
+    frame["horizon"] = frame["horizon"].astype(object)
+    frame.loc[0, "horizon"] = bad
+    with pytest.raises(ContractError, match=f"{which}.*horizons"):
+        join(preds, outs)
+
+
+def test_largest_int64_horizon_is_preserved_with_decimal_spellings():
+    preds, outs = frames()
+    largest = 2**63 - 1
+    preds["horizon"] = [str(largest), "12.0", 12.0]
+    outs["horizon"] = [largest, 12, 12]
+    df = join(preds, outs)
+    assert df["horizon"].dtype == np.dtype("int64")
+    assert df["horizon"].tolist() == [largest, 12, 12]
+
+
+def test_csv_preserves_largest_int64_horizon(tmp_path):
+    preds, outs = frames()
+    largest = 2**63 - 1
+    preds["horizon"] = [str(largest), "12.0", "12"]
+    outs["horizon"] = [largest, 12, 12]
+    pred_path, out_path = tmp_path / "predictions.csv", tmp_path / "outcomes.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    assert load(pred_path, out_path)["horizon"].tolist() == [largest, 12, 12]
+
+
+def test_numpy_float_horizon_retains_its_integer_value():
+    preds, outs = frames()
+    horizon = np.float32(123456789)
+    preds["horizon"] = pd.Series([horizon, 12, 12], dtype=object)
+    outs["horizon"] = [int(horizon), 12, 12]
+    assert join(preds, outs)["horizon"].tolist() == [123456792, 12, 12]
+
+
+@pytest.mark.parametrize(
+    "bad", ["2025-02-30", "2025-13-01", "31/01/2025", "yesterday", "2025-1-31", ""]
+)
+def test_invalid_as_of_rejected(bad):
+    preds, outs = frames()
+    preds.loc[0, "as_of"] = bad
+    with pytest.raises(ContractError, match="as_of"):
+        join(preds, outs)
+
+
+def test_as_of_timestamps_are_accepted_as_dates():
+    preds, outs = frames()
+    preds["as_of"] = pd.to_datetime(preds["as_of"])
+    assert join(preds, outs)["as_of"].tolist() == ["2025-01-31"] * 3
+
+
+@pytest.mark.parametrize("which", ["predictions", "outcomes"])
+def test_duplicates_after_canonicalisation(which):
+    preds, outs = frames()
+    frame = preds if which == "predictions" else outs
+    frame["horizon"] = frame["horizon"].astype(object)
+    dup = frame.iloc[[0]].copy()
+    dup["horizon"] = "12.0"
+    frame = pd.concat([frame, dup], ignore_index=True)
+    preds, outs = (frame, outs) if which == "predictions" else (preds, frame)
+    with pytest.raises(ContractError, match="duplicate"):
+        join(preds, outs)
+
+
+def test_duplicate_entity_spelling_after_canonicalisation():
+    preds, outs = frames()
+    preds["entity_id"] = [1, "1", 2]
+    preds["scenario"] = "normal"
+    outs["scenario"] = "normal"
+    with pytest.raises(ContractError, match="duplicate"):
+        join(preds, outs)
+
+
+def test_prediction_columns_in_outcomes_rejected():
+    preds, outs = frames()
+    outs["p_event"] = [0.1, 0.2, 0.3]
+    with pytest.raises(ContractError, match="go in predictions"):
+        join(preds, outs)
+    preds, outs = with_states()
+    outs["p_state_current"] = 0.5
+    with pytest.raises(ContractError, match="go in predictions"):
+        join(preds, outs)
+
+
+def test_outcome_columns_in_predictions_rejected():
+    preds, outs = frames()
+    preds["next_state"] = ["a", "b", "c"]
+    with pytest.raises(ContractError, match="go in outcomes"):
+        join(preds, outs)
+
+
+def test_p_event_must_match_p_state_default():
+    preds, outs = with_states()
+    preds.loc[0, "p_event"] = 0.5
+    with pytest.raises(ContractError, match="p_event differs"):
+        join(preds, outs)
+
+
+def test_event_must_match_next_state_default():
+    preds, outs = with_states()
+    outs["event"] = [1, 1, 1]
+    with pytest.raises(ContractError, match="event disagrees"):
+        join(preds, outs)
+
+
+def test_event_flag_must_be_zero_or_one():
+    preds, outs = frames()
+    outs.loc[0, "event"] = 2
+    with pytest.raises(ContractError, match="0 or 1"):
+        join(preds, outs)
+
+
+@pytest.mark.parametrize("flags", [[False, True, True], [0, True, 1]])
+def test_boolean_event_rejected(flags):
+    preds, outs = frames()
+    outs["event"] = pd.Series(flags, dtype=object if 0 in flags else bool)
+    with pytest.raises(ContractError, match="not boolean"):
+        join(preds, outs)
+
+
+@pytest.mark.parametrize("column", ["p_event", "p_state_current"])
+@pytest.mark.parametrize("imaginary", [0.0, 0.2])
+def test_complex_probabilities_rejected_before_conversion(column, imaginary):
+    preds, outs = with_states() if column.startswith("p_state_") else frames()
+    preds[column] = preds[column].astype(complex)
+    preds.loc[0, column] += imaginary * 1j
+    with pytest.raises(ContractError, match="real probabilities"):
+        join(preds, outs)
+
+
+@pytest.mark.parametrize("label", ["NA", "NULL", "nan", "N/A"])
+def test_csv_preserves_literal_entity_and_state_labels(tmp_path, label):
+    preds, outs = with_states(from_state=[label, "current", "late"])
+    preds.loc[0, "entity_id"] = outs.loc[0, "entity_id"] = label
+    preds = preds.rename(columns={"p_state_current": f"p_state_{label}"})
+    outs.loc[0, "next_state"] = label
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    df = load(pred_path, out_path)
+    assert df.loc[0, ["entity_id", "from_state", "next_state"]].tolist() == [label] * 3
+    pd.testing.assert_frame_equal(df, join(preds, outs))
+
+
+@pytest.mark.parametrize("column", ["entity_id", "from_state", "next_state"])
+def test_csv_still_rejects_empty_entity_and_state_labels(tmp_path, column):
+    preds, outs = with_states(from_state=["current"] * 3)
+    frame = outs if column == "next_state" else preds
+    frame.loc[0, column] = ""
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    with pytest.raises(ContractError, match="missing"):
+        load(pred_path, out_path)
+
+
+@pytest.mark.parametrize("n_bins", [6, 7, 49, 100])
+def test_csv_round_trips_event_and_state_probabilities_at_bin_edges(tmp_path, n_bins):
+    probabilities = np.arange(n_bins + 1) / n_bins
+    key = {
+        "entity_id": [f"edge-{i}" for i in range(len(probabilities))],
+        "as_of": "2025-01-31",
+        "horizon": 6,
+        "scenario": "baseline",
+    }
+    preds = pd.DataFrame(
+        {
+            **key,
+            "p_event": probabilities,
+            "p_state_current": 1 - probabilities,
+            "p_state_default": probabilities,
+        }
+    )
+    event = np.arange(len(probabilities)) % 2
+    outs = pd.DataFrame(
+        {**key, "event": event, "next_state": np.where(event, "default", "current")}
+    )
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    pd.testing.assert_frame_equal(load(pred_path, out_path), join(preds, outs), check_exact=True)
+
+
+@pytest.mark.parametrize(
+    "which,column",
+    [
+        ("predictions", "p_event"),
+        ("predictions", "entity_id"),
+        ("predictions", "p_state_default"),
+        ("outcomes", "event"),
+        ("outcomes", "horizon"),
+        ("outcomes", "next_state"),
+    ],
+)
+@pytest.mark.parametrize("quoted_bom", [False, True])
+def test_csv_rejects_duplicate_original_headers(tmp_path, which, column, quoted_bom):
+    preds, outs = with_states()
+    frame = preds if which == "predictions" else outs
+    frame.insert(len(frame.columns), column, "conflicting", allow_duplicates=True)
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    options = {
+        "index": False,
+        "encoding": "utf-8-sig" if quoted_bom else "utf-8",
+        "quoting": csv.QUOTE_ALL if quoted_bom else csv.QUOTE_MINIMAL,
+    }
+    preds.to_csv(pred_path, **options)
+    outs.to_csv(out_path, **options)
+    with pytest.raises(ContractError, match=f"{which}.*duplicate CSV.*{column}"):
+        load(pred_path, out_path)
+
+
+@pytest.mark.parametrize("kind", ["path", "gzip", "binary", "text"])
+def test_csv_header_validation_preserves_quotes_bom_blank_lines_and_streams(tmp_path, kind):
+    preds, outs = frames()
+    preds['source, "kind"\nline'] = ["NA", "NULL", "nan"]
+    pred_text = "\ufeff\n \t\n" + preds.to_csv(
+        index=False, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
+    out_text = "\ufeff\n \t\n" + outs.to_csv(
+        index=False, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
+    if kind == "binary":
+        sources = [BytesIO(t.encode()) for t in (pred_text, out_text)]
+    elif kind == "text":
+        sources = [StringIO(t) for t in (pred_text, out_text)]
+    else:
+        import gzip
+
+        sources = [tmp_path / f"{name}.csv{'.gz' if kind == 'gzip' else ''}" for name in ("p", "o")]
+        for path, text in zip(sources, (pred_text, out_text)):
+            path.write_bytes(gzip.compress(text.encode()) if kind == "gzip" else text.encode())
+    pd.testing.assert_frame_equal(load(*sources), join(preds, outs))
+
+
+@pytest.mark.parametrize(
+    "contents,error",
+    [
+        (b"", pd.errors.EmptyDataError),
+        (b"\xef\xbb\xbf\n \t\n", pd.errors.EmptyDataError),
+        (b"\xff", UnicodeDecodeError),
+    ],
+)
+def test_csv_header_validation_preserves_empty_and_encoding_errors(contents, error):
+    _, outs = frames()
+    with pytest.raises(error):
+        load(BytesIO(contents), StringIO(outs.to_csv(index=False)))
+
+
+def test_csv_header_and_data_use_one_snapshot_when_file_is_replaced(tmp_path, monkeypatch):
+    preds, outs = frames()
+    pred_path, out_path = tmp_path / "p.csv", tmp_path / "o.csv"
+    preds.to_csv(pred_path, index=False)
+    outs.to_csv(out_path, index=False)
+    original_read_csv = pd.read_csv
+    replaced = False
+
+    def replace_after_header(*args, **kwargs):
+        nonlocal replaced
+        frame = original_read_csv(*args, **kwargs)
+        if kwargs.get("header", "infer") is None and not replaced:
+            preds.assign(p_event=0.9).to_csv(pred_path, index=False)
+            replaced = True
+        return frame
+
+    monkeypatch.setattr(pd, "read_csv", replace_after_header)
+    pd.testing.assert_frame_equal(load(pred_path, out_path), join(preds, outs), check_exact=True)
+    assert replaced
+
+
+def test_csv_rejects_duplicate_quoted_names_with_delimiters_and_newlines():
+    preds, outs = frames()
+    column = 'source, "kind"\nline'
+    preds[column] = "original"
+    preds.insert(len(preds.columns), column, "conflicting", allow_duplicates=True)
+    with pytest.raises(ContractError, match="duplicate CSV") as exc:
+        load(StringIO(preds.to_csv(index=False)), StringIO(outs.to_csv(index=False)))
+    assert repr(column) in str(exc.value)
