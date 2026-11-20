@@ -1,0 +1,9 @@
+{
+  "dataset_version": "1.0.0",
+  "seed": 20261120,
+  "borrowers": 400,
+  "snapshots_requested": 16,
+  "start_date": "2025-01-01",
+  "generator": "synthetic_gnpa.generator.generate_synthetic_history",
+  "all_records_synthetic": true
+}
