@@ -1,0 +1,48 @@
+{
+  "dataset_version": "1.0.0",
+  "simulator_version": "1.0.0",
+  "seed": 20261117,
+  "entity_count": 40,
+  "horizon_months": 12,
+  "currency": "USD",
+  "baseline_generation": {
+    "monthly_income_usd": [2500.0, 12000.0],
+    "income_volatility": [0.05, 0.35],
+    "balance_to_income_months": [0.5, 5.0],
+    "risk_index_formula": "clip(0.55 * balance_to_income_months / 5 + 0.45 * income_volatility / 0.35, 0, 1)",
+    "observational_policy_assignment": {
+      "interest_rate_pct_formula": "5 + 15 * risk_index",
+      "term_months_rule": "24 months when risk_index >= 0.65, otherwise 36 months",
+      "credit_limit_formula": "balance_usd * (1.1 + 0.9 * (1 - risk_index))",
+      "collections_delay_days_rule": "15 days when risk_index >= 0.65, otherwise 30 days"
+    }
+  },
+  "intervention_arms": [
+    {"arm_id": "observed_policy", "kind": "control", "change": {}},
+    {"arm_id": "rate_reduction_2pp", "kind": "interest_rate", "change": {"delta_pct_points": -2.0}},
+    {"arm_id": "term_extension_12m", "kind": "repayment_term", "change": {"delta_months": 12}},
+    {"arm_id": "limit_increase_20pct", "kind": "credit_limit", "change": {"multiplier": 1.2}},
+    {"arm_id": "collections_delay_plus_15d", "kind": "collections_timing", "change": {"delta_days": 15}}
+  ],
+  "structural_model": {
+    "monthly_expense_share_base": 0.55,
+    "volatility_expense_sensitivity": 0.35,
+    "credit_limit_take_up_share": 0.1,
+    "stress_intercept": -6.0,
+    "payment_burden_coefficient": 3.0,
+    "balance_to_income_coefficient": 0.75,
+    "income_volatility_coefficient": 1.3,
+    "collections_delay_coefficient_per_day_after_15": 0.015,
+    "collections_delay_reference_days": 15,
+    "minimum_interest_rate_pct": 2.0,
+    "maximum_interest_rate_pct": 40.0,
+    "minimum_term_months": 12,
+    "maximum_term_months": 60
+  },
+  "counterfactual_design": {
+    "paired_units": true,
+    "shared_exogenous_shock_across_arms": true,
+    "one_intervention_dimension_per_noncontrol_arm": true,
+    "estimand": "Within-simulator paired mean outcome difference versus observed_policy arm for the same synthetic entities."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "dataset_name": "G4F-WM-007-synthetic-causal-intervention-scenarios",
+  "dataset_version": "1.0.0",
+  "simulator_version": "1.0.0",
+  "synthetic": true,
+  "seed": 20261117,
+  "runtime_versions": {
+    "python": "3.14.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3"
+  },
+  "config_sha256": "7d66c20cf8aa6b809a8196227441c9f1d8550d9353fd79fcc72e1277d499ba53",
+  "entity_count": 40,
+  "intervention_arm_count": 5,
+  "potential_outcome_record_count": 200,
+  "outcome_summary_count": 16,
+  "output_sha256": {
+    "observational_features.csv": "85e20b19936e5ad826fdcd11e1a42e4a182039a195be53ea0fa9fd5d29fcbc45",
+    "baseline_policies.csv": "33645b8df2a622976dd1c4598f239c03ad779b11dfcd963f3f7961e3b5ac6d77",
+    "potential_outcomes.csv": "a3f765a7f661f806a9ec5af965600f375e49398a8e2edd548478c75ebaebd460",
+    "example_potential_outcomes.json": "2cb8b15dd7e6fd0a3677171f5aafab4a7f8d7f8730752afae426c173cdc97bae",
+    "model_implied_effects.json": "1cf23e94c1ba19bb5e7c43dc7969b407f81ddfd8136a0bac20708f392e753ffa"
+  },
+  "estimand_note": "Paired differences are simulator-implied counterfactual contrasts, not empirical causal effects."
+}
