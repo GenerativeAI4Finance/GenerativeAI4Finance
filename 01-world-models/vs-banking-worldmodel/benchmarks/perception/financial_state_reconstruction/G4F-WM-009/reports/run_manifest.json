@@ -1,0 +1,25 @@
+{
+  "dataset_sha256": "3d5622663e6db5303519ad025d1117213a891e5cfbf2569a4ec16329f7e95928",
+  "config_sha256": "b4560fca49716610e1b75c557db304077d406cbe8ff24145d0d0eee6b7b16072",
+  "evaluation_sha256": "816705bdfc9e555480cf42e7800101b22cd70330447ecfc74a03f03707cbd8dd",
+  "runtime_versions": {
+    "python": "3.14.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scikit_learn": "1.9.1"
+  },
+  "random_seed": 42,
+  "feature_columns": [
+    "utilisation",
+    "days_past_due",
+    "income_ratio"
+  ],
+  "target": "default_in_horizon",
+  "horizon_months": 3,
+  "model": {
+    "type": "StandardScaler + LogisticRegression",
+    "C": 1.0,
+    "max_iter": 1000,
+    "class_weight": "balanced"
+  }
+}
