@@ -1,0 +1,44 @@
+{
+  "dataset_version": "1.0.0",
+  "generator_version": "1.0.0",
+  "seed": 20261116,
+  "start_timestamp": "2026-01-01T00:00:00Z",
+  "initial_state_ranges": {
+    "balance_usd": [8000.0, 14000.0],
+    "monthly_revenue_usd": [4000.0, 7000.0],
+    "interest_rate_pct": [6.0, 10.0],
+    "monthly_debt_service_usd": [500.0, 900.0]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "normal-path",
+      "entity_id": "SYN-WM006-ENTITY-001",
+      "path_type": "normal",
+      "events": [
+        {"days_after_start": 30, "event_type": "scheduled_payment", "payment_status": "received", "action": "post_payment", "payment_amount_usd": 650.0},
+        {"days_after_start": 60, "event_type": "new_credit_exposure", "action": "approve_synthetic_exposure", "exposure_usd": 500.0, "additional_monthly_service_usd": 40.0}
+      ]
+    },
+    {
+      "scenario_id": "stress-path",
+      "entity_id": "SYN-WM006-ENTITY-002",
+      "path_type": "stress",
+      "events": [
+        {"days_after_start": 30, "event_type": "liquidity_shock", "action": null, "revenue_multiplier": 0.55},
+        {"days_after_start": 60, "event_type": "rate_change", "action": null, "rate_change_pct_points": 2.0},
+        {"days_after_start": 90, "event_type": "payment_delay", "payment_status": "missed", "action": "record_missed_payment", "days_past_due_increment": 30}
+      ]
+    },
+    {
+      "scenario_id": "recovery-path",
+      "entity_id": "SYN-WM006-ENTITY-003",
+      "path_type": "recovery",
+      "events": [
+        {"days_after_start": 30, "event_type": "liquidity_shock", "action": null, "revenue_multiplier": 0.65},
+        {"days_after_start": 60, "event_type": "payment_delay", "payment_status": "missed", "action": "record_missed_payment", "days_past_due_increment": 30},
+        {"days_after_start": 90, "event_type": "recovery_payment", "payment_status": "received", "action": "post_catch_up_payment", "payment_amount_usd": 1200.0},
+        {"days_after_start": 120, "event_type": "liquidity_normalization", "action": null, "revenue_multiplier": 1.0}
+      ]
+    }
+  ]
+}

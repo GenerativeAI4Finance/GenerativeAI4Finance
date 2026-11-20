@@ -1,0 +1,322 @@
+[
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "normal-path-T001",
+    "scenario_id": "normal-path",
+    "path_type": "normal",
+    "entity_id": "SYN-WM006-ENTITY-001",
+    "sequence": 1,
+    "transition_timestamp_utc": "2026-01-31T00:00:00Z",
+    "event": {
+      "event_type": "scheduled_payment",
+      "attributes": {
+        "payment_status": "received",
+        "payment_amount_usd": 650.0
+      }
+    },
+    "action": "post_payment",
+    "initial_state": {
+      "account_status": "current",
+      "balance_usd": 9173.35,
+      "monthly_revenue_usd": 5254.85,
+      "interest_rate_pct": 6.9633,
+      "monthly_debt_service_usd": 657.37,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.125098
+    },
+    "resulting_state": {
+      "account_status": "current",
+      "balance_usd": 8523.35,
+      "monthly_revenue_usd": 5254.85,
+      "interest_rate_pct": 6.9633,
+      "monthly_debt_service_usd": 657.37,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.125098
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "normal-path-T002",
+    "scenario_id": "normal-path",
+    "path_type": "normal",
+    "entity_id": "SYN-WM006-ENTITY-001",
+    "sequence": 2,
+    "transition_timestamp_utc": "2026-03-02T00:00:00Z",
+    "event": {
+      "event_type": "new_credit_exposure",
+      "attributes": {
+        "exposure_usd": 500.0,
+        "additional_monthly_service_usd": 40.0
+      }
+    },
+    "action": "approve_synthetic_exposure",
+    "initial_state": {
+      "account_status": "current",
+      "balance_usd": 8523.35,
+      "monthly_revenue_usd": 5254.85,
+      "interest_rate_pct": 6.9633,
+      "monthly_debt_service_usd": 657.37,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.125098
+    },
+    "resulting_state": {
+      "account_status": "current",
+      "balance_usd": 9023.35,
+      "monthly_revenue_usd": 5254.85,
+      "interest_rate_pct": 6.9633,
+      "monthly_debt_service_usd": 697.37,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.13271
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "stress-path-T001",
+    "scenario_id": "stress-path",
+    "path_type": "stress",
+    "entity_id": "SYN-WM006-ENTITY-002",
+    "sequence": 1,
+    "transition_timestamp_utc": "2026-01-31T00:00:00Z",
+    "event": {
+      "event_type": "liquidity_shock",
+      "attributes": {
+        "revenue_multiplier": 0.55
+      }
+    },
+    "action": null,
+    "initial_state": {
+      "account_status": "current",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 4391.13,
+      "interest_rate_pct": 9.3903,
+      "monthly_debt_service_usd": 599.81,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.136596
+    },
+    "resulting_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 2415.12,
+      "interest_rate_pct": 9.3903,
+      "monthly_debt_service_usd": 599.81,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.248356
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "stress-path-T002",
+    "scenario_id": "stress-path",
+    "path_type": "stress",
+    "entity_id": "SYN-WM006-ENTITY-002",
+    "sequence": 2,
+    "transition_timestamp_utc": "2026-03-02T00:00:00Z",
+    "event": {
+      "event_type": "rate_change",
+      "attributes": {
+        "rate_change_pct_points": 2.0
+      }
+    },
+    "action": null,
+    "initial_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 2415.12,
+      "interest_rate_pct": 9.3903,
+      "monthly_debt_service_usd": 599.81,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.248356
+    },
+    "resulting_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 2415.12,
+      "interest_rate_pct": 11.3903,
+      "monthly_debt_service_usd": 727.56,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.301252
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "stress-path-T003",
+    "scenario_id": "stress-path",
+    "path_type": "stress",
+    "entity_id": "SYN-WM006-ENTITY-002",
+    "sequence": 3,
+    "transition_timestamp_utc": "2026-04-01T00:00:00Z",
+    "event": {
+      "event_type": "payment_delay",
+      "attributes": {
+        "payment_status": "missed",
+        "days_past_due_increment": 30
+      }
+    },
+    "action": "record_missed_payment",
+    "initial_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 2415.12,
+      "interest_rate_pct": 11.3903,
+      "monthly_debt_service_usd": 727.56,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.301252
+    },
+    "resulting_state": {
+      "account_status": "delinquent",
+      "balance_usd": 10335.88,
+      "monthly_revenue_usd": 2415.12,
+      "interest_rate_pct": 11.3903,
+      "monthly_debt_service_usd": 727.56,
+      "days_past_due": 30,
+      "debt_to_income_ratio": 0.301252
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "recovery-path-T001",
+    "scenario_id": "recovery-path",
+    "path_type": "recovery",
+    "entity_id": "SYN-WM006-ENTITY-003",
+    "sequence": 1,
+    "transition_timestamp_utc": "2026-01-31T00:00:00Z",
+    "event": {
+      "event_type": "liquidity_shock",
+      "attributes": {
+        "revenue_multiplier": 0.65
+      }
+    },
+    "action": null,
+    "initial_state": {
+      "account_status": "current",
+      "balance_usd": 8923.0,
+      "monthly_revenue_usd": 5361.31,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.102329
+    },
+    "resulting_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 8923.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.15743
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "recovery-path-T002",
+    "scenario_id": "recovery-path",
+    "path_type": "recovery",
+    "entity_id": "SYN-WM006-ENTITY-003",
+    "sequence": 2,
+    "transition_timestamp_utc": "2026-03-02T00:00:00Z",
+    "event": {
+      "event_type": "payment_delay",
+      "attributes": {
+        "payment_status": "missed",
+        "days_past_due_increment": 30
+      }
+    },
+    "action": "record_missed_payment",
+    "initial_state": {
+      "account_status": "liquidity_stress",
+      "balance_usd": 8923.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.15743
+    },
+    "resulting_state": {
+      "account_status": "delinquent",
+      "balance_usd": 8923.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 30,
+      "debt_to_income_ratio": 0.15743
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "recovery-path-T003",
+    "scenario_id": "recovery-path",
+    "path_type": "recovery",
+    "entity_id": "SYN-WM006-ENTITY-003",
+    "sequence": 3,
+    "transition_timestamp_utc": "2026-04-01T00:00:00Z",
+    "event": {
+      "event_type": "recovery_payment",
+      "attributes": {
+        "payment_status": "received",
+        "payment_amount_usd": 1200.0
+      }
+    },
+    "action": "post_catch_up_payment",
+    "initial_state": {
+      "account_status": "delinquent",
+      "balance_usd": 8923.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 30,
+      "debt_to_income_ratio": 0.15743
+    },
+    "resulting_state": {
+      "account_status": "cured",
+      "balance_usd": 7723.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.15743
+    },
+    "synthetic": true
+  },
+  {
+    "schema_version": "1.0.0",
+    "transition_id": "recovery-path-T004",
+    "scenario_id": "recovery-path",
+    "path_type": "recovery",
+    "entity_id": "SYN-WM006-ENTITY-003",
+    "sequence": 4,
+    "transition_timestamp_utc": "2026-05-01T00:00:00Z",
+    "event": {
+      "event_type": "liquidity_normalization",
+      "attributes": {
+        "revenue_multiplier": 1.0
+      }
+    },
+    "action": null,
+    "initial_state": {
+      "account_status": "cured",
+      "balance_usd": 7723.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.15743
+    },
+    "resulting_state": {
+      "account_status": "current",
+      "balance_usd": 7723.0,
+      "monthly_revenue_usd": 3484.85,
+      "interest_rate_pct": 6.5505,
+      "monthly_debt_service_usd": 548.62,
+      "days_past_due": 0,
+      "debt_to_income_ratio": 0.15743
+    },
+    "synthetic": true
+  }
+]
