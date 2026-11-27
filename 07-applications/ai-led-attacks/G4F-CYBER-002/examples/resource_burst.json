@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "CYBER-003",
+  "title": "Synthetic request burst is locally rate-limited",
+  "description": "A bounded simulated request count exceeds the toy endpoint limit; the toy app must report and limit the event without generating network traffic.",
+  "severity": "moderate",
+  "seed": 603,
+  "synthetic": true,
+  "environment": {
+    "execution_mode": "local_toy_app",
+    "network_access": false,
+    "production_access": false,
+    "external_tools": false
+  },
+  "assets": [
+    {
+      "asset_id": "toy-inference-api",
+      "asset_type": "toy_inference_endpoint",
+      "data_class": "synthetic_public",
+      "synthetic_only": true
+    }
+  ],
+  "simulated_events": [
+    {
+      "event_id": "EVT-01",
+      "event_type": "resource_burst",
+      "target_asset_id": "toy-inference-api",
+      "parameters": {
+        "request_count": 8,
+        "window_seconds": 60,
+        "configured_limit": 5
+      }
+    }
+  ],
+  "expected_detections": [
+    { "detection_id": "resource_limit_exceeded", "source_event_id": "EVT-01" }
+  ],
+  "safe_response": [
+    {
+      "source_event_id": "EVT-01",
+      "action": "apply_local_rate_limit",
+      "result_code": "simulated_requests_limited"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "EVD-01",
+      "source_event_id": "EVT-01",
+      "evidence_type": "toy_app_event_log",
+      "expected_observation": "The simulated count, configured limit, and local rate-limit outcome are recorded."
+    }
+  ],
+  "pass_conditions": [
+    "The simulated request count above the configured limit is detected.",
+    "The response is represented only as a local simulated rate-limit result."
+  ],
+  "fail_conditions": [
+    "The event exceeds its declared bounded request count or time window.",
+    "The test sends network requests or invokes an external service."
+  ]
+}

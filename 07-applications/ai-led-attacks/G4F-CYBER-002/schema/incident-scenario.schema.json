@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://generativeai4finance.example/schemas/g4f-cyber-002-incident-scenario.schema.json",
+  "title": "G4F-CYBER-002 Controlled Local Incident Scenario",
+  "description": "Declarative synthetic scenario for a deterministic local toy application. This schema does not define executable commands or production actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "scenario_id", "title", "description", "severity", "seed",
+    "synthetic", "environment", "assets", "simulated_events", "expected_detections",
+    "safe_response", "evidence", "pass_conditions", "fail_conditions"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "scenario_id": { "type": "string", "pattern": "^CYBER-[0-9]{3}$" },
+    "title": { "type": "string", "minLength": 5, "maxLength": 120 },
+    "description": { "type": "string", "minLength": 10, "maxLength": 500 },
+    "severity": { "enum": ["low", "moderate", "high", "critical"] },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "synthetic": { "const": true },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_mode", "network_access", "production_access", "external_tools"],
+      "properties": {
+        "execution_mode": { "const": "local_toy_app" },
+        "network_access": { "const": false },
+        "production_access": { "const": false },
+        "external_tools": { "const": false }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset_id", "asset_type", "data_class", "synthetic_only"],
+        "properties": {
+          "asset_id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,40}$" },
+          "asset_type": { "enum": ["synthetic_document", "toy_identity_service", "toy_inference_endpoint", "toy_audit_log"] },
+          "data_class": { "enum": ["synthetic_public", "synthetic_internal", "synthetic_confidential"] },
+          "synthetic_only": { "const": true }
+        }
+      }
+    },
+    "simulated_events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "event_type", "target_asset_id", "parameters"],
+        "properties": {
+          "event_id": { "type": "string", "pattern": "^EVT-[0-9]{2}$" },
+          "event_type": { "enum": ["untrusted_content", "identity_check", "resource_burst"] },
+          "target_asset_id": { "type": "string" },
+          "parameters": { "type": "object" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "event_type": { "const": "untrusted_content" } }, "required": ["event_type"] },
+            "then": { "properties": { "parameters": {
+              "type": "object", "additionalProperties": false,
+              "required": ["content_id", "contains_untrusted_instruction"],
+              "properties": {
+                "content_id": { "type": "string", "pattern": "^SYN-DOC-[0-9]{3}$" },
+                "contains_untrusted_instruction": { "type": "boolean" }
+              }
+            } } }
+          },
+          {
+            "if": { "properties": { "event_type": { "const": "identity_check" } }, "required": ["event_type"] },
+            "then": { "properties": { "parameters": {
+              "type": "object", "additionalProperties": false,
+              "required": ["principal_id", "authorized"],
+              "properties": {
+                "principal_id": { "type": "string", "pattern": "^SYN-(USER|AGENT)-[0-9]{3}$" },
+                "authorized": { "type": "boolean" }
+              }
+            } } }
+          },
+          {
+            "if": { "properties": { "event_type": { "const": "resource_burst" } }, "required": ["event_type"] },
+            "then": { "properties": { "parameters": {
+              "type": "object", "additionalProperties": false,
+              "required": ["request_count", "window_seconds", "configured_limit"],
+              "properties": {
+                "request_count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                "window_seconds": { "type": "integer", "minimum": 1, "maximum": 3600 },
+                "configured_limit": { "type": "integer", "minimum": 1, "maximum": 1000 }
+              }
+            } } }
+          }
+        ]
+      }
+    },
+    "expected_detections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["detection_id", "source_event_id"],
+        "properties": {
+          "detection_id": { "enum": ["untrusted_content_detected", "unauthorized_identity_detected", "resource_limit_exceeded"] },
+          "source_event_id": { "type": "string", "pattern": "^EVT-[0-9]{2}$" }
+        }
+      }
+    },
+    "safe_response": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_event_id", "action", "result_code"],
+        "properties": {
+          "source_event_id": { "type": "string", "pattern": "^EVT-[0-9]{2}$" },
+          "action": { "enum": ["flag_for_review", "deny_access", "apply_local_rate_limit", "continue_safe_read"] },
+          "result_code": { "type": "string", "minLength": 3, "maxLength": 120 }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "source_event_id", "evidence_type", "expected_observation"],
+        "properties": {
+          "evidence_id": { "type": "string", "pattern": "^EVD-[0-9]{2}$" },
+          "source_event_id": { "type": "string", "pattern": "^EVT-[0-9]{2}$" },
+          "evidence_type": { "enum": ["toy_app_event_log", "toy_app_detection_log", "toy_app_response_log"] },
+          "expected_observation": { "type": "string", "minLength": 5, "maxLength": 300 }
+        }
+      }
+    },
+    "pass_conditions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 5, "maxLength": 300 } },
+    "fail_conditions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 5, "maxLength": 300 } }
+  }
+}

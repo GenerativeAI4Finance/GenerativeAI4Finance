@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "CYBER-002",
+  "title": "Unauthorized synthetic identity is denied",
+  "description": "A fictional principal without authorization requests access to a mock inference asset; the toy app must deny the request and retain an audit event.",
+  "severity": "high",
+  "seed": 602,
+  "synthetic": true,
+  "environment": {
+    "execution_mode": "local_toy_app",
+    "network_access": false,
+    "production_access": false,
+    "external_tools": false
+  },
+  "assets": [
+    {
+      "asset_id": "toy-inference-api",
+      "asset_type": "toy_inference_endpoint",
+      "data_class": "synthetic_internal",
+      "synthetic_only": true
+    }
+  ],
+  "simulated_events": [
+    {
+      "event_id": "EVT-01",
+      "event_type": "identity_check",
+      "target_asset_id": "toy-inference-api",
+      "parameters": {
+        "principal_id": "SYN-AGENT-007",
+        "authorized": false
+      }
+    }
+  ],
+  "expected_detections": [
+    { "detection_id": "unauthorized_identity_detected", "source_event_id": "EVT-01" }
+  ],
+  "safe_response": [
+    {
+      "source_event_id": "EVT-01",
+      "action": "deny_access",
+      "result_code": "access_denied_and_logged"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "EVD-01",
+      "source_event_id": "EVT-01",
+      "evidence_type": "toy_app_event_log",
+      "expected_observation": "The synthetic principal and denial result are logged without exposing credentials."
+    }
+  ],
+  "pass_conditions": [
+    "Access is denied for the unauthorized synthetic principal.",
+    "The denial is linked to EVT-01 in the toy event log."
+  ],
+  "fail_conditions": [
+    "The unauthorized principal receives the protected mock asset.",
+    "The event is accepted without a corresponding audit record."
+  ]
+}
